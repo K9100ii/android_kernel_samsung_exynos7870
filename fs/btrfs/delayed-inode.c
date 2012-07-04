@@ -1773,6 +1773,11 @@ static void fill_stack_inode_item(struct btrfs_trans_handle *trans,
 				     inode->i_ctime.tv_sec);
 	btrfs_set_stack_timespec_nsec(btrfs_inode_ctime(inode_item),
 				      inode->i_ctime.tv_nsec);
+
+	btrfs_set_stack_timespec_sec(&inode_item->otime,
+				     BTRFS_I(inode)->i_otime.tv_sec);
+	btrfs_set_stack_timespec_nsec(&inode_item->otime,
+				     BTRFS_I(inode)->i_otime.tv_nsec);
 }
 
 int btrfs_fill_inode(struct inode *inode, u32 *rdev)
@@ -1817,6 +1822,11 @@ int btrfs_fill_inode(struct inode *inode, u32 *rdev)
 	tspec = btrfs_inode_ctime(inode_item);
 	inode->i_ctime.tv_sec = btrfs_stack_timespec_sec(tspec);
 	inode->i_ctime.tv_nsec = btrfs_stack_timespec_nsec(tspec);
+
+	BTRFS_I(inode)->i_otime.tv_sec =
+		btrfs_stack_timespec_sec(&inode_item->otime);
+	BTRFS_I(inode)->i_otime.tv_nsec =
+		btrfs_stack_timespec_nsec(&inode_item->otime);
 
 	inode->i_generation = BTRFS_I(inode)->generation;
 	BTRFS_I(inode)->index_cnt = (u64)-1;
