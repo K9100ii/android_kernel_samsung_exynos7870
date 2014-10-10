@@ -3091,10 +3091,13 @@ int btrfsic_mount(struct btrfs_root *root,
 		       root->sectorsize, PAGE_CACHE_SIZE);
 		return -1;
 	}
-	state = kzalloc(sizeof(*state), GFP_NOFS);
-	if (NULL == state) {
-		printk(KERN_INFO "btrfs check-integrity: kmalloc() failed!\n");
-		return -1;
+	state = kzalloc(sizeof(*state), GFP_KERNEL | __GFP_NOWARN | __GFP_REPEAT);
+	if (!state) {
+		state = vzalloc(sizeof(*state));
+		if (!state) {
+			printk(KERN_INFO "btrfs check-integrity: vzalloc() failed!\n");
+			return -1;
+		}
 	}
 
 	if (!btrfsic_is_initialized) {
@@ -3238,5 +3241,8 @@ void btrfsic_unmount(struct btrfs_root *root,
 
 	mutex_unlock(&btrfsic_mutex);
 
-	kfree(state);
+	if (is_vmalloc_addr(state))
+		vfree(state);
+	else
+		kfree(state);
 }
