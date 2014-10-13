@@ -886,6 +886,7 @@ int btrfs_write_marked_extents(struct btrfs_root *root,
 			werr = err;
 		else if (wait_writeback)
 			werr = filemap_fdatawait_range(mapping, start, end);
+		free_extent_state(cached_state);
 		cached_state = NULL;
 		cond_resched();
 		start = end + 1;
@@ -930,6 +931,8 @@ int btrfs_wait_marked_extents(struct btrfs_root *root,
 			err = filemap_fdatawait_range(mapping, start, end);
 		if (err)
 			werr = err;
+		free_extent_state(cached_state);
+		cached_state = NULL;
 		cond_resched();
 		start = end + 1;
 	}
