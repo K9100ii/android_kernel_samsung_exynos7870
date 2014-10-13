@@ -565,6 +565,7 @@ static int uvc_v4l2_release(struct file *file)
 	/* Only free resources if this is a privileged handle. */
 	if (uvc_has_privileges(handle)) {
 		uvc_video_enable(stream, 0);
+		uvc_queue_enable(&stream->queue, 0);
 		uvc_free_buffers(&stream->queue);
 	}
 
@@ -799,7 +800,15 @@ static int uvc_ioctl_streamon(struct file *file, void *fh,
 		return -EBUSY;
 
 	mutex_lock(&stream->mutex);
+	ret = uvc_queue_enable(&stream->queue, 1);
+	if (ret < 0)
+		goto done;
+
 	ret = uvc_video_enable(stream, 1);
+	if (ret < 0)
+		uvc_queue_enable(&stream->queue, 0);
+
+done:
 	mutex_unlock(&stream->mutex);
 
 	return ret;
@@ -810,7 +819,6 @@ static int uvc_ioctl_streamoff(struct file *file, void *fh,
 {
 	struct uvc_fh *handle = fh;
 	struct uvc_streaming *stream = handle->stream;
-	int ret;
 
 	if (type != stream->type)
 		return -EINVAL;
@@ -819,10 +827,11 @@ static int uvc_ioctl_streamoff(struct file *file, void *fh,
 		return -EBUSY;
 
 	mutex_lock(&stream->mutex);
-	ret = uvc_video_enable(stream, 0);
+	uvc_video_enable(stream, 0);
+	uvc_queue_enable(&stream->queue, 0);
 	mutex_unlock(&stream->mutex);
 
-	return ret;
+	return 0;
 }
 
 static int uvc_ioctl_enum_input(struct file *file, void *fh,
