@@ -121,7 +121,7 @@ struct binder_object_header {
  */
 struct flat_binder_object {
 	struct binder_object_header	hdr;
-	__u32		flags;
+	__u32				flags;
 
 	/* 8 bytes of data. */
 	union {
