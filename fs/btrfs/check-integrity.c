@@ -1327,24 +1327,25 @@ static int btrfsic_create_link_to_next_block(
 		l = NULL;
 		next_block->generation = BTRFSIC_GENERATION_UNKNOWN;
 	} else {
-		if (next_block->logical_bytenr != next_bytenr &&
-		    !(!next_block->is_metadata &&
-		      0 == next_block->logical_bytenr)) {
-			printk(KERN_INFO
-			       "Referenced block @%llu (%s/%llu/%d)"
-			       " found in hash table, %c,"
-			       " bytenr mismatch (!= stored %llu).\n",
-			       next_bytenr, next_block_ctx->dev->name,
-			       next_block_ctx->dev_bytenr, *mirror_nump,
-			       btrfsic_get_block_type(state, next_block),
-			       next_block->logical_bytenr);
-		} else if (state->print_mask & BTRFSIC_PRINT_MASK_VERBOSE)
-			printk(KERN_INFO
-			       "Referenced block @%llu (%s/%llu/%d)"
-			       " found in hash table, %c.\n",
-			       next_bytenr, next_block_ctx->dev->name,
-			       next_block_ctx->dev_bytenr, *mirror_nump,
-			       btrfsic_get_block_type(state, next_block));
+		if (state->print_mask & BTRFSIC_PRINT_MASK_VERBOSE) {
+			if (next_block->logical_bytenr != next_bytenr &&
+			    !(!next_block->is_metadata &&
+			      0 == next_block->logical_bytenr))
+				printk(KERN_INFO
+				       "Referenced block @%llu (%s/%llu/%d) found in hash table, %c, bytenr mismatch (!= stored %llu).\n",
+				       next_bytenr, next_block_ctx->dev->name,
+				       next_block_ctx->dev_bytenr, *mirror_nump,
+				       btrfsic_get_block_type(state,
+							      next_block),
+				       next_block->logical_bytenr);
+			else
+				printk(KERN_INFO
+				       "Referenced block @%llu (%s/%llu/%d) found in hash table, %c.\n",
+				       next_bytenr, next_block_ctx->dev->name,
+				       next_block_ctx->dev_bytenr, *mirror_nump,
+				       btrfsic_get_block_type(state,
+							      next_block));
+		}
 		next_block->logical_bytenr = next_bytenr;
 
 		next_block->mirror_num = *mirror_nump;
@@ -1530,7 +1531,9 @@ static int btrfsic_handle_extent_data(
 				return -1;
 			}
 			if (!block_was_created) {
-				if (next_block->logical_bytenr != next_bytenr &&
+				if ((state->print_mask &
+				     BTRFSIC_PRINT_MASK_VERBOSE) &&
+				    next_block->logical_bytenr != next_bytenr &&
 				    !(!next_block->is_metadata &&
 				      0 == next_block->logical_bytenr)) {
 					printk(KERN_INFO
@@ -1902,25 +1905,26 @@ again:
 							       dev_state,
 							       dev_bytenr);
 			}
-			if (block->logical_bytenr != bytenr &&
-			    !(!block->is_metadata &&
-			      block->logical_bytenr == 0))
-				printk(KERN_INFO
-				       "Written block @%llu (%s/%llu/%d)"
-				       " found in hash table, %c,"
-				       " bytenr mismatch"
-				       " (!= stored %llu).\n",
-				       bytenr, dev_state->name, dev_bytenr,
-				       block->mirror_num,
-				       btrfsic_get_block_type(state, block),
-				       block->logical_bytenr);
-			else if (state->print_mask & BTRFSIC_PRINT_MASK_VERBOSE)
-				printk(KERN_INFO
-				       "Written block @%llu (%s/%llu/%d)"
-				       " found in hash table, %c.\n",
-				       bytenr, dev_state->name, dev_bytenr,
-				       block->mirror_num,
-				       btrfsic_get_block_type(state, block));
+			if (state->print_mask & BTRFSIC_PRINT_MASK_VERBOSE) {
+				if (block->logical_bytenr != bytenr &&
+				    !(!block->is_metadata &&
+				      block->logical_bytenr == 0))
+					printk(KERN_INFO
+					       "Written block @%llu (%s/%llu/%d) found in hash table, %c, bytenr mismatch (!= stored %llu).\n",
+					       bytenr, dev_state->name,
+					       dev_bytenr,
+					       block->mirror_num,
+					       btrfsic_get_block_type(state,
+								      block),
+					       block->logical_bytenr);
+				else
+					printk(KERN_INFO
+					       "Written block @%llu (%s/%llu/%d) found in hash table, %c.\n",
+					       bytenr, dev_state->name,
+					       dev_bytenr, block->mirror_num,
+					       btrfsic_get_block_type(state,
+								      block));
+			}
 			block->logical_bytenr = bytenr;
 		} else {
 			if (num_pages * PAGE_CACHE_SIZE <
