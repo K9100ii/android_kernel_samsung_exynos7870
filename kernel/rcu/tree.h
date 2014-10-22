@@ -556,7 +556,7 @@ static int rcu_spawn_one_boost_kthread(struct rcu_state *rsp,
 static void __init rcu_spawn_boost_kthreads(void);
 static void rcu_prepare_kthreads(int cpu);
 static void rcu_cleanup_after_idle(int cpu);
-static void rcu_prepare_for_idle(int cpu);
+static void rcu_prepare_for_idle(void);
 static void rcu_idle_count_callbacks_posted(void);
 static bool rcu_preempt_has_tasks(struct rcu_node *rnp);
 static void print_cpu_stall_info_begin(void);
