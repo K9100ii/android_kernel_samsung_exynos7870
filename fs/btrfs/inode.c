@@ -1351,7 +1351,7 @@ next_slot:
 			 * we fall into common COW way.
 			 */
 			if (!nolock) {
-				err = btrfs_start_nocow_write(root);
+				err = btrfs_start_write_no_snapshoting(root);
 				if (!err)
 					goto out_check;
 			}
@@ -1375,7 +1375,7 @@ out_check:
 		if (extent_end <= start) {
 			path->slots[0]++;
 			if (!nolock && nocow)
-				btrfs_end_nocow_write(root);
+				btrfs_end_write_no_snapshoting(root);
 			goto next_slot;
 		}
 		if (!nocow) {
@@ -1395,7 +1395,7 @@ out_check:
 					     page_started, nr_written, 1);
 			if (ret) {
 				if (!nolock && nocow)
-					btrfs_end_nocow_write(root);
+					btrfs_end_write_no_snapshoting(root);
 				goto error;
 			}
 			cow_start = (u64)-1;
@@ -1446,7 +1446,7 @@ out_check:
 						      num_bytes);
 			if (ret) {
 				if (!nolock && nocow)
-					btrfs_end_nocow_write(root);
+					btrfs_end_write_no_snapshoting(root);
 				goto error;
 			}
 		}
@@ -1457,7 +1457,7 @@ out_check:
 					     EXTENT_DELALLOC, PAGE_UNLOCK |
 					     PAGE_SET_PRIVATE2);
 		if (!nolock && nocow)
-			btrfs_end_nocow_write(root);
+			btrfs_end_write_no_snapshoting(root);
 		cur_offset = extent_end;
 		if (cur_offset > end)
 			break;
@@ -4787,6 +4787,26 @@ next:
 	return err;
 }
 
+static int wait_snapshoting_atomic_t(atomic_t *a)
+{
+	schedule();
+	return 0;
+}
+
+static void wait_for_snapshot_creation(struct btrfs_root *root)
+{
+	while (true) {
+		int ret;
+
+		ret = btrfs_start_write_no_snapshoting(root);
+		if (ret)
+			break;
+		wait_on_atomic_t(&root->will_be_snapshoted,
+				 wait_snapshoting_atomic_t,
+				 TASK_UNINTERRUPTIBLE);
+	}
+}
+
 static int btrfs_setsize(struct inode *inode, struct iattr *attr)
 {
 	struct btrfs_root *root = BTRFS_I(inode)->root;
@@ -4811,17 +4831,30 @@ static int btrfs_setsize(struct inode *inode, struct iattr *attr)
 
 	if (newsize > oldsize) {
 		truncate_pagecache(inode, newsize);
+		/*
+		 * Don't do an expanding truncate while snapshoting is ongoing.
+		 * This is to ensure the snapshot captures a fully consistent
+		 * state of this file - if the snapshot captures this expanding
+		 * truncation, it must capture all writes that happened before
+		 * this truncation.
+		 */
+		wait_for_snapshot_creation(root);
 		ret = btrfs_cont_expand(inode, oldsize, newsize);
-		if (ret)
+		if (ret) {
+			btrfs_end_write_no_snapshoting(root);
 			return ret;
+		}
 
 		trans = btrfs_start_transaction(root, 1);
-		if (IS_ERR(trans))
+		if (IS_ERR(trans)) {
+			btrfs_end_write_no_snapshoting(root);
 			return PTR_ERR(trans);
+		}
 
 		i_size_write(inode, newsize);
 		btrfs_ordered_update_i_size(inode, i_size_read(inode), NULL);
 		ret = btrfs_update_inode(trans, root, inode);
+		btrfs_end_write_no_snapshoting(root);
 		btrfs_end_transaction(trans, root);
 	} else {
 
