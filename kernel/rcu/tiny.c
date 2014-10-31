@@ -96,16 +96,6 @@ EXPORT_SYMBOL(__rcu_is_watching);
 #endif /* defined(CONFIG_DEBUG_LOCK_ALLOC) || defined(CONFIG_RCU_TRACE) */
 
 /*
- * Test whether the current CPU was interrupted from idle.  Nested
- * interrupts don't count, we must be running at the first interrupt
- * level.
- */
-static int rcu_is_cpu_rrupt_from_idle(void)
-{
-	return rcu_dynticks_nesting <= 1;
-}
-
-/*
  * Helper function for rcu_sched_qs() and rcu_bh_qs().
  * Also irqs are disabled to avoid confusion due to interrupt handlers
  * invoking call_rcu().
@@ -159,7 +149,7 @@ void rcu_bh_qs(void)
 void rcu_check_callbacks(int user)
 {
 	RCU_TRACE(check_cpu_stalls());
-	if (user || rcu_is_cpu_rrupt_from_idle())
+	if (user)
 		rcu_sched_qs();
 	else if (!in_softirq())
 		rcu_bh_qs();
