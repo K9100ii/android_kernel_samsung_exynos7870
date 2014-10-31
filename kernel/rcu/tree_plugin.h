@@ -325,9 +325,10 @@ static struct list_head *rcu_next_node_entry(struct task_struct *t,
  */
 void rcu_read_unlock_special(struct task_struct *t)
 {
-	int empty_exp;
-	int empty_norm;
-	int empty_exp_now;
+	bool empty;
+	bool empty_exp;
+	bool empty_norm;
+	bool empty_exp_now;
 	unsigned long flags;
 	struct list_head *np;
 	bool drop_boost_mutex = false;
@@ -384,6 +385,7 @@ void rcu_read_unlock_special(struct task_struct *t)
 				break;
 			raw_spin_unlock(&rnp->lock); /* irqs remain disabled. */
 		}
+		empty = !rcu_preempt_has_tasks(rnp);
 		empty_norm = !rcu_preempt_blocked_readers_cgp(rnp);
 		empty_exp = !rcu_preempted_readers_exp(rnp);
 		smp_mb(); /* ensure expedited fastpath sees end of RCU c-s. */
@@ -402,6 +404,14 @@ void rcu_read_unlock_special(struct task_struct *t)
 			/* Snapshot ->boost_mtx ownership w/rnp->lock held. */
 			drop_boost_mutex = rt_mutex_owner(&rnp->boost_mtx) == t;
 		}
+
+		/*
+		 * If this was the last task on the list, go see if we
+		 * need to propagate ->qsmaskinit bit clearing up the
+		 * rcu_node tree.
+		 */
+		if (!empty && !rcu_preempt_has_tasks(rnp))
+			rcu_cleanup_dead_rnp(rnp);
 
 		/*
 		 * If this was the last task on the current list, and if
