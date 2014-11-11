@@ -1881,6 +1881,11 @@ int btrfs_qgroup_inherit(struct btrfs_trans_handle *trans,
 				ret = -EINVAL;
 				goto out;
 			}
+
+			if ((srcgroup->qgroupid >> 48) <= (objectid >> 48)) {
+				ret = -EINVAL;
+				goto out;
+			}
 			++i_qgroups;
 		}
 	}
