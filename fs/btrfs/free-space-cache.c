@@ -1211,6 +1211,7 @@ int btrfs_write_out_cache(struct btrfs_root *root,
 	struct btrfs_free_space_ctl *ctl = block_group->free_space_ctl;
 	struct inode *inode;
 	int ret = 0;
+	enum btrfs_disk_cache_state dcs = BTRFS_DC_WRITTEN;
 
 	root = root->fs_info->tree_root;
 
@@ -1234,9 +1235,7 @@ int btrfs_write_out_cache(struct btrfs_root *root,
 	ret = __btrfs_write_out_cache(root, inode, ctl, block_group, trans,
 				      path, block_group->key.objectid);
 	if (ret) {
-		spin_lock(&block_group->lock);
-		block_group->disk_cache_state = BTRFS_DC_ERROR;
-		spin_unlock(&block_group->lock);
+		dcs = BTRFS_DC_ERROR;
 		ret = 0;
 #ifdef DEBUG
 		btrfs_err(root->fs_info,
@@ -1245,6 +1244,9 @@ int btrfs_write_out_cache(struct btrfs_root *root,
 #endif
 	}
 
+	spin_lock(&block_group->lock);
+	block_group->disk_cache_state = dcs;
+	spin_unlock(&block_group->lock);
 	iput(inode);
 	return ret;
 }
