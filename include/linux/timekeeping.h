@@ -10,7 +10,7 @@ extern int timekeeping_suspended;
  * Get and set timeofday
  */
 extern void do_gettimeofday(struct timeval *tv);
-extern int do_settimeofday(const struct timespec *tv);
+extern int do_settimeofday64(const struct timespec64 *ts);
 extern int do_sys_settimeofday(const struct timespec *tv,
 			       const struct timezone *tz);
 
@@ -36,6 +36,14 @@ extern void getnstimeofday64(struct timespec64 *tv);
 extern void getboottime64(struct timespec64 *ts);
 
 #if BITS_PER_LONG == 64
+/**
+ * Deprecated. Use do_settimeofday64().
+ */
+static inline int do_settimeofday(const struct timespec *ts)
+{
+	return do_settimeofday64(ts);
+}
+
 static inline int __getnstimeofday(struct timespec *ts)
 {
 	return __getnstimeofday64(ts);
@@ -71,6 +79,17 @@ static inline void getboottime(struct timespec *ts)
 	return getboottime64(ts);
 }
 #else
+/**
+ * Deprecated. Use do_settimeofday64().
+ */
+static inline int do_settimeofday(const struct timespec *ts)
+{
+	struct timespec64 ts64;
+
+	ts64 = timespec_to_timespec64(*ts);
+	return do_settimeofday64(&ts64);
+}
+
 static inline int __getnstimeofday(struct timespec *ts)
 {
 	struct timespec64 ts64;
