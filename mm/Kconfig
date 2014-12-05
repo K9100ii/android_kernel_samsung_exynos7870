@@ -320,6 +320,7 @@ config VIRT_TO_BUS
 
 config MMU_NOTIFIER
 	bool
+	select SRCU
 
 config KSM
 	bool "Enable KSM for page merging"
