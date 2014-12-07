@@ -580,7 +580,7 @@ static bool alloc_p2m(unsigned long pfn)
 		}
 	}
 
-	p2m_orig = ACCESS_ONCE(p2m_top[topidx][mididx]);
+	p2m_orig = READ_ONCE(p2m_top[topidx][mididx]);
 	if (p2m_orig == p2m_identity || p2m_orig == p2m_missing) {
 		/* p2m leaf page is missing */
 		unsigned long *p2m;
