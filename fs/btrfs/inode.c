@@ -3573,7 +3573,6 @@ static void btrfs_read_locked_inode(struct inode *inode)
 	struct btrfs_path *path;
 	struct extent_buffer *leaf;
 	struct btrfs_inode_item *inode_item;
-	struct btrfs_timespec *tspec;
 	struct btrfs_root *root = BTRFS_I(inode)->root;
 	struct btrfs_key location;
 	unsigned long ptr;
@@ -3610,17 +3609,14 @@ static void btrfs_read_locked_inode(struct inode *inode)
 	i_gid_write(inode, btrfs_inode_gid(leaf, inode_item));
 	btrfs_i_size_write(inode, btrfs_inode_size(leaf, inode_item));
 
-	tspec = btrfs_inode_atime(inode_item);
-	inode->i_atime.tv_sec = btrfs_timespec_sec(leaf, tspec);
-	inode->i_atime.tv_nsec = btrfs_timespec_nsec(leaf, tspec);
+	inode->i_atime.tv_sec = btrfs_timespec_sec(leaf, &inode_item->atime);
+	inode->i_atime.tv_nsec = btrfs_timespec_nsec(leaf, &inode_item->atime);
 
-	tspec = btrfs_inode_mtime(inode_item);
-	inode->i_mtime.tv_sec = btrfs_timespec_sec(leaf, tspec);
-	inode->i_mtime.tv_nsec = btrfs_timespec_nsec(leaf, tspec);
+	inode->i_mtime.tv_sec = btrfs_timespec_sec(leaf, &inode_item->mtime);
+	inode->i_mtime.tv_nsec = btrfs_timespec_nsec(leaf, &inode_item->mtime);
 
-	tspec = btrfs_inode_ctime(inode_item);
-	inode->i_ctime.tv_sec = btrfs_timespec_sec(leaf, tspec);
-	inode->i_ctime.tv_nsec = btrfs_timespec_nsec(leaf, tspec);
+	inode->i_ctime.tv_sec = btrfs_timespec_sec(leaf, &inode_item->ctime);
+	inode->i_ctime.tv_nsec = btrfs_timespec_nsec(leaf, &inode_item->ctime);
 
 	BTRFS_I(inode)->i_otime.tv_sec =
 		btrfs_timespec_sec(leaf, &inode_item->otime);
@@ -3744,19 +3740,19 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
 	btrfs_set_token_inode_mode(leaf, item, inode->i_mode, &token);
 	btrfs_set_token_inode_nlink(leaf, item, inode->i_nlink, &token);
 
-	btrfs_set_token_timespec_sec(leaf, btrfs_inode_atime(item),
+	btrfs_set_token_timespec_sec(leaf, &item->atime,
 				     inode->i_atime.tv_sec, &token);
-	btrfs_set_token_timespec_nsec(leaf, btrfs_inode_atime(item),
+	btrfs_set_token_timespec_nsec(leaf, &item->atime,
 				      inode->i_atime.tv_nsec, &token);
 
-	btrfs_set_token_timespec_sec(leaf, btrfs_inode_mtime(item),
+	btrfs_set_token_timespec_sec(leaf, &item->mtime,
 				     inode->i_mtime.tv_sec, &token);
-	btrfs_set_token_timespec_nsec(leaf, btrfs_inode_mtime(item),
+	btrfs_set_token_timespec_nsec(leaf, &item->mtime,
 				      inode->i_mtime.tv_nsec, &token);
 
-	btrfs_set_token_timespec_sec(leaf, btrfs_inode_ctime(item),
+	btrfs_set_token_timespec_sec(leaf, &item->ctime,
 				     inode->i_ctime.tv_sec, &token);
-	btrfs_set_token_timespec_nsec(leaf, btrfs_inode_ctime(item),
+	btrfs_set_token_timespec_nsec(leaf, &item->ctime,
 				      inode->i_ctime.tv_nsec, &token);
 
 	btrfs_set_token_timespec_sec(leaf, &item->otime,
