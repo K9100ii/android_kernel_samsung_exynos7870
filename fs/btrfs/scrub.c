@@ -2669,9 +2669,9 @@ static int scrub_extent_for_parity(struct scrub_parity *sparity,
 		ret = scrub_pages_for_parity(sparity, logical, l, physical, dev,
 					     flags, gen, mirror_num,
 					     have_csum ? csum : NULL);
-skip:
 		if (ret)
 			return ret;
+skip:
 		len -= l;
 		logical += l;
 		physical += l;
