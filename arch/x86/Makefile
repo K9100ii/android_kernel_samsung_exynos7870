@@ -123,6 +123,9 @@ else
         # and the number of alignment instructions.
         KBUILD_CFLAGS += $(call cc-option,$(cc_stack_align8))
 
+	# Use -mskip-rax-setup if supported.
+	KBUILD_CFLAGS += $(call cc-option,-mskip-rax-setup)
+
         # FIXME - should be integrated in Makefile.cpu (Makefile_32.cpu)
         cflags-$(CONFIG_MK8) += $(call cc-option,-march=k8)
         cflags-$(CONFIG_MPSC) += $(call cc-option,-march=nocona)
