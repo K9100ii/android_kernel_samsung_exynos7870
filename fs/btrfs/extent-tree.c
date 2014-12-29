@@ -3775,12 +3775,16 @@ commit_trans:
 					      data_sinfo->flags, bytes, 1);
 		return -ENOSPC;
 	}
+	ret = btrfs_qgroup_reserve(root, bytes);
+	if (ret)
+		goto out;
 	data_sinfo->bytes_may_use += bytes;
 	trace_btrfs_space_reservation(root->fs_info, "space_info",
 				      data_sinfo->flags, bytes, 1);
+out:
 	spin_unlock(&data_sinfo->lock);
 
-	return 0;
+	return ret;
 }
 
 /*
@@ -3797,6 +3801,7 @@ void btrfs_free_reserved_data_space(struct inode *inode, u64 bytes)
 	data_sinfo = root->fs_info->data_sinfo;
 	spin_lock(&data_sinfo->lock);
 	WARN_ON(data_sinfo->bytes_may_use < bytes);
+	btrfs_qgroup_free(root, bytes);
 	data_sinfo->bytes_may_use -= bytes;
 	trace_btrfs_space_reservation(root->fs_info, "space_info",
 				      data_sinfo->flags, bytes, 0);
@@ -5252,8 +5257,7 @@ int btrfs_delalloc_reserve_metadata(struct inode *inode, u64 num_bytes)
 	spin_unlock(&BTRFS_I(inode)->lock);
 
 	if (root->fs_info->quota_enabled) {
-		ret = btrfs_qgroup_reserve(root, num_bytes +
-					   nr_extents * root->nodesize);
+		ret = btrfs_qgroup_reserve(root, nr_extents * root->nodesize);
 		if (ret)
 			goto out_fail;
 	}
@@ -5261,8 +5265,7 @@ int btrfs_delalloc_reserve_metadata(struct inode *inode, u64 num_bytes)
 	ret = reserve_metadata_bytes(root, block_rsv, to_reserve, flush);
 	if (unlikely(ret)) {
 		if (root->fs_info->quota_enabled)
-			btrfs_qgroup_free(root, num_bytes +
-						nr_extents * root->nodesize);
+			btrfs_qgroup_free(root, nr_extents * root->nodesize);
 		goto out_fail;
 	}
 
@@ -5377,8 +5380,7 @@ void btrfs_delalloc_release_metadata(struct inode *inode, u64 num_bytes)
 	trace_btrfs_space_reservation(root->fs_info, "delalloc",
 				      btrfs_ino(inode), to_free, 0);
 	if (root->fs_info->quota_enabled) {
-		btrfs_qgroup_free(root, num_bytes +
-					dropped * root->nodesize);
+		btrfs_qgroup_free(root, dropped * root->nodesize);
 	}
 
 	btrfs_block_rsv_release(root, &root->fs_info->delalloc_block_rsv,
