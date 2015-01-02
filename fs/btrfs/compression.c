@@ -752,7 +752,7 @@ static struct {
 	wait_queue_head_t ws_wait;
 } btrfs_comp_ws[BTRFS_COMPRESS_TYPES];
 
-static struct btrfs_compress_op *btrfs_compress_op[] = {
+static const struct btrfs_compress_op * const btrfs_compress_op[] = {
 	&btrfs_zlib_compress,
 	&btrfs_lzo_compress,
 };
