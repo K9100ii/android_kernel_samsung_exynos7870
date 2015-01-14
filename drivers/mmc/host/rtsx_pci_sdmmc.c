@@ -53,9 +53,9 @@ struct realtek_pci_sdmmc {
 #define SDMMC_POWER_ON		1
 #define SDMMC_POWER_OFF		0
 
-	unsigned int		sg_count;
+	int			sg_count;
 	s32			cookie;
-	unsigned int		cookie_sg_count;
+	int			cookie_sg_count;
 	bool			using_cookie;
 };
 
@@ -449,6 +449,13 @@ static int sd_rw_multi(struct realtek_pci_sdmmc *host, struct mmc_request *mrq)
 	u8 cfg2, trans_mode;
 	int err;
 	size_t data_len = data->blksz * data->blocks;
+
+	if (host->sg_count < 0) {
+		data->error = host->sg_count;
+		dev_dbg(sdmmc_dev(host), "%s: sg_count = %d is invalid\n",
+			__func__, host->sg_count);
+		return data->error;
+	}
 
 	if (read) {
 		cfg2 = SD_CALCULATE_CRC7 | SD_CHECK_CRC16 |
