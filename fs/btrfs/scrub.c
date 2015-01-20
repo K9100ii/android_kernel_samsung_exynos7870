@@ -1300,7 +1300,9 @@ out:
 static inline int scrub_nr_raid_mirrors(struct btrfs_bio *bbio, u64 *raid_map)
 {
 	if (raid_map) {
-		if (raid_map[bbio->num_stripes - 1] == RAID6_Q_STRIPE)
+		int real_stripes = bbio->num_stripes - bbio->num_tgtdevs;
+
+		if (raid_map[real_stripes - 1] == RAID6_Q_STRIPE)
 			return 3;
 		else
 			return 2;
@@ -1421,7 +1423,8 @@ leave_nomem:
 
 			scrub_stripe_index_and_offset(logical, raid_map,
 						      mapped_length,
-						      bbio->num_stripes,
+						      bbio->num_stripes -
+						      bbio->num_tgtdevs,
 						      mirror_index,
 						      &stripe_index,
 						      &stripe_offset);
