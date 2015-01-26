@@ -161,7 +161,7 @@ void __sched __down_read(struct rw_semaphore *sem)
 		set_task_state(tsk, TASK_UNINTERRUPTIBLE);
 	}
 
-	tsk->state = TASK_RUNNING;
+	__set_task_state(tsk, TASK_RUNNING);
  out:
 	;
 }
