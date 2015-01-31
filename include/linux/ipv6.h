@@ -130,6 +130,12 @@ struct ipv6_mc_socklist;
 struct ipv6_ac_socklist;
 struct ipv6_fl_socklist;
 
+struct inet6_cork {
+	struct ipv6_txoptions *opt;
+	u8 hop_limit;
+	u8 tclass;
+};
+
 /**
  * struct ipv6_pinfo - ipv6 private area
  *
@@ -222,11 +228,7 @@ struct ipv6_pinfo {
 	struct ipv6_txoptions __rcu	*opt;
 	struct sk_buff		*pktoptions;
 	struct sk_buff		*rxpmtu;
-	struct {
-		struct ipv6_txoptions *opt;
-		u8 hop_limit;
-		u8 tclass;
-	} cork;
+	struct inet6_cork	cork;
 };
 
 /* WARNING: don't change the layout of the members in {raw,udp,tcp}6_sock! */
