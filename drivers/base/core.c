@@ -1130,8 +1130,7 @@ done:
  Error:
 	cleanup_glue_dir(dev, glue_dir);
 parent_error:
-	if (parent)
-		put_device(parent);
+	put_device(parent);
 name_error:
 	kfree(dev->p);
 	dev->p = NULL;
