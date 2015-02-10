@@ -273,8 +273,7 @@ struct vm_area_struct {
 
 	/*
 	 * For areas with an address space and backing store,
-	 * linkage into the address_space->i_mmap interval tree, or
-	 * linkage of vma in the address_space->i_mmap_nonlinear list.
+	 * linkage into the address_space->i_mmap interval tree.
 	 *
 	 * For private anonymous mappings, a pointer to a null terminated string
 	 * in the user process containing the name given to the vma, or NULL
@@ -285,7 +284,6 @@ struct vm_area_struct {
 			struct rb_node rb;
 			unsigned long rb_subtree_last;
 		} linear;
-		struct list_head nonlinear;
 		const char __user *anon_name;
 	} shared;
 
