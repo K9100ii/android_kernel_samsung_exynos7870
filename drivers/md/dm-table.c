@@ -373,23 +373,18 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
 	int r;
 	dev_t uninitialized_var(dev);
 	struct dm_dev_internal *dd;
-	unsigned int major, minor;
 	struct dm_table *t = ti->table;
-	char dummy;
+	struct block_device *bdev;
 
 	BUG_ON(!t);
 
-	if (sscanf(path, "%u:%u%c", &major, &minor, &dummy) == 2) {
-		/* Extract the major/minor numbers */
-		dev = MKDEV(major, minor);
-		if (MAJOR(dev) != major || MINOR(dev) != minor)
-			return -EOVERFLOW;
+	/* convert the path to a device */
+	bdev = lookup_bdev(path);
+	if (IS_ERR(bdev)) {
+		dev = name_to_dev_t(path);
+		if (!dev)
+			return -ENODEV;
 	} else {
-		/* convert the path to a device */
-		struct block_device *bdev = lookup_bdev(path);
-
-		if (IS_ERR(bdev))
-			return PTR_ERR(bdev);
 		dev = bdev->bd_dev;
 		bdput(bdev);
 	}
