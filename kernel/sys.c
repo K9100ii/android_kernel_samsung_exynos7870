@@ -2072,7 +2072,7 @@ static int prctl_update_vma_anon_name(struct vm_area_struct *vma,
 
 success:
 	if (!vma->vm_file)
-		vma->shared.anon_name = name_addr;
+		vma->anon_name = name_addr;
 
 out:
 	if (error == -ENOMEM)

@@ -283,9 +283,9 @@ struct vm_area_struct {
 		struct {
 			struct rb_node rb;
 			unsigned long rb_subtree_last;
-		} linear;
+		} shared;
 		const char __user *anon_name;
-	} shared;
+	};
 
 	/*
 	 * A file's MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
@@ -538,7 +538,7 @@ static inline const char __user *vma_get_anon_name(struct vm_area_struct *vma)
 	if (vma->vm_file)
 		return NULL;
 
-	return vma->shared.anon_name;
+	return vma->anon_name;
 }
 
 #endif /* _LINUX_MM_TYPES_H */
