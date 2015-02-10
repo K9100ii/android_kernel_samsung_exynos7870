@@ -131,17 +131,13 @@ static int mincore_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
 	ptep = pte_offset_map_lock(walk->mm, pmd, addr, &ptl);
 	for (; addr != end; ptep++, addr += PAGE_SIZE) {
 		pte_t pte = *ptep;
-		pgoff_t pgoff;
 
 		if (pte_none(pte))
 			__mincore_unmapped_range(addr, addr + PAGE_SIZE,
 						 vma, vec);
 		else if (pte_present(pte))
 			*vec = 1;
-		else if (pte_file(pte)) {
-			pgoff = pte_to_pgoff(pte);
-			*vec = mincore_page(vma->vm_file->f_mapping, pgoff);
-		} else { /* pte is a swap entry */
+		else { /* pte is a swap entry */
 			swp_entry_t entry = pte_to_swp_entry(pte);
 
 			if (is_migration_entry(entry)) {
@@ -149,9 +145,8 @@ static int mincore_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
 				*vec = 1;
 			} else {
 #ifdef CONFIG_SWAP
-				pgoff = entry.val;
 				*vec = mincore_page(swap_address_space(entry),
-					pgoff);
+					entry.val);
 #else
 				WARN_ON(1);
 				*vec = 1;
