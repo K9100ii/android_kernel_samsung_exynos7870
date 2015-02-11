@@ -2683,8 +2683,8 @@ static void wait_for_writer(struct btrfs_root *root)
 		mutex_unlock(&root->log_mutex);
 		if (atomic_read(&root->log_writers))
 			schedule();
-		mutex_lock(&root->log_mutex);
 		finish_wait(&root->log_writer_wait, &wait);
+		mutex_lock(&root->log_mutex);
 	}
 }
 
