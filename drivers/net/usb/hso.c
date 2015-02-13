@@ -915,7 +915,7 @@ static void packetizeRx(struct hso_net *odev, unsigned char *ip_pkt,
 					/* We got no receive buffer. */
 					D1("could not allocate memory");
 					odev->rx_parse_state = WAIT_SYNC;
-					return;
+					continue;
 				}
 
 				/* Copy what we got so far. make room for iphdr
