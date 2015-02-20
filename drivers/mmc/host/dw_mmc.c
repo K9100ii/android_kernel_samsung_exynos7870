@@ -2367,7 +2367,10 @@ static void dw_mci_tasklet_func(unsigned long priv)
 
 				dw_mci_fifo_reset(host->dev, host);
 				dw_mci_stop_dma(host);
-				send_stop_abort(host, data);
+				if (data->stop ||
+				    !(host->data_status & (SDMMC_INT_DRTO |
+							   SDMMC_INT_EBE)))
+					send_stop_abort(host, data);
 				state = STATE_DATA_ERROR;
 				dw_mci_debug_req_log(host,
 						host->mrq,
@@ -2398,7 +2401,10 @@ static void dw_mci_tasklet_func(unsigned long priv)
 					       &host->pending_events)) {
 				dw_mci_fifo_reset(host->dev, host);
 				dw_mci_stop_dma(host);
-				send_stop_abort(host, data);
+				if (data->stop ||
+				    !(host->data_status & (SDMMC_INT_DRTO |
+							   SDMMC_INT_EBE)))
+					send_stop_abort(host, data);
 				state = STATE_DATA_ERROR;
 				dw_mci_debug_req_log(host, host->mrq,
 						STATE_REQ_DATA_PROCESS, state);
