@@ -304,7 +304,7 @@ static int csum_tree_block(struct btrfs_fs_info *fs_info,
 		offset += cur_len;
 	}
 	if (csum_size > sizeof(inline_result)) {
-		result = kzalloc(csum_size * sizeof(char), GFP_NOFS);
+		result = kzalloc(csum_size, GFP_NOFS);
 		if (!result)
 			return 1;
 	} else {

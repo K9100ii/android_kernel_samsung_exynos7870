@@ -550,7 +550,7 @@ tree_mod_log_insert_move(struct btrfs_fs_info *fs_info,
 	if (!tree_mod_need_log(fs_info, eb))
 		return 0;
 
-	tm_list = kzalloc(nr_items * sizeof(struct tree_mod_elem *), flags);
+	tm_list = kcalloc(nr_items, sizeof(struct tree_mod_elem *), flags);
 	if (!tm_list)
 		return -ENOMEM;
 
@@ -649,7 +649,7 @@ tree_mod_log_insert_root(struct btrfs_fs_info *fs_info,
 
 	if (log_removal && btrfs_header_level(old_root) > 0) {
 		nritems = btrfs_header_nritems(old_root);
-		tm_list = kzalloc(nritems * sizeof(struct tree_mod_elem *),
+		tm_list = kcalloc(nritems, sizeof(struct tree_mod_elem *),
 				  flags);
 		if (!tm_list) {
 			ret = -ENOMEM;
@@ -786,7 +786,7 @@ tree_mod_log_eb_copy(struct btrfs_fs_info *fs_info, struct extent_buffer *dst,
 	if (btrfs_header_level(dst) == 0 && btrfs_header_level(src) == 0)
 		return 0;
 
-	tm_list = kzalloc(nr_items * 2 * sizeof(struct tree_mod_elem *),
+	tm_list = kcalloc(nr_items * 2, sizeof(struct tree_mod_elem *),
 			  GFP_NOFS);
 	if (!tm_list)
 		return -ENOMEM;
@@ -877,8 +877,7 @@ tree_mod_log_free_eb(struct btrfs_fs_info *fs_info, struct extent_buffer *eb)
 		return 0;
 
 	nritems = btrfs_header_nritems(eb);
-	tm_list = kzalloc(nritems * sizeof(struct tree_mod_elem *),
-			  GFP_NOFS);
+	tm_list = kcalloc(nritems, sizeof(struct tree_mod_elem *), GFP_NOFS);
 	if (!tm_list)
 		return -ENOMEM;
 
