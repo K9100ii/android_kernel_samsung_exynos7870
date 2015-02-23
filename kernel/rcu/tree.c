@@ -2000,7 +2000,7 @@ static void rcu_gp_fqs(struct rcu_state *rsp, bool first_time)
 		rcu_sysidle_report_gp(rsp, isidle, maxj);
 	} else {
 		/* Handle dyntick-idle and offline CPUs. */
-		isidle = false;
+		isidle = true;
 		force_qs_rnp(rsp, rcu_implicit_dynticks_qs, &isidle, &maxj);
 	}
 	/* Clear flag to prevent immediate re-entry. */
@@ -2886,8 +2886,8 @@ static void force_qs_rnp(struct rcu_state *rsp,
 		bit = 1;
 		for (; cpu <= rnp->grphi; cpu++, bit <<= 1) {
 			if ((rnp->qsmask & bit) != 0) {
-				if ((rnp->qsmaskinit & bit) != 0)
-					*isidle = false;
+				if ((rnp->qsmaskinit & bit) == 0)
+					*isidle = false; /* Pending hotplug. */
 				if (f(per_cpu_ptr(rsp->rda, cpu), isidle, maxj))
 					mask |= bit;
 			}
