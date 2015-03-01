@@ -2127,7 +2127,8 @@ static int __init intel_opregion_present(void)
 
 int acpi_video_register(void)
 {
-	int result = 0;
+	int ret;
+
 	if (register_count) {
 		/*
 		 * if the function of acpi_video_register is already called,
@@ -2139,9 +2140,9 @@ int acpi_video_register(void)
 	mutex_init(&video_list_lock);
 	INIT_LIST_HEAD(&video_bus_head);
 
-	result = acpi_bus_register_driver(&acpi_video_bus);
-	if (result < 0)
-		return -ENODEV;
+	ret = acpi_bus_register_driver(&acpi_video_bus);
+	if (ret)
+		return ret;
 
 	/*
 	 * When the acpi_video_bus is loaded successfully, increase
