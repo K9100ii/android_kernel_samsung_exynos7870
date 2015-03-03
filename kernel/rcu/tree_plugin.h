@@ -179,7 +179,7 @@ static void rcu_preempt_note_context_switch(void)
 	    !t->rcu_read_unlock_special.b.blocked) {
 
 		/* Possibly blocking in an RCU read-side critical section. */
-		rdp = this_cpu_ptr(rcu_preempt_state.rda);
+		rdp = this_cpu_ptr(rcu_state_p->rda);
 		rnp = rdp->mynode;
 		raw_spin_lock_irqsave(&rnp->lock, flags);
 		smp_mb__after_unlock_lock();
@@ -379,8 +379,7 @@ void rcu_read_unlock_special(struct task_struct *t)
 							 rnp->grplo,
 							 rnp->grphi,
 							 !!rnp->gp_tasks);
-			rcu_report_unblock_qs_rnp(&rcu_preempt_state,
-						  rnp, flags);
+			rcu_report_unblock_qs_rnp(rcu_state_p, rnp, flags);
 		} else {
 			raw_spin_unlock_irqrestore(&rnp->lock, flags);
 		}
@@ -394,7 +393,7 @@ void rcu_read_unlock_special(struct task_struct *t)
 		 * then we need to report up the rcu_node hierarchy.
 		 */
 		if (!empty_exp && empty_exp_now)
-			rcu_report_exp_rnp(&rcu_preempt_state, rnp, true);
+			rcu_report_exp_rnp(rcu_state_p, rnp, true);
 	} else {
 		local_irq_restore(flags);
 	}
@@ -528,7 +527,7 @@ static void rcu_preempt_check_callbacks(void)
 
 static void rcu_preempt_do_callbacks(void)
 {
-	rcu_do_batch(&rcu_preempt_state, this_cpu_ptr(&rcu_preempt_data));
+	rcu_do_batch(rcu_state_p, this_cpu_ptr(&rcu_preempt_data));
 }
 
 #endif /* #ifdef CONFIG_RCU_BOOST */
@@ -538,7 +537,7 @@ static void rcu_preempt_do_callbacks(void)
  */
 void call_rcu(struct rcu_head *head, rcu_callback_t func)
 {
-	__call_rcu(head, func, &rcu_preempt_state, -1, 0);
+	__call_rcu(head, func, rcu_state_p, -1, 0);
 }
 EXPORT_SYMBOL_GPL(call_rcu);
 
@@ -687,7 +686,7 @@ void synchronize_rcu_expedited(void)
 {
 	unsigned long flags;
 	struct rcu_node *rnp;
-	struct rcu_state *rsp = &rcu_preempt_state;
+	struct rcu_state *rsp = rcu_state_p;
 	unsigned long snap;
 	int trycount = 0;
 
@@ -756,7 +755,7 @@ EXPORT_SYMBOL_GPL(synchronize_rcu_expedited);
  */
 void rcu_barrier(void)
 {
-	_rcu_barrier(&rcu_preempt_state);
+	_rcu_barrier(rcu_state_p);
 }
 EXPORT_SYMBOL_GPL(rcu_barrier);
 
@@ -765,7 +764,7 @@ EXPORT_SYMBOL_GPL(rcu_barrier);
  */
 static void __init __rcu_init_preempt(void)
 {
-	rcu_init_one(&rcu_preempt_state, &rcu_preempt_data);
+	rcu_init_one(rcu_state_p, &rcu_preempt_data);
 }
 
 /*
@@ -1139,7 +1138,7 @@ static int rcu_spawn_one_boost_kthread(struct rcu_state *rsp,
 	struct sched_param sp;
 	struct task_struct *t;
 
-	if (&rcu_preempt_state != rsp)
+	if (rcu_state_p != rsp)
 		return 0;
 
 	if (!rcu_scheduler_fully_active || rcu_rnp_online_cpus(rnp) == 0)
