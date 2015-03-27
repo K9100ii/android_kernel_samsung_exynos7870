@@ -10,9 +10,10 @@ NAME = Diseased Newt
 # Comments in this file are targeted only to the developer, do not
 # expect to learn how to build the kernel reading this file.
 
-# Do not use make's built-in rules and variables
-# (this increases performance and avoids hard-to-debug behaviour);
-MAKEFLAGS += -rR
+# o Do not use make's built-in rules and variables
+#   (this increases performance and avoids hard-to-debug behaviour);
+# o Look for make include files relative to root of kernel src
+MAKEFLAGS += -rR --include-dir=$(CURDIR)
 
 # Avoid funny character set dependencies
 unexport LC_ALL
@@ -337,12 +338,9 @@ endif
 export KBUILD_MODULES KBUILD_BUILTIN
 export KBUILD_CHECKSRC KBUILD_SRC KBUILD_EXTMOD
 
-# Look for make include files relative to root of kernel src
-MAKEFLAGS += --include-dir=$(srctree)
-
 # We need some generic definitions (do not try to remake the file).
-$(srctree)/scripts/Kbuild.include: ;
-include $(srctree)/scripts/Kbuild.include
+scripts/Kbuild.include: ;
+include scripts/Kbuild.include
 
 # Make variables (CC, etc...)
 CPP		= $(CC) -E
@@ -549,7 +547,7 @@ ifeq ($(config-targets),1)
 # Read arch specific Makefile to set KBUILD_DEFCONFIG as needed.
 # KBUILD_DEFCONFIG may point out an alternative default configuration
 # used for 'make defconfig'
-include $(srctree)/arch/$(SRCARCH)/Makefile
+include arch/$(SRCARCH)/Makefile
 export KBUILD_DEFCONFIG KBUILD_KCONFIG
 
 config: scripts_basic outputmakefile FORCE
@@ -647,7 +645,7 @@ KBUILD_CFLAGS	+= $(CLANG_FLAGS)
 KBUILD_AFLAGS	+= $(CLANG_FLAGS)
 endif
 
-include $(srctree)/arch/$(SRCARCH)/Makefile
+include arch/$(SRCARCH)/Makefile
 
 KBUILD_CFLAGS	+= $(call cc-option,-fno-delete-null-pointer-checks,)
 KBUILD_CFLAGS	+= $(call cc-disable-warning,frame-address,)
@@ -871,7 +869,7 @@ endif
 KBUILD_ARFLAGS := $(call ar-option,D)
 
 
-include $(srctree)/scripts/Makefile.extrawarn
+include scripts/Makefile.extrawarn
 
 # Add any arch overrides and user supplied CPPFLAGS, AFLAGS and CFLAGS as the
 # last assignments
