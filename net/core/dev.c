@@ -1733,7 +1733,8 @@ static inline int deliver_skb(struct sk_buff *skb,
 
 static inline void deliver_ptype_list_skb(struct sk_buff *skb,
 					  struct packet_type **pt,
-					  struct net_device *dev, __be16 type,
+					  struct net_device *orig_dev,
+					  __be16 type,
 					  struct list_head *ptype_list)
 {
 	struct packet_type *ptype, *pt_prev = *pt;
@@ -1742,7 +1743,7 @@ static inline void deliver_ptype_list_skb(struct sk_buff *skb,
 		if (ptype->type != type)
 			continue;
 		if (pt_prev)
-			deliver_skb(skb, pt_prev, dev);
+			deliver_skb(skb, pt_prev, orig_dev);
 		pt_prev = ptype;
 	}
 	*pt = pt_prev;
