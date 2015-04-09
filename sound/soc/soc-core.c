@@ -1376,15 +1376,8 @@ static int soc_probe_link_dais(struct snd_soc_card *card, int num, int order)
 
 #ifdef CONFIG_DEBUG_FS
 	/* add DPCM sysfs entries */
-	if (dai_link->dynamic) {
-		ret = soc_dpcm_debugfs_add(rtd);
-		if (ret < 0) {
-			dev_err(rtd->dev,
-				"ASoC: failed to add dpcm sysfs entries: %d\n",
-				ret);
-			return ret;
-		}
-	}
+	if (dai_link->dynamic)
+		soc_dpcm_debugfs_add(rtd);
 #endif
 
 	ret = device_create_file(rtd->dev, &dev_attr_pmdown_time);
