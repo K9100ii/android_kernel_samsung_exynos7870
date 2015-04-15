@@ -329,11 +329,6 @@ static bool escape_space(unsigned char c, char **dst, char *end)
 		return false;
 	}
 
-	if (out + 2 > end) {
-		*dst = out + 2;
-		return true;
-	}
-
 	if (out < end)
 		*out = '\\';
 	++out;
@@ -364,11 +359,6 @@ static bool escape_special(unsigned char c, char **dst, char *end)
 		return false;
 	}
 
-	if (out + 2 > end) {
-		*dst = out + 2;
-		return true;
-	}
-
 	if (out < end)
 		*out = '\\';
 	++out;
@@ -387,11 +377,6 @@ static bool escape_null(unsigned char c, char **dst, char *end)
 	if (c)
 		return false;
 
-	if (out + 2 > end) {
-		*dst = out + 2;
-		return true;
-	}
-
 	if (out < end)
 		*out = '\\';
 	++out;
@@ -406,11 +391,6 @@ static bool escape_null(unsigned char c, char **dst, char *end)
 static bool escape_octal(unsigned char c, char **dst, char *end)
 {
 	char *out = *dst;
-
-	if (out + 4 > end) {
-		*dst = out + 4;
-		return true;
-	}
 
 	if (out < end)
 		*out = '\\';
@@ -432,11 +412,6 @@ static bool escape_octal(unsigned char c, char **dst, char *end)
 static bool escape_hex(unsigned char c, char **dst, char *end)
 {
 	char *out = *dst;
-
-	if (out + 4 > end) {
-		*dst = out + 4;
-		return true;
-	}
 
 	if (out < end)
 		*out = '\\';
@@ -506,20 +481,17 @@ static bool escape_hex(unsigned char c, char **dst, char *end)
  * it if needs.
  *
  * Return:
- * The amount of the characters processed to the destination buffer, or
- * %-ENOMEM if the size of buffer is not enough to put an escaped character is
- * returned.
- *
- * Even in the case of error @dst pointer will be updated to point to the byte
- * after the last processed character.
+ * The total size of the escaped output that would be generated for
+ * the given input and flags. To check whether the output was
+ * truncated, compare the return value to osz. There is room left in
+ * dst for a '\0' terminator if and only if ret < osz.
  */
-int string_escape_mem(const char *src, size_t isz, char **dst, size_t osz,
+int string_escape_mem(const char *src, size_t isz, char *dst, size_t osz,
 		      unsigned int flags, const char *esc)
 {
-	char *p = *dst;
+	char *p = dst;
 	char *end = p + osz;
 	bool is_dict = esc && *esc;
-	int ret;
 
 	while (isz--) {
 		unsigned char c = *src++;
@@ -559,13 +531,6 @@ int string_escape_mem(const char *src, size_t isz, char **dst, size_t osz,
 		escape_passthrough(c, &p, end);
 	}
 
-	if (p > end) {
-		*dst = end;
-		return -ENOMEM;
-	}
-
-	ret = p - *dst;
-	*dst = p;
-	return ret;
+	return p - dst;
 }
 EXPORT_SYMBOL(string_escape_mem);
