@@ -224,6 +224,7 @@ loop:
 	cur_trans->start_time = get_seconds();
 
 	cur_trans->delayed_refs.href_root = RB_ROOT;
+	cur_trans->delayed_refs.dirty_extent_root = RB_ROOT;
 	atomic_set(&cur_trans->delayed_refs.num_entries, 0);
 	cur_trans->delayed_refs.num_heads_ready = 0;
 	cur_trans->delayed_refs.num_heads = 0;
