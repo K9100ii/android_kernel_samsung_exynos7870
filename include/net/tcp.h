@@ -840,6 +840,8 @@ enum tcp_ca_ack_event_flags {
 /* Requires ECN/ECT set on all packets */
 #define TCP_CONG_NEEDS_ECN	0x2
 
+union tcp_cc_info;
+
 struct tcp_congestion_ops {
 	struct list_head	list;
 	unsigned long flags;
@@ -864,7 +866,8 @@ struct tcp_congestion_ops {
 	/* hook for packet ack accounting (optional) */
 	void (*pkts_acked)(struct sock *sk, u32 num_acked, s32 rtt_us);
 	/* get info for inet_diag (optional) */
-	int (*get_info)(struct sock *sk, u32 ext, struct sk_buff *skb);
+	size_t (*get_info)(struct sock *sk, u32 ext, int *attr,
+			   union tcp_cc_info *info);
 
 	char 		name[TCP_CA_NAME_MAX];
 	struct module 	*owner;
