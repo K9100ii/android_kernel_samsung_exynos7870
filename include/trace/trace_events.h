@@ -16,7 +16,7 @@
  * in the structure.
  */
 
-#include <linux/ftrace_event.h>
+#include <linux/trace_events.h>
 
 /*
  * DECLARE_EVENT_CLASS can be used to add a generic function
