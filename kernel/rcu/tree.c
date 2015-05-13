@@ -722,7 +722,7 @@ void rcu_idle_enter(void)
 }
 EXPORT_SYMBOL_GPL(rcu_idle_enter);
 
-#ifdef CONFIG_RCU_USER_QS
+#ifdef CONFIG_NO_HZ_FULL
 /**
  * rcu_user_enter - inform RCU that we are resuming userspace.
  *
@@ -735,7 +735,7 @@ void rcu_user_enter(void)
 {
 	rcu_eqs_enter(1);
 }
-#endif /* CONFIG_RCU_USER_QS */
+#endif /* CONFIG_NO_HZ_FULL */
 
 /**
  * rcu_irq_exit - inform RCU that current CPU is exiting irq towards idle
@@ -849,7 +849,7 @@ void rcu_idle_exit(void)
 }
 EXPORT_SYMBOL_GPL(rcu_idle_exit);
 
-#ifdef CONFIG_RCU_USER_QS
+#ifdef CONFIG_NO_HZ_FULL
 /**
  * rcu_user_exit - inform RCU that we are exiting userspace.
  *
@@ -860,7 +860,7 @@ void rcu_user_exit(void)
 {
 	rcu_eqs_exit(1);
 }
-#endif /* CONFIG_RCU_USER_QS */
+#endif /* CONFIG_NO_HZ_FULL */
 
 /**
  * rcu_irq_enter - inform RCU that current CPU is entering irq away from idle
