@@ -1857,8 +1857,10 @@ again:
 			}
 
 			eb = read_tree_block(dest, old_bytenr, old_ptr_gen);
-			if (!eb || !extent_buffer_uptodate(eb)) {
-				ret = (!eb) ? -ENOMEM : -EIO;
+			if (IS_ERR(eb)) {
+				ret = PTR_ERR(eb);
+			} else if (!extent_buffer_uptodate(eb)) {
+				ret = -EIO;
 				free_extent_buffer(eb);
 				break;
 			}
@@ -2010,7 +2012,9 @@ int walk_down_reloc_tree(struct btrfs_root *root, struct btrfs_path *path,
 
 		bytenr = btrfs_node_blockptr(eb, path->slots[i]);
 		eb = read_tree_block(root, bytenr, ptr_gen);
-		if (!eb || !extent_buffer_uptodate(eb)) {
+		if (IS_ERR(eb)) {
+			return PTR_ERR(eb);
+		} else if (!extent_buffer_uptodate(eb)) {
 			free_extent_buffer(eb);
 			return -EIO;
 		}
@@ -2739,7 +2743,10 @@ static int do_relocation(struct btrfs_trans_handle *trans,
 		blocksize = root->nodesize;
 		generation = btrfs_node_ptr_generation(upper->eb, slot);
 		eb = read_tree_block(root, bytenr, generation);
-		if (!eb || !extent_buffer_uptodate(eb)) {
+		if (IS_ERR(eb)) {
+			err = PTR_ERR(eb);
+			goto next;
+		} else if (!extent_buffer_uptodate(eb)) {
 			free_extent_buffer(eb);
 			err = -EIO;
 			goto next;
@@ -2902,7 +2909,9 @@ static int get_tree_block_key(struct reloc_control *rc,
 	BUG_ON(block->key_ready);
 	eb = read_tree_block(rc->extent_root, block->bytenr,
 			     block->key.offset);
-	if (!eb || !extent_buffer_uptodate(eb)) {
+	if (IS_ERR(eb)) {
+		return PTR_ERR(eb);
+	} else if (!extent_buffer_uptodate(eb)) {
 		free_extent_buffer(eb);
 		return -EIO;
 	}
