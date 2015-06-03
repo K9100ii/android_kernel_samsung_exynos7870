@@ -7085,7 +7085,7 @@ void btrfs_update_commit_device_bytes_used(struct btrfs_root *root,
 	/* In order to kick the device replace finish process */
 	lock_chunks(root);
 	list_for_each_entry(em, &transaction->pending_chunks, list) {
-		map = (struct map_lookup *)em->bdev;
+		map = em->map_lookup;
 
 		for (i = 0; i < map->num_stripes; i++) {
 			dev = map->stripes[i].dev;
