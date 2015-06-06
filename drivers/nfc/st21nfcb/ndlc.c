@@ -287,6 +287,8 @@ EXPORT_SYMBOL(ndlc_probe);
 
 void ndlc_remove(struct llt_ndlc *ndlc)
 {
+	st21nfcb_nci_remove(ndlc->ndev);
+
 	/* cancel timers */
 	del_timer_sync(&ndlc->t1_timer);
 	del_timer_sync(&ndlc->t2_timer);
@@ -295,7 +297,5 @@ void ndlc_remove(struct llt_ndlc *ndlc)
 
 	skb_queue_purge(&ndlc->rcv_q);
 	skb_queue_purge(&ndlc->send_q);
-
-	st21nfcb_nci_remove(ndlc->ndev);
 }
 EXPORT_SYMBOL(ndlc_remove);
