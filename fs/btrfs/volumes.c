@@ -2761,7 +2761,7 @@ int btrfs_remove_chunk(struct btrfs_trans_handle *trans,
 	}
 	map = em->map_lookup;
 	lock_chunks(root->fs_info->chunk_root);
-	check_system_chunk(trans, extent_root, map->type, false);
+	check_system_chunk(trans, extent_root, map->type);
 	unlock_chunks(root->fs_info->chunk_root);
 
 	for (i = 0; i < map->num_stripes; i++) {
