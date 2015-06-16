@@ -367,7 +367,8 @@ static inline unsigned long ifname_compare_aligned(const char *_a,
  * so nothing needs to be done there.
  *
  * xt_percpu_counter_alloc returns the address of the percpu
- * counter, or 0 on !SMP.
+ * counter, or 0 on !SMP. We force an alignment of 16 bytes
+ * so that bytes/packets share a common cache line.
  *
  * Hence caller must use IS_ERR_VALUE to check for error, this
  * allows us to return 0 for single core systems without forcing
@@ -376,7 +377,8 @@ static inline unsigned long ifname_compare_aligned(const char *_a,
 static inline unsigned long xt_percpu_counter_alloc(void)
 {
 	if (nr_cpu_ids > 1) {
-		void __percpu *res = alloc_percpu(struct xt_counters);
+		void __percpu *res = __alloc_percpu(sizeof(struct xt_counters),
+						    sizeof(struct xt_counters));
 
 		if (res == NULL)
 			return -ENOMEM;
