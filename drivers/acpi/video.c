@@ -409,19 +409,19 @@ acpi_video_device_lcd_set_level(struct acpi_video_device *device, int level)
  */
 
 static int bqc_offset_aml_bug_workaround;
-static int __init video_set_bqc_offset(const struct dmi_system_id *d)
+static int video_set_bqc_offset(const struct dmi_system_id *d)
 {
 	bqc_offset_aml_bug_workaround = 9;
 	return 0;
 }
 
-static int __init video_disable_native_backlight(const struct dmi_system_id *d)
+static int video_disable_native_backlight(const struct dmi_system_id *d)
 {
 	use_native_backlight_dmi = false;
 	return 0;
 }
 
-static int __init video_disable_backlight_sysfs_if(
+static int video_disable_backlight_sysfs_if(
 	const struct dmi_system_id *d)
 {
 	if (disable_backlight_sysfs_if == -1)
@@ -429,7 +429,7 @@ static int __init video_disable_backlight_sysfs_if(
 	return 0;
 }
 
-static struct dmi_system_id video_dmi_table[] __initdata = {
+static struct dmi_system_id video_dmi_table[] = {
 	/*
 	 * Broken _BQC workaround http://bugzilla.kernel.org/show_bug.cgi?id=13121
 	 */
@@ -2140,6 +2140,8 @@ int acpi_video_register(void)
 	mutex_init(&video_list_lock);
 	INIT_LIST_HEAD(&video_bus_head);
 
+	dmi_check_system(video_dmi_table);
+
 	ret = acpi_bus_register_driver(&acpi_video_bus);
 	if (ret)
 		return ret;
@@ -2204,8 +2206,6 @@ static int __init acpi_video_init(void)
 	 */
 	if (acpi_disabled)
 		return 0;
-
-	dmi_check_system(video_dmi_table);
 
 	if (intel_opregion_present())
 		return 0;
