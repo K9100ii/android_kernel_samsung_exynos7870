@@ -7548,6 +7548,7 @@ unlock:
 
 		current->journal_info = outstanding_extents;
 		btrfs_free_reserved_data_space(inode, len);
+		set_bit(BTRFS_INODE_DIO_READY, &BTRFS_I(inode)->runtime_flags);
 	}
 
 	/*
@@ -8361,9 +8362,18 @@ static ssize_t btrfs_direct_IO(int rw, struct kiocb *iocb,
 			btrfs_submit_direct, flags);
 	if (rw & WRITE) {
 		current->journal_info = NULL;
-		if (ret < 0 && ret != -EIOCBQUEUED)
-			btrfs_delalloc_release_space(inode, count);
-		else if (ret >= 0 && (size_t)ret < count)
+		if (ret < 0 && ret != -EIOCBQUEUED) {
+			/*
+			 * If the error comes from submitting stage,
+			 * btrfs_get_blocsk_direct() has free'd data space,
+			 * and metadata space will be handled by
+			 * finish_ordered_fn, don't do that again to make
+			 * sure bytes_may_use is correct.
+			 */
+			if (!test_and_clear_bit(BTRFS_INODE_DIO_READY,
+				     &BTRFS_I(inode)->runtime_flags))
+				btrfs_delalloc_release_space(inode, count);
+		} else if (ret >= 0 && (size_t)ret < count)
 			btrfs_delalloc_release_space(inode,
 						     count - (size_t)ret);
 	}
