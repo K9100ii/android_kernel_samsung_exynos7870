@@ -281,6 +281,9 @@ unsigned int arpt_do_table(struct sk_buff *skb,
 	table_base = private->entries;
 	jumpstack  = (struct arpt_entry **)private->jumpstack[cpu];
 
+	/* No TEE support for arptables, so no need to switch to alternate
+	 * stack.  All targets that reenter must return absolute verdicts.
+	 */
 	e = get_entry(table_base, private->hook_entry[hook]);
 
 	acpar.in      = in;
@@ -326,11 +329,6 @@ unsigned int arpt_do_table(struct sk_buff *skb,
 			}
 			if (table_base + v
 			    != arpt_next_entry(e)) {
-
-				if (stackidx >= private->stacksize) {
-					verdict = NF_DROP;
-					break;
-				}
 				jumpstack[stackidx++] = e;
 			}
 
@@ -338,9 +336,6 @@ unsigned int arpt_do_table(struct sk_buff *skb,
 			continue;
 		}
 
-		/* Targets which reenter must return
-		 * abs. verdicts
-		 */
 		acpar.target   = t->u.kernel.target;
 		acpar.targinfo = t->data;
 		verdict = t->u.kernel.target->target(skb, &acpar);
