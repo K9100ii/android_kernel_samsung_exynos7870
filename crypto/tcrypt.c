@@ -1753,6 +1753,17 @@ static int do_test(int m)
 				NULL, 0, 16, 8, aead_speed_template_20);
 		break;
 
+	case 213:
+		test_aead_speed("rfc7539esp(chacha20,poly1305)", ENCRYPT, sec,
+				NULL, 0, 16, 8, aead_speed_template_36);
+		break;
+
+	case 214:
+		test_cipher_speed("chacha20", ENCRYPT, sec, NULL, 0,
+				  speed_template_32);
+		break;
+
+
 	case 300:
 		/* fall through */
 
@@ -1834,6 +1845,10 @@ static int do_test(int m)
 
 	case 320:
 		test_hash_speed("crct10dif", sec, generic_hash_speed_template);
+		if (mode > 300 && mode < 400) break;
+
+	case 321:
+		test_hash_speed("poly1305", sec, poly1305_speed_template);
 		if (mode > 300 && mode < 400) break;
 
 	case 399:
