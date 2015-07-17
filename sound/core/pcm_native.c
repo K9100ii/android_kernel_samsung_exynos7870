@@ -101,7 +101,7 @@ static inline void down_write_nonfifo(struct rw_semaphore *lock)
 void snd_pcm_stream_lock(struct snd_pcm_substream *substream)
 {
 	if (substream->pcm->nonatomic) {
-		down_read(&snd_pcm_link_rwsem);
+		down_read_nested(&snd_pcm_link_rwsem, SINGLE_DEPTH_NESTING);
 		mutex_lock(&substream->self_group.mutex);
 	} else {
 		read_lock(&snd_pcm_link_rwlock);
