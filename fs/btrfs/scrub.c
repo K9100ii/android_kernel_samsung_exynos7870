@@ -2966,11 +2966,12 @@ static noinline_for_stack int scrub_raid56_parity(struct scrub_ctx *sctx,
 			flags = btrfs_extent_flags(l, extent);
 			generation = btrfs_extent_generation(l, extent);
 
-			if (key.objectid < logic_start &&
-			    (flags & BTRFS_EXTENT_FLAG_TREE_BLOCK)) {
-				btrfs_err(fs_info,
-					  "scrub: tree block %llu spanning stripes, ignored. logical=%llu",
-					   key.objectid, logic_start);
+			if ((flags & BTRFS_EXTENT_FLAG_TREE_BLOCK) &&
+			    (key.objectid < logic_start ||
+			     key.objectid + bytes >
+			     logic_start + map->stripe_len)) {
+				btrfs_err(fs_info, "scrub: tree block %llu spanning stripes, ignored. logical=%llu",
+					  key.objectid, logic_start);
 				goto next;
 			}
 again:
@@ -3310,8 +3311,10 @@ static noinline_for_stack int scrub_stripe(struct scrub_ctx *sctx,
 			flags = btrfs_extent_flags(l, extent);
 			generation = btrfs_extent_generation(l, extent);
 
-			if (key.objectid < logical &&
-			    (flags & BTRFS_EXTENT_FLAG_TREE_BLOCK)) {
+			if ((flags & BTRFS_EXTENT_FLAG_TREE_BLOCK) &&
+			    (key.objectid < logical ||
+			     key.objectid + bytes >
+			     logical + map->stripe_len)) {
 				btrfs_err(fs_info,
 					   "scrub: tree block %llu spanning "
 					   "stripes, ignored. logical=%llu",
