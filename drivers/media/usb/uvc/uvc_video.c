@@ -662,6 +662,9 @@ void uvc_video_clock_update(struct uvc_streaming *stream,
 	u32 rem;
 	u64 y;
 
+	if (!uvc_hw_timestamps_param)
+		return;
+
 	/*
 	 * We will get called from __vb2_queue_cancel() if there are buffers
 	 * done but not dequeued by the user, but the sample array has already
