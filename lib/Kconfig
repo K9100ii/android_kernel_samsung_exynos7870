@@ -45,9 +45,6 @@ config GENERIC_IO
 config STMP_DEVICE
 	bool
 
-config PERCPU_RWSEM
-	boolean
-
 config ARCH_USE_CMPXCHG_LOCKREF
 	bool
 
