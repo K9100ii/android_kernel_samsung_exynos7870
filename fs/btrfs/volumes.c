@@ -2217,7 +2217,7 @@ int btrfs_init_new_device(struct btrfs_root *root, char *device_path)
 	unlock_chunks(root);
 
 	/* add sysfs device entry */
-	btrfs_kobj_add_device(root->fs_info->fs_devices, device);
+	btrfs_sysfs_add_device_link(root->fs_info->fs_devices, device);
 
 	mutex_unlock(&root->fs_info->fs_devices->device_list_mutex);
 
