@@ -2972,6 +2972,9 @@ static noinline_for_stack int scrub_raid56_parity(struct scrub_ctx *sctx,
 			     logic_start + map->stripe_len)) {
 				btrfs_err(fs_info, "scrub: tree block %llu spanning stripes, ignored. logical=%llu",
 					  key.objectid, logic_start);
+				spin_lock(&sctx->stat_lock);
+				sctx->stat.uncorrectable_errors++;
+				spin_unlock(&sctx->stat_lock);
 				goto next;
 			}
 again:
@@ -3319,6 +3322,9 @@ static noinline_for_stack int scrub_stripe(struct scrub_ctx *sctx,
 					   "scrub: tree block %llu spanning "
 					   "stripes, ignored. logical=%llu",
 				       key.objectid, logical);
+				spin_lock(&sctx->stat_lock);
+				sctx->stat.uncorrectable_errors++;
+				spin_unlock(&sctx->stat_lock);
 				goto next;
 			}
 
