@@ -238,7 +238,7 @@ static struct tcp_metrics_block *__tcp_get_metrics_req(struct request_sock *req,
 	case AF_INET:
 		saddr.addr.a4 = inet_rsk(req)->ir_loc_addr;
 		daddr.addr.a4 = inet_rsk(req)->ir_rmt_addr;
-		hash = (__force unsigned int) daddr.addr.a4;
+		hash = ipv4_addr_hash(inet_rsk(req)->ir_rmt_addr);
 		break;
 #if IS_ENABLED(CONFIG_IPV6)
 	case AF_INET6:
@@ -276,7 +276,7 @@ static struct tcp_metrics_block *__tcp_get_metrics_tw(struct inet_timewait_sock 
 		saddr.addr.a4 = tw->tw_rcv_saddr;
 		daddr.family = AF_INET;
 		daddr.addr.a4 = tw->tw_daddr;
-		hash = (__force unsigned int) daddr.addr.a4;
+		hash = ipv4_addr_hash(tw->tw_daddr);
 	}
 #if IS_ENABLED(CONFIG_IPV6)
 	else if (tw->tw_family == AF_INET6) {
@@ -285,7 +285,7 @@ static struct tcp_metrics_block *__tcp_get_metrics_tw(struct inet_timewait_sock 
 			saddr.addr.a4 = tw->tw_rcv_saddr;
 			daddr.family = AF_INET;
 			daddr.addr.a4 = tw->tw_daddr;
-			hash = (__force unsigned int) daddr.addr.a4;
+			hash = ipv4_addr_hash(tw->tw_daddr);
 		} else {
 			saddr.family = AF_INET6;
 			*(struct in6_addr *)saddr.addr.a6 = tw->tw_v6_rcv_saddr;
@@ -324,7 +324,7 @@ static struct tcp_metrics_block *tcp_get_metrics(struct sock *sk,
 		saddr.addr.a4 = inet_sk(sk)->inet_saddr;
 		daddr.family = AF_INET;
 		daddr.addr.a4 = inet_sk(sk)->inet_daddr;
-		hash = (__force unsigned int) daddr.addr.a4;
+		hash = ipv4_addr_hash(inet_sk(sk)->inet_daddr);
 	}
 #if IS_ENABLED(CONFIG_IPV6)
 	else if (sk->sk_family == AF_INET6) {
@@ -333,7 +333,7 @@ static struct tcp_metrics_block *tcp_get_metrics(struct sock *sk,
 			saddr.addr.a4 = inet_sk(sk)->inet_saddr;
 			daddr.family = AF_INET;
 			daddr.addr.a4 = inet_sk(sk)->inet_daddr;
-			hash = (__force unsigned int) daddr.addr.a4;
+			hash = ipv4_addr_hash(inet_sk(sk)->inet_daddr);
 		} else {
 			saddr.family = AF_INET6;
 			*(struct in6_addr *)saddr.addr.a6 = sk->sk_v6_rcv_saddr;
@@ -935,7 +935,7 @@ static int __parse_nl_addr(struct genl_info *info, struct inetpeer_addr *addr,
 		addr->family = AF_INET;
 		addr->addr.a4 = nla_get_in_addr(a);
 		if (hash)
-			*hash = (__force unsigned int) addr->addr.a4;
+			*hash = ipv4_addr_hash(addr->addr.a4);
 		return 0;
 	}
 	a = info->attrs[v6];
