@@ -22,6 +22,7 @@ int __percpu_init_rwsem(struct percpu_rw_semaphore *brw,
 	init_waitqueue_head(&brw->write_waitq);
 	return 0;
 }
+EXPORT_SYMBOL_GPL(__percpu_init_rwsem);
 
 void percpu_free_rwsem(struct percpu_rw_semaphore *brw)
 {
@@ -79,6 +80,7 @@ void percpu_down_read(struct percpu_rw_semaphore *brw)
 	atomic_inc(&brw->slow_read_ctr);
 	__up_read(&brw->rw_sem);
 }
+EXPORT_SYMBOL_GPL(percpu_down_read);
 
 int percpu_down_read_trylock(struct percpu_rw_semaphore *brw)
 {
@@ -104,6 +106,7 @@ void percpu_up_read(struct percpu_rw_semaphore *brw)
 	if (atomic_dec_and_test(&brw->slow_read_ctr))
 		wake_up_all(&brw->write_waitq);
 }
+EXPORT_SYMBOL_GPL(percpu_up_read);
 
 static int clear_fast_ctr(struct percpu_rw_semaphore *brw)
 {
@@ -141,6 +144,7 @@ void percpu_down_write(struct percpu_rw_semaphore *brw)
 	/* wait for all readers to complete their percpu_up_read() */
 	wait_event(brw->write_waitq, !atomic_read(&brw->slow_read_ctr));
 }
+EXPORT_SYMBOL_GPL(percpu_down_write);
 
 void percpu_up_write(struct percpu_rw_semaphore *brw)
 {
@@ -155,3 +159,4 @@ void percpu_up_write(struct percpu_rw_semaphore *brw)
 	/* the last writer unblocks update_fast_ctr() */
 	atomic_dec(&brw->write_ctr);
 }
+EXPORT_SYMBOL_GPL(percpu_up_write);
