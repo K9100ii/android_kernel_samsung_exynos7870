@@ -4172,7 +4172,12 @@ int __btrfs_check_data_free_space(struct inode *inode, u64 start, u64 len)
 	if (ret < 0)
 		return ret;
 
-	/* Use new btrfs_qgroup_reserve_data to reserve precious data space */
+	/*
+	 * Use new btrfs_qgroup_reserve_data to reserve precious data space
+	 *
+	 * TODO: Find a good method to avoid reserve data space for NOCOW
+	 * range, but don't impact performance on quota disable case.
+	 */
 	ret = btrfs_qgroup_reserve_data(inode, start, len);
 	return ret;
 }
