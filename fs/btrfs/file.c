@@ -1551,7 +1551,7 @@ static noinline ssize_t __btrfs_buffered_write(struct file *file,
 				goto reserve_metadata;
 			}
 		}
-		ret = __btrfs_check_data_free_space(inode, pos, write_bytes);
+		ret = btrfs_check_data_free_space(inode, pos, write_bytes);
 		if (ret < 0)
 			break;
 
@@ -1559,8 +1559,8 @@ reserve_metadata:
 		ret = btrfs_delalloc_reserve_metadata(inode, reserve_bytes);
 		if (ret) {
 			if (!only_release_metadata)
-				__btrfs_free_reserved_data_space(inode, pos,
-							         write_bytes);
+				btrfs_free_reserved_data_space(inode, pos,
+							       write_bytes);
 			else
 				btrfs_end_write_no_snapshoting(root);
 			break;
@@ -1630,7 +1630,7 @@ again:
 				btrfs_delalloc_release_metadata(inode,
 								release_bytes);
 			else
-				__btrfs_delalloc_release_space(inode, pos,
+				btrfs_delalloc_release_space(inode, pos,
 							     release_bytes);
 		}
 
@@ -1682,8 +1682,7 @@ again:
 			btrfs_end_write_no_snapshoting(root);
 			btrfs_delalloc_release_metadata(inode, release_bytes);
 		} else {
-			__btrfs_delalloc_release_space(inode, pos,
-						       release_bytes);
+			btrfs_delalloc_release_space(inode, pos, release_bytes);
 		}
 	}
 
@@ -2773,8 +2772,8 @@ static long btrfs_fallocate(struct file *file, int mode,
 out:
 	mutex_unlock(&inode->i_mutex);
 	/* Let go of our reservation. */
-	__btrfs_free_reserved_data_space(inode, alloc_start,
-					 alloc_end - alloc_start);
+	btrfs_free_reserved_data_space(inode, alloc_start,
+				       alloc_end - alloc_start);
 	return ret;
 }
 
