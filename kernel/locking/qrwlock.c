@@ -85,7 +85,7 @@ void queued_read_lock_slowpath(struct qrwlock *lock, u32 cnts)
 	/*
 	 * Put the reader into the wait queue
 	 */
-	arch_spin_lock(&lock->lock);
+	arch_spin_lock(&lock->wait_lock);
 
 	/*
 	 * At the head of the wait queue now, wait until the writer state
@@ -103,7 +103,7 @@ void queued_read_lock_slowpath(struct qrwlock *lock, u32 cnts)
 	/*
 	 * Signal the next one in queue to become queue head
 	 */
-	arch_spin_unlock(&lock->lock);
+	arch_spin_unlock(&lock->wait_lock);
 }
 EXPORT_SYMBOL(queued_read_lock_slowpath);
 
@@ -116,7 +116,7 @@ void queued_write_lock_slowpath(struct qrwlock *lock)
 	u32 cnts;
 
 	/* Put the writer into the wait queue */
-	arch_spin_lock(&lock->lock);
+	arch_spin_lock(&lock->wait_lock);
 
 	/* Try to acquire the lock directly if no reader is present */
 	if (!atomic_read(&lock->cnts) &&
@@ -148,6 +148,6 @@ void queued_write_lock_slowpath(struct qrwlock *lock)
 		cpu_relax_lowlatency();
 	}
 unlock:
-	arch_spin_unlock(&lock->lock);
+	arch_spin_unlock(&lock->wait_lock);
 }
 EXPORT_SYMBOL(queued_write_lock_slowpath);
