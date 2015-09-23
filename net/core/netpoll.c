@@ -149,7 +149,7 @@ static void queue_process(struct work_struct *work)
  */
 static int poll_one_napi(struct napi_struct *napi, int budget)
 {
-	int work;
+	int work = 0;
 
 	/* net_rx_action's ->poll() invocations and our's are
 	 * synchronized by this test which is only made while
@@ -158,7 +158,12 @@ static int poll_one_napi(struct napi_struct *napi, int budget)
 	if (!test_bit(NAPI_STATE_SCHED, &napi->state))
 		return budget;
 
-	set_bit(NAPI_STATE_NPSVC, &napi->state);
+	/* If we set this bit but see that it has already been set,
+	 * that indicates that napi has been disabled and we need
+	 * to abort this operation
+	 */
+	if (test_and_set_bit(NAPI_STATE_NPSVC, &napi->state))
+		goto out;
 
 	work = napi->poll(napi, budget);
 	WARN_ONCE(work > budget, "%pF exceeded budget in poll\n", napi->poll);
@@ -166,6 +171,7 @@ static int poll_one_napi(struct napi_struct *napi, int budget)
 
 	clear_bit(NAPI_STATE_NPSVC, &napi->state);
 
+out:
 	return budget - work;
 }
 
