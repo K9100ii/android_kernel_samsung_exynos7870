@@ -9878,6 +9878,7 @@ static int __btrfs_prealloc_file_range(struct inode *inode, int mode,
 	u64 cur_offset = start;
 	u64 i_size;
 	u64 cur_bytes;
+	u64 last_alloc = (u64)-1;
 	int ret = 0;
 	bool own_trans = true;
 
@@ -9894,6 +9895,13 @@ static int __btrfs_prealloc_file_range(struct inode *inode, int mode,
 
 		cur_bytes = min(num_bytes, 256ULL * 1024 * 1024);
 		cur_bytes = max(cur_bytes, min_size);
+		/*
+		 * If we are severely fragmented we could end up with really
+		 * small allocations, so if the allocator is returning small
+		 * chunks lets make its job easier by only searching for those
+		 * sized chunks.
+		 */
+		cur_bytes = min(cur_bytes, last_alloc);
 		ret = btrfs_reserve_extent(root, cur_bytes, min_size, 0,
 					   *alloc_hint, &ins, 1, 0);
 		if (ret) {
@@ -9902,6 +9910,7 @@ static int __btrfs_prealloc_file_range(struct inode *inode, int mode,
 			break;
 		}
 
+		last_alloc = ins.offset;
 		ret = insert_reserved_file_extent(trans, inode,
 						  cur_offset, ins.objectid,
 						  ins.offset, ins.offset,
