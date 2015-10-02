@@ -1739,7 +1739,7 @@ static void bitmap_set_bits(struct btrfs_free_space_ctl *ctl,
  */
 static int search_bitmap(struct btrfs_free_space_ctl *ctl,
 			 struct btrfs_free_space *bitmap_info, u64 *offset,
-			 u64 *bytes)
+			 u64 *bytes, bool for_alloc)
 {
 	unsigned long found_bits = 0;
 	unsigned long max_bits = 0;
@@ -1751,7 +1751,8 @@ static int search_bitmap(struct btrfs_free_space_ctl *ctl,
 	 * Skip searching the bitmap if we don't have a contiguous section that
 	 * is large enough for this allocation.
 	 */
-	if (bitmap_info->max_extent_size &&
+	if (for_alloc &&
+	    bitmap_info->max_extent_size &&
 	    bitmap_info->max_extent_size < *bytes) {
 		*bytes = bitmap_info->max_extent_size;
 		return -1;
@@ -1762,6 +1763,10 @@ static int search_bitmap(struct btrfs_free_space_ctl *ctl,
 	bits = bytes_to_bits(*bytes, ctl->unit);
 
 	for_each_set_bit_from(i, bitmap_info->bitmap, BITS_PER_BITMAP) {
+		if (for_alloc && bits == 1) {
+			found_bits = 1;
+			break;
+		}
 		next_zero = find_next_zero_bit(bitmap_info->bitmap,
 					       BITS_PER_BITMAP, i);
 		extent_bits = next_zero - i;
@@ -1833,7 +1838,7 @@ find_free_space(struct btrfs_free_space_ctl *ctl, u64 *offset, u64 *bytes,
 		if (entry->bitmap) {
 			u64 size = *bytes;
 
-			ret = search_bitmap(ctl, entry, &tmp, &size);
+			ret = search_bitmap(ctl, entry, &tmp, &size, true);
 			if (!ret) {
 				*offset = tmp;
 				*bytes = size;
@@ -1894,7 +1899,8 @@ again:
 	search_start = *offset;
 	search_bytes = ctl->unit;
 	search_bytes = min(search_bytes, end - search_start + 1);
-	ret = search_bitmap(ctl, bitmap_info, &search_start, &search_bytes);
+	ret = search_bitmap(ctl, bitmap_info, &search_start, &search_bytes,
+			    false);
 	if (ret < 0 || search_start != *offset)
 		return -EINVAL;
 
@@ -1939,7 +1945,7 @@ again:
 		search_start = *offset;
 		search_bytes = ctl->unit;
 		ret = search_bitmap(ctl, bitmap_info, &search_start,
-				    &search_bytes);
+				    &search_bytes, false);
 		if (ret < 0 || search_start != *offset)
 			return -EAGAIN;
 
@@ -2694,7 +2700,7 @@ static u64 btrfs_alloc_from_bitmap(struct btrfs_block_group_cache *block_group,
 	search_start = min_start;
 	search_bytes = bytes;
 
-	err = search_bitmap(ctl, entry, &search_start, &search_bytes);
+	err = search_bitmap(ctl, entry, &search_start, &search_bytes, true);
 	if (err) {
 		if (search_bytes > *max_extent_size)
 			*max_extent_size = search_bytes;
@@ -3271,7 +3277,7 @@ static int trim_bitmaps(struct btrfs_block_group_cache *block_group,
 		}
 
 		bytes = minlen;
-		ret2 = search_bitmap(ctl, entry, &start, &bytes);
+		ret2 = search_bitmap(ctl, entry, &start, &bytes, false);
 		if (ret2 || start >= end) {
 			spin_unlock(&ctl->tree_lock);
 			mutex_unlock(&ctl->cache_writeout_mutex);
@@ -3424,7 +3430,7 @@ u64 btrfs_find_ino_for_alloc(struct btrfs_root *fs_root)
 		u64 count = 1;
 		int ret;
 
-		ret = search_bitmap(ctl, entry, &offset, &count);
+		ret = search_bitmap(ctl, entry, &offset, &count, true);
 		/* Logic error; Should be empty if it can't find anything */
 		ASSERT(!ret);
 
@@ -3599,10 +3605,6 @@ again:
 
 	bytes_added = add_bytes_to_bitmap(ctl, bitmap_info, offset, bytes);
 
-	/* We used the newly allocated info, set the max_extent_size to bytes */
-	if (!info)
-		bitmap_info->max_extent_size = bytes_added;
-
 	bytes -= bytes_added;
 	offset += bytes_added;
 	spin_unlock(&ctl->tree_lock);
@@ -3646,7 +3648,7 @@ have_info:
 
 		bit_off = offset;
 		bit_bytes = ctl->unit;
-		ret = search_bitmap(ctl, info, &bit_off, &bit_bytes);
+		ret = search_bitmap(ctl, info, &bit_off, &bit_bytes, false);
 		if (!ret) {
 			if (bit_off == offset) {
 				ret = 1;
