@@ -381,8 +381,8 @@ int btrfs_dev_replace_start(struct btrfs_root *root,
 	WARN_ON(!tgt_device);
 	dev_replace->tgtdev = tgt_device;
 
-	printk_in_rcu(KERN_INFO
-		      "BTRFS: dev_replace from %s (devid %llu) to %s started\n",
+	btrfs_info_in_rcu(root->fs_info,
+		      "dev_replace from %s (devid %llu) to %s started",
 		      src_device->missing ? "<missing disk>" :
 		        rcu_str_deref(src_device->name),
 		      src_device->devid,
@@ -537,8 +537,8 @@ static int btrfs_dev_replace_finishing(struct btrfs_fs_info *fs_info,
 								src_device,
 								tgt_device);
 	} else {
-		printk_in_rcu(KERN_ERR
-			      "BTRFS: btrfs_scrub_dev(%s, %llu, %s) failed %d\n",
+		btrfs_err_in_rcu(root->fs_info,
+			      "btrfs_scrub_dev(%s, %llu, %s) failed %d",
 			      src_device->missing ? "<missing disk>" :
 			        rcu_str_deref(src_device->name),
 			      src_device->devid,
@@ -554,8 +554,8 @@ static int btrfs_dev_replace_finishing(struct btrfs_fs_info *fs_info,
 		return 0;
 	}
 
-	printk_in_rcu(KERN_INFO
-		      "BTRFS: dev_replace from %s (devid %llu) to %s finished\n",
+	btrfs_info_in_rcu(root->fs_info,
+		      "dev_replace from %s (devid %llu) to %s finished",
 		      src_device->missing ? "<missing disk>" :
 		        rcu_str_deref(src_device->name),
 		      src_device->devid,
@@ -829,8 +829,8 @@ static int btrfs_dev_replace_kthread(void *data)
 		progress = status_args->status.progress_1000;
 		kfree(status_args);
 		progress = div_u64(progress, 10);
-		printk_in_rcu(KERN_INFO
-			"BTRFS: continuing dev_replace from %s (devid %llu) to %s @%u%%\n",
+		btrfs_info_in_rcu(fs_info,
+			"continuing dev_replace from %s (devid %llu) to %s @%u%%",
 			dev_replace->srcdev->missing ? "<missing disk>" :
 			rcu_str_deref(dev_replace->srcdev->name),
 			dev_replace->srcdev->devid,
