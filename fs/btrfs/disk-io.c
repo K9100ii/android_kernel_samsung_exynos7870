@@ -2295,8 +2295,7 @@ static int btrfs_replay_log(struct btrfs_fs_info *fs_info,
 	u64 bytenr = btrfs_super_log_root(disk_super);
 
 	if (fs_devices->rw_devices == 0) {
-		printk(KERN_WARNING "BTRFS: log replay required "
-		       "on RO media\n");
+		btrfs_warn(fs_info, "log replay required on RO media");
 		return -EIO;
 	}
 
@@ -2311,12 +2310,12 @@ static int btrfs_replay_log(struct btrfs_fs_info *fs_info,
 	log_tree_root->node = read_tree_block(tree_root, bytenr,
 			fs_info->generation + 1);
 	if (IS_ERR(log_tree_root->node)) {
-		printk(KERN_ERR "BTRFS: failed to read log tree\n");
+		btrfs_warn(fs_info, "failed to read log tree");
 		ret = PTR_ERR(log_tree_root->node);
 		kfree(log_tree_root);
 		return ret;
 	} else if (!extent_buffer_uptodate(log_tree_root->node)) {
-		printk(KERN_ERR "BTRFS: failed to read log tree\n");
+		btrfs_err(fs_info, "failed to read log tree");
 		free_extent_buffer(log_tree_root->node);
 		kfree(log_tree_root);
 		return -EIO;
@@ -3287,8 +3286,9 @@ static int write_dev_supers(struct btrfs_device *device,
 			bh = __getblk(device->bdev, bytenr / 4096,
 				      BTRFS_SUPER_INFO_SIZE);
 			if (!bh) {
-				printk(KERN_ERR "BTRFS: couldn't get super "
-				       "buffer head for bytenr %Lu\n", bytenr);
+				btrfs_err(device->dev_root->fs_info,
+				    "couldn't get super buffer head for bytenr %llu",
+				    bytenr);
 				errors++;
 				continue;
 			}
