@@ -238,10 +238,16 @@ void write_nic_byte_E(struct net_device *dev, int indx, u8 data)
 	int status;
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u8 *usbdata = kzalloc(sizeof(data), GFP_KERNEL);
+
+	if (!usbdata)
+		return;
+	*usbdata = data;
 
 	status = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
 				 RTL8187_REQ_SET_REGS, RTL8187_REQT_WRITE,
-				 indx|0xfe00, 0, &data, 1, HZ / 2);
+				 indx | 0xfe00, 0, usbdata, 1, HZ / 2);
+	kfree(usbdata);
 
 	if (status < 0)
 		netdev_err(dev, "write_nic_byte_E TimeOut! status: %d\n", status);
@@ -252,10 +258,16 @@ int read_nic_byte_E(struct net_device *dev, int indx, u8 *data)
 	int status;
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u8 *usbdata = kzalloc(sizeof(u8), GFP_KERNEL);
+
+	if (!usbdata)
+		return -ENOMEM;
 
 	status = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
 				 RTL8187_REQ_GET_REGS, RTL8187_REQT_READ,
-				 indx|0xfe00, 0, data, 1, HZ / 2);
+				 indx | 0xfe00, 0, usbdata, 1, HZ / 2);
+	*data = *usbdata;
+	kfree(usbdata);
 
 	if (status < 0) {
 		netdev_err(dev, "%s failure status: %d\n", __func__, status);
@@ -271,10 +283,17 @@ void write_nic_byte(struct net_device *dev, int indx, u8 data)
 
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u8 *usbdata = kzalloc(sizeof(data), GFP_KERNEL);
+
+	if (!usbdata)
+		return;
+	*usbdata = data;
 
 	status = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
 				 RTL8187_REQ_SET_REGS, RTL8187_REQT_WRITE,
-				 (indx&0xff)|0xff00, (indx>>8)&0x0f, &data, 1, HZ / 2);
+				 (indx & 0xff) | 0xff00, (indx >> 8) & 0x0f,
+				 usbdata, 1, HZ / 2);
+	kfree(usbdata);
 
 	if (status < 0)
 		netdev_err(dev, "write_nic_byte TimeOut! status: %d\n", status);
@@ -290,10 +309,17 @@ void write_nic_word(struct net_device *dev, int indx, u16 data)
 
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u16 *usbdata = kzalloc(sizeof(data), GFP_KERNEL);
+
+	if (!usbdata)
+		return;
+	*usbdata = data;
 
 	status = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
 				 RTL8187_REQ_SET_REGS, RTL8187_REQT_WRITE,
-				 (indx&0xff)|0xff00, (indx>>8)&0x0f, &data, 2, HZ / 2);
+				 (indx & 0xff) | 0xff00, (indx >> 8) & 0x0f,
+				 usbdata, 2, HZ / 2);
+	kfree(usbdata);
 
 	if (status < 0)
 		netdev_err(dev, "write_nic_word TimeOut! status: %d\n", status);
@@ -308,10 +334,17 @@ void write_nic_dword(struct net_device *dev, int indx, u32 data)
 
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u32 *usbdata = kzalloc(sizeof(data), GFP_KERNEL);
+
+	if (!usbdata)
+		return;
+	*usbdata = data;
 
 	status = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
 				 RTL8187_REQ_SET_REGS, RTL8187_REQT_WRITE,
-				 (indx&0xff)|0xff00, (indx>>8)&0x0f, &data, 4, HZ / 2);
+				 (indx & 0xff) | 0xff00, (indx >> 8) & 0x0f,
+				 usbdata, 4, HZ / 2);
+	kfree(usbdata);
 
 
 	if (status < 0)
@@ -326,10 +359,17 @@ int read_nic_byte(struct net_device *dev, int indx, u8 *data)
 	int status;
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u8 *usbdata = kzalloc(sizeof(u8), GFP_KERNEL);
+
+	if (!usbdata)
+		return -ENOMEM;
 
 	status = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
 				 RTL8187_REQ_GET_REGS, RTL8187_REQT_READ,
-				 (indx&0xff)|0xff00, (indx>>8)&0x0f, data, 1, HZ / 2);
+				 (indx & 0xff) | 0xff00, (indx >> 8) & 0x0f,
+				 usbdata, 1, HZ / 2);
+	*data = *usbdata;
+	kfree(usbdata);
 
 	if (status < 0) {
 		netdev_err(dev, "%s failure status: %d\n", __func__, status);
@@ -346,11 +386,17 @@ int read_nic_word(struct net_device *dev, int indx, u16 *data)
 	int status;
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u16 *usbdata = kzalloc(sizeof(u16), GFP_KERNEL);
+
+	if (!usbdata)
+		return -ENOMEM;
 
 	status = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
 				 RTL8187_REQ_GET_REGS, RTL8187_REQT_READ,
-				 (indx&0xff)|0xff00, (indx>>8)&0x0f,
-				 data, 2, HZ / 2);
+				 (indx & 0xff) | 0xff00, (indx >> 8) & 0x0f,
+				 usbdata, 2, HZ / 2);
+	*data = *usbdata;
+	kfree(usbdata);
 
 	if (status < 0) {
 		netdev_err(dev, "%s failure status: %d\n", __func__, status);
@@ -365,10 +411,16 @@ static int read_nic_word_E(struct net_device *dev, int indx, u16 *data)
 	int status;
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u16 *usbdata = kzalloc(sizeof(u16), GFP_KERNEL);
+
+	if (!usbdata)
+		return -ENOMEM;
 
 	status = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
 				 RTL8187_REQ_GET_REGS, RTL8187_REQT_READ,
-				 indx|0xfe00, 0, data, 2, HZ / 2);
+				 indx | 0xfe00, 0, usbdata, 2, HZ / 2);
+	*data = *usbdata;
+	kfree(usbdata);
 
 	if (status < 0) {
 		netdev_err(dev, "%s failure status: %d\n", __func__, status);
@@ -384,11 +436,17 @@ int read_nic_dword(struct net_device *dev, int indx, u32 *data)
 
 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
 	struct usb_device *udev = priv->udev;
+	u32 *usbdata = kzalloc(sizeof(u32), GFP_KERNEL);
+
+	if (!usbdata)
+		return -ENOMEM;
 
 	status = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
 				 RTL8187_REQ_GET_REGS, RTL8187_REQT_READ,
-				 (indx&0xff)|0xff00, (indx>>8)&0x0f,
-				 data, 4, HZ / 2);
+				 (indx & 0xff) | 0xff00, (indx >> 8) & 0x0f,
+				 usbdata, 4, HZ / 2);
+	*data = *usbdata;
+	kfree(usbdata);
 
 	if (status < 0) {
 		netdev_err(dev, "%s failure status: %d\n", __func__, status);
