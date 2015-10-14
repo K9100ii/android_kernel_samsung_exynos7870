@@ -54,6 +54,7 @@ extern struct fs_struct init_fs;
 	.cputimer	= { 						\
 		.cputime_atomic	= INIT_CPUTIME_ATOMIC,			\
 		.running	= false,				\
+		.checking_timer = false,				\
 	},								\
 	.cred_guard_mutex =						\
 		 __MUTEX_INITIALIZER(sig.cred_guard_mutex),		\
