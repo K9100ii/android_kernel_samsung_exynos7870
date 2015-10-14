@@ -53,7 +53,7 @@ extern struct fs_struct init_fs;
 	.rlim		= INIT_RLIMITS,					\
 	.cputimer	= { 						\
 		.cputime_atomic	= INIT_CPUTIME_ATOMIC,			\
-		.running	= 0,					\
+		.running	= false,				\
 	},								\
 	.cred_guard_mutex =						\
 		 __MUTEX_INITIALIZER(sig.cred_guard_mutex),		\
