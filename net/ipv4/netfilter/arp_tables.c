@@ -633,7 +633,7 @@ static inline void cleanup_entry(struct arpt_entry *e)
  * newinfo).
  */
 static int translate_table(struct xt_table_info *newinfo, void *entry0,
-                           const struct arpt_replace *repl)
+			   const struct arpt_replace *repl)
 {
 	struct xt_percpu_counter_alloc_state alloc_state = { 0 };
 	struct arpt_entry *iter;
@@ -905,7 +905,7 @@ static int compat_table_info(const struct xt_table_info *info,
 #endif
 
 static int get_info(struct net *net, void __user *user,
-                    const int *len, int compat)
+		    const int *len, int compat)
 {
 	char name[XT_TABLE_MAXNAMELEN];
 	struct xt_table *t;
@@ -1083,7 +1083,7 @@ static int __do_replace(struct net *net, const char *name,
 }
 
 static int do_replace(struct net *net, const void __user *user,
-                      unsigned int len)
+		      unsigned int len)
 {
 	int ret;
 	struct arpt_replace tmp;
