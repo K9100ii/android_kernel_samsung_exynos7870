@@ -859,7 +859,7 @@ next_slot:
 						disk_bytenr, num_bytes, 0,
 						root->root_key.objectid,
 						new_key.objectid,
-						start - extent_offset, 1);
+						start - extent_offset);
 				BUG_ON(ret); /* -ENOMEM */
 			}
 			key.offset = start;
@@ -937,7 +937,7 @@ delete_extent_item:
 						disk_bytenr, num_bytes, 0,
 						root->root_key.objectid,
 						key.objectid, key.offset -
-						extent_offset, 0);
+						extent_offset);
 				BUG_ON(ret); /* -ENOMEM */
 				inode_sub_bytes(inode,
 						extent_end - key.offset);
@@ -1216,7 +1216,7 @@ again:
 
 		ret = btrfs_inc_extent_ref(trans, root, bytenr, num_bytes, 0,
 					   root->root_key.objectid,
-					   ino, orig_offset, 1);
+					   ino, orig_offset);
 		BUG_ON(ret); /* -ENOMEM */
 
 		if (split == start) {
@@ -1243,7 +1243,7 @@ again:
 		del_nr++;
 		ret = btrfs_free_extent(trans, root, bytenr, num_bytes,
 					0, root->root_key.objectid,
-					ino, orig_offset, 0);
+					ino, orig_offset);
 		BUG_ON(ret); /* -ENOMEM */
 	}
 	other_start = 0;
@@ -1260,7 +1260,7 @@ again:
 		del_nr++;
 		ret = btrfs_free_extent(trans, root, bytenr, num_bytes,
 					0, root->root_key.objectid,
-					ino, orig_offset, 0);
+					ino, orig_offset);
 		BUG_ON(ret); /* -ENOMEM */
 	}
 	if (del_nr == 0) {
