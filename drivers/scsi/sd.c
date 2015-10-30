@@ -204,6 +204,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
 	buffer_data[2] &= ~0x05;
 	buffer_data[2] |= wce << 2 | rcd;
 	sp = buffer_data[0] & 0x80 ? 1 : 0;
+	buffer_data[0] &= ~0x80;
 
 	/*
 	 * Ensure WP, DPOFUA, and RESERVED fields are cleared in
