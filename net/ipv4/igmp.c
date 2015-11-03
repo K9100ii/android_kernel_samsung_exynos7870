@@ -2241,10 +2241,10 @@ int ip_mc_msfget(struct sock *sk, struct ip_msfilter *msf,
 	struct ip_sf_socklist *psl;
 	struct net *net = sock_net(sk);
 
+	ASSERT_RTNL();
+
 	if (!ipv4_is_multicast(addr))
 		return -EINVAL;
-
-	rtnl_lock();
 
 	imr.imr_multiaddr.s_addr = msf->imsf_multiaddr;
 	imr.imr_address.s_addr = msf->imsf_interface;
@@ -2266,7 +2266,6 @@ int ip_mc_msfget(struct sock *sk, struct ip_msfilter *msf,
 		goto done;
 	msf->imsf_fmode = pmc->sfmode;
 	psl = rtnl_dereference(pmc->sflist);
-	rtnl_unlock();
 	if (!psl) {
 		len = 0;
 		count = 0;
@@ -2285,7 +2284,6 @@ int ip_mc_msfget(struct sock *sk, struct ip_msfilter *msf,
 		return -EFAULT;
 	return 0;
 done:
-	rtnl_unlock();
 	return err;
 }
 
@@ -2299,14 +2297,14 @@ int ip_mc_gsfget(struct sock *sk, struct group_filter *gsf,
 	struct inet_sock *inet = inet_sk(sk);
 	struct ip_sf_socklist *psl;
 
+	ASSERT_RTNL();
+
 	psin = (struct sockaddr_in *)&gsf->gf_group;
 	if (psin->sin_family != AF_INET)
 		return -EINVAL;
 	addr = psin->sin_addr.s_addr;
 	if (!ipv4_is_multicast(addr))
 		return -EINVAL;
-
-	rtnl_lock();
 
 	err = -EADDRNOTAVAIL;
 
@@ -2319,7 +2317,6 @@ int ip_mc_gsfget(struct sock *sk, struct group_filter *gsf,
 		goto done;
 	gsf->gf_fmode = pmc->sfmode;
 	psl = rtnl_dereference(pmc->sflist);
-	rtnl_unlock();
 	count = psl ? psl->sl_count : 0;
 	copycount = count < gsf->gf_numsrc ? count : gsf->gf_numsrc;
 	gsf->gf_numsrc = count;
@@ -2339,7 +2336,6 @@ int ip_mc_gsfget(struct sock *sk, struct group_filter *gsf,
 	}
 	return 0;
 done:
-	rtnl_unlock();
 	return err;
 }
 
