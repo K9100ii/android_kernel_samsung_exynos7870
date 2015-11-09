@@ -708,8 +708,6 @@ static int f2fs_mknod(struct inode *dir, struct dentry *dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	if (!new_valid_dev(rdev))
-		return -EINVAL;
 	err = f2fs_is_checkpoint_ready(sbi);
 	if (err)
 		return err;
