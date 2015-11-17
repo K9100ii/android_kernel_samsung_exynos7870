@@ -3567,6 +3567,7 @@ int scrub_enumerate_chunks(struct scrub_ctx *sctx,
 	u64 chunk_objectid;
 	u64 chunk_offset;
 	int ret = 0;
+	int ro_set;
 	int slot;
 	struct extent_buffer *l;
 	struct btrfs_key key;
@@ -3654,7 +3655,21 @@ int scrub_enumerate_chunks(struct scrub_ctx *sctx,
 		scrub_pause_on(fs_info);
 		ret = btrfs_inc_block_group_ro(root, cache);
 		scrub_pause_off(fs_info);
-		if (ret) {
+
+		if (ret == 0) {
+			ro_set = 1;
+		} else if (ret == -ENOSPC) {
+			/*
+			 * btrfs_inc_block_group_ro return -ENOSPC when it
+			 * failed in creating new chunk for metadata.
+			 * It is not a problem for scrub/replace, because
+			 * metadata are always cowed, and our scrub paused
+			 * commit_transactions.
+			 */
+			ro_set = 0;
+		} else {
+			btrfs_warn(fs_info, "failed setting block group ro, ret=%d\n",
+				   ret);
 			btrfs_put_block_group(cache);
 			break;
 		}
@@ -3702,7 +3717,8 @@ int scrub_enumerate_chunks(struct scrub_ctx *sctx,
 		mutex_unlock(&fs_info->scrub_lock);
 		wake_up(&fs_info->scrub_pause_wait);
 
-		btrfs_dec_block_group_ro(root, cache);
+		if (ro_set)
+			btrfs_dec_block_group_ro(root, cache);
 
 		btrfs_put_block_group(cache);
 		if (ret)
