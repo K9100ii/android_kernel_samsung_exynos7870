@@ -65,7 +65,11 @@ extern void purge_tlb_entries(struct mm_struct *, unsigned long);
 	printk("%s:%d: bad pgd %08lx.\n", __FILE__, __LINE__, (unsigned long)pgd_val(e))
 
 /* This is the size of the initially mapped kernel memory */
-#define KERNEL_INITIAL_ORDER	24	/* 0 to 1<<24 = 16MB */
+#ifdef CONFIG_64BIT
+#define KERNEL_INITIAL_ORDER	25	/* 1<<25 = 32MB */
+#else
+#define KERNEL_INITIAL_ORDER	24	/* 1<<24 = 16MB */
+#endif
 #define KERNEL_INITIAL_SIZE	(1 << KERNEL_INITIAL_ORDER)
 
 #if defined(CONFIG_64BIT) && defined(CONFIG_PARISC_PAGE_SIZE_4KB)
