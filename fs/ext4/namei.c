@@ -3285,6 +3285,12 @@ static int ext4_link(struct dentry *old_dentry,
 	if (ext4_encrypted_inode(dir) &&
 	    !ext4_is_child_context_consistent_with_parent(dir, inode))
 		return -EXDEV;
+
+       if ((ext4_test_inode_flag(dir, EXT4_INODE_PROJINHERIT)) &&
+	   (!projid_eq(EXT4_I(dir)->i_projid,
+		       EXT4_I(old_dentry->d_inode)->i_projid)))
+		return -EXDEV;
+
 	err = dquot_initialize(dir);
 	if (err)
 		return err;
@@ -3617,6 +3623,11 @@ static int ext4_rename(struct inode *old_dir, struct dentry *old_dentry,
 	int credits;
 	u8 old_file_type;
 
+	if ((ext4_test_inode_flag(new_dir, EXT4_INODE_PROJINHERIT)) &&
+	    (!projid_eq(EXT4_I(new_dir)->i_projid,
+			EXT4_I(old_dentry->d_inode)->i_projid)))
+		return -EXDEV;
+
 	if ((ext4_encrypted_inode(old_dir) &&
 	     !ext4_has_encryption_key(old_dir)) ||
 	    (ext4_encrypted_inode(new_dir) &&
@@ -3841,6 +3852,14 @@ static int ext4_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 							   old.inode) ||
 	     !ext4_is_child_context_consistent_with_parent(old_dir,
 							   new.inode)))
+		return -EXDEV;
+
+	if ((ext4_test_inode_flag(new_dir, EXT4_INODE_PROJINHERIT) &&
+	     !projid_eq(EXT4_I(new_dir)->i_projid,
+			EXT4_I(old_dentry->d_inode)->i_projid)) ||
+	    (ext4_test_inode_flag(old_dir, EXT4_INODE_PROJINHERIT) &&
+	     !projid_eq(EXT4_I(old_dir)->i_projid,
+			EXT4_I(new_dentry->d_inode)->i_projid)))
 		return -EXDEV;
 
 	retval = dquot_initialize(old.dir);
