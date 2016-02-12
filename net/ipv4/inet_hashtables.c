@@ -497,124 +497,124 @@ int __inet_hash_connect(struct inet_timewait_death_row *death_row,
 		int (*hash)(struct sock *sk, struct inet_timewait_sock *twp))
 {
 	struct inet_hashinfo *hinfo = death_row->hashinfo;
-	const unsigned short snum = inet_sk(sk)->inet_num;
+	struct inet_timewait_sock *tw = NULL;
 	struct inet_bind_hashbucket *head;
-	struct inet_bind_bucket *tb;
-	int ret;
+	int port = inet_sk(sk)->inet_num;
 	struct net *net = sock_net(sk);
 	int twrefcnt = 1;
+	struct inet_bind_bucket *tb;
+	u32 remaining, offset;
+	int ret, i, low, high;
+	u32 index;
 
-	if (!snum) {
-		int i, remaining, low, high, port;
-		u32 index;
-		u32 offset;
-		struct inet_timewait_sock *tw = NULL;
-
-		net_get_random_once(table_perturb,
-				    INET_TABLE_PERTURB_SIZE * sizeof(*table_perturb));
-		index = port_offset & (INET_TABLE_PERTURB_SIZE - 1);
-
-		offset = READ_ONCE(table_perturb[index]) + (port_offset >> 32);
-
-		inet_get_local_port_range(net, &low, &high);
-		remaining = (high - low) + 1;
-
-		/* By starting with offset being an even number,
-		 * we tend to leave about 50% of ports for other uses,
-		 * like bind(0).
-		 */
-		offset &= ~1;
-
-		local_bh_disable();
-		for (i = 0; i < remaining; i++) {
-			port = low + (i + offset) % remaining;
-			if (inet_is_local_reserved_port(net, port))
-				continue;
-			head = &hinfo->bhash[inet_bhashfn(net, port,
-					hinfo->bhash_size)];
-			spin_lock(&head->lock);
-
-			/* Does not bother with rcv_saddr checks,
-			 * because the established check is already
-			 * unique enough.
-			 */
-			inet_bind_bucket_for_each(tb, &head->chain) {
-				if (net_eq(ib_net(tb), net) &&
-				    tb->port == port) {
-					if (tb->fastreuse >= 0 ||
-					    tb->fastreuseport >= 0)
-						goto next_port;
-					WARN_ON(hlist_empty(&tb->owners));
-					if (!check_established(death_row, sk,
-								port, &tw))
-						goto ok;
-					goto next_port;
-				}
-			}
-
-			tb = inet_bind_bucket_create(hinfo->bind_bucket_cachep,
-					net, head, port);
-			if (!tb) {
-				spin_unlock(&head->lock);
-				break;
-			}
-			tb->fastreuse = -1;
-			tb->fastreuseport = -1;
-			goto ok;
-
-		next_port:
-			spin_unlock(&head->lock);
+	if (port) {
+		head = &hinfo->bhash[inet_bhashfn(net, port,
+						  hinfo->bhash_size)];
+		tb = inet_csk(sk)->icsk_bind_hash;
+		spin_lock_bh(&head->lock);
+		if (sk_head(&tb->owners) == sk && !sk->sk_bind_node.next) {
+			hash(sk, NULL);
+			spin_unlock_bh(&head->lock);
+			return 0;
 		}
-		local_bh_enable();
-
-		return -EADDRNOTAVAIL;
-
-ok:
-		/* Here we want to add a little bit of randomness to the next source
-		 * port that will be chosen. We use a max() with a random here so that
-		 * on low contention the randomness is maximal and on high contention
-		 * it may be inexistent.
-		 */
-		i = max_t(int, i, (prandom_u32() & 7) * 2);
-		WRITE_ONCE(table_perturb[index], READ_ONCE(table_perturb[index]) + i);
-
-		/* Head lock still held and bh's disabled */
-		inet_bind_hash(sk, tb, port);
-		if (sk_unhashed(sk)) {
-			inet_sk(sk)->inet_sport = htons(port);
-			twrefcnt += hash(sk, tw);
-		}
-		if (tw)
-			twrefcnt += inet_twsk_bind_unhash(tw, hinfo);
-		spin_unlock(&head->lock);
-
-		if (tw) {
-			inet_twsk_deschedule(tw, death_row);
-			while (twrefcnt) {
-				twrefcnt--;
-				inet_twsk_put(tw);
-			}
-		}
-
-		ret = 0;
-		goto out;
-	}
-
-	head = &hinfo->bhash[inet_bhashfn(net, snum, hinfo->bhash_size)];
-	tb  = inet_csk(sk)->icsk_bind_hash;
-	spin_lock_bh(&head->lock);
-	if (sk_head(&tb->owners) == sk && !sk->sk_bind_node.next) {
-		hash(sk, NULL);
-		spin_unlock_bh(&head->lock);
-		return 0;
-	} else {
 		spin_unlock(&head->lock);
 		/* No definite answer... Walk to established hash table */
-		ret = check_established(death_row, sk, snum, NULL);
-out:
+		ret = check_established(death_row, sk, port, NULL);
 		local_bh_enable();
 		return ret;
 	}
+
+	inet_get_local_port_range(net, &low, &high);
+	high++; /* [32768, 60999] -> [32768, 61000[ */
+	remaining = high - low;
+	if (likely(remaining > 1))
+		remaining &= ~1U;
+
+	net_get_random_once(table_perturb,
+			    INET_TABLE_PERTURB_SIZE * sizeof(*table_perturb));
+	index = port_offset & (INET_TABLE_PERTURB_SIZE - 1);
+
+	offset = READ_ONCE(table_perturb[index]) + (port_offset >> 32);
+	offset %= remaining;
+
+	/* In first pass we try ports of @low parity.
+	 * inet_csk_get_port() does the opposite choice.
+	 */
+	offset &= ~1U;
+other_parity_scan:
+	port = low + offset;
+	for (i = 0; i < remaining; i += 2, port += 2) {
+		if (unlikely(port >= high))
+			port -= remaining;
+		if (inet_is_local_reserved_port(net, port))
+			continue;
+		head = &hinfo->bhash[inet_bhashfn(net, port,
+						  hinfo->bhash_size)];
+		spin_lock_bh(&head->lock);
+
+		/* Does not bother with rcv_saddr checks, because
+		 * the established check is already unique enough.
+		 */
+		inet_bind_bucket_for_each(tb, &head->chain) {
+			if (net_eq(ib_net(tb), net) && tb->port == port) {
+				if (tb->fastreuse >= 0 ||
+				    tb->fastreuseport >= 0)
+					goto next_port;
+				WARN_ON(hlist_empty(&tb->owners));
+				if (!check_established(death_row, sk,
+						       port, &tw))
+					goto ok;
+				goto next_port;
+			}
+		}
+
+		tb = inet_bind_bucket_create(hinfo->bind_bucket_cachep,
+					     net, head, port);
+		if (!tb) {
+			spin_unlock_bh(&head->lock);
+			return -ENOMEM;
+		}
+		tb->fastreuse = -1;
+		tb->fastreuseport = -1;
+		goto ok;
+next_port:
+		spin_unlock_bh(&head->lock);
+		cond_resched();
+	}
+
+	offset++;
+	if ((offset & 1) && remaining > 1)
+		goto other_parity_scan;
+
+	return -EADDRNOTAVAIL;
+
+ok:
+	/* Here we want to add a little bit of randomness to the next source
+	 * port that will be chosen. We use a max() with a random here so that
+	 * on low contention the randomness is maximal and on high contention
+	 * it may be inexistent.
+	 */
+	i = max_t(int, i, (prandom_u32() & 7) * 2);
+	WRITE_ONCE(table_perturb[index], READ_ONCE(table_perturb[index]) + i);
+
+	/* Head lock still held and bh's disabled */
+	inet_bind_hash(sk, tb, port);
+	if (sk_unhashed(sk)) {
+		inet_sk(sk)->inet_sport = htons(port);
+		twrefcnt += hash(sk, tw);
+	}
+	if (tw)
+		twrefcnt += inet_twsk_bind_unhash(tw, hinfo);
+	spin_unlock(&head->lock);
+	if (tw) {
+		inet_twsk_deschedule(tw, death_row);
+		while (twrefcnt) {
+			twrefcnt--;
+			inet_twsk_put(tw);
+		}
+	}
+	local_bh_enable();
+	return 0;
 }
 
 /*
