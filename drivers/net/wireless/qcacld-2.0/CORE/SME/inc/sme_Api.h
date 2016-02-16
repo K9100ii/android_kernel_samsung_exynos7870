@@ -4476,4 +4476,6 @@ eHalStatus sme_set_lost_link_info_cb(tHalHandle hal,
 uint32_t sme_unpack_rsn_ie(tHalHandle hal, uint8_t *buf,
 			   uint8_t buf_len, tDot11fIERSN *rsn_ie);
 
+VOS_STATUS sme_is_session_valid(tHalHandle hal_handle, uint8_t session_id);
+
 #endif //#if !defined( __SME_API_H )
