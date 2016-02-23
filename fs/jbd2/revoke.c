@@ -591,7 +591,7 @@ static void write_one_revoke_record(journal_t *journal,
 
 	/* Do we need to leave space at the end for a checksum? */
 	if (jbd2_journal_has_csum_v2or3(journal))
-		csum_size = sizeof(struct jbd2_journal_revoke_tail);
+		csum_size = sizeof(struct jbd2_journal_block_tail);
 
 	if (JBD2_HAS_INCOMPAT_FEATURE(journal, JBD2_FEATURE_INCOMPAT_64BIT))
 		sz = 8;
@@ -631,21 +631,6 @@ static void write_one_revoke_record(journal_t *journal,
 	*offsetp = offset;
 }
 
-static void jbd2_revoke_csum_set(journal_t *j, struct buffer_head *bh)
-{
-	struct jbd2_journal_revoke_tail *tail;
-	__u32 csum;
-
-	if (!jbd2_journal_has_csum_v2or3(j))
-		return;
-
-	tail = (struct jbd2_journal_revoke_tail *)(bh->b_data + j->j_blocksize -
-			sizeof(struct jbd2_journal_revoke_tail));
-	tail->r_checksum = 0;
-	csum = jbd2_chksum(j, j->j_csum_seed, bh->b_data, j->j_blocksize);
-	tail->r_checksum = cpu_to_be32(csum);
-}
-
 /*
  * Flush a revoke descriptor out to the journal.  If we are aborting,
  * this is a noop; otherwise we are generating a buffer which needs to
@@ -666,7 +651,7 @@ static void flush_descriptor(journal_t *journal,
 
 	header = (jbd2_journal_revoke_header_t *)descriptor->b_data;
 	header->r_count = cpu_to_be32(offset);
-	jbd2_revoke_csum_set(journal, descriptor);
+	jbd2_descriptor_block_csum_set(journal, descriptor);
 
 	set_buffer_jwrite(descriptor);
 	BUFFER_TRACE(descriptor, "write");
