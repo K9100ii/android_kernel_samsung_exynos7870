@@ -2728,7 +2728,7 @@ ProcSetReqInternal(tpAniSirGlobal pMac, tANI_U16 length, tANI_U32 *pParam, tANI_
     tANI_U16    cfgId, valueLen, valueLenRoundedUp4;
     tANI_U32    value, result;
 
-    PELOG1(cfgLog(pMac, LOGl, FL("Rcvd cfg set request %d bytes"), length);)
+    PELOG1(cfgLog(pMac, LOG1, FL("Rcvd cfg set request %d bytes"), length);)
 
     if (!pMac->cfg.gCfgStatus)
     {
