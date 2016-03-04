@@ -66,8 +66,8 @@ int sclp_sync_request_timeout(sclp_cmdw_t cmd, void *sccb, int timeout)
 
 	/* Check response. */
 	if (request->status != SCLP_REQ_DONE) {
-		pr_warning("sync request failed (cmd=0x%08x, "
-			   "status=0x%02x)\n", cmd, request->status);
+		pr_warn("sync request failed (cmd=0x%08x, status=0x%02x)\n",
+			cmd, request->status);
 		rc = -EIO;
 	}
 out:
@@ -122,8 +122,8 @@ int sclp_get_cpu_info(struct sclp_cpu_info *info)
 	if (rc)
 		goto out;
 	if (sccb->header.response_code != 0x0010) {
-		pr_warning("readcpuinfo failed (response=0x%04x)\n",
-			   sccb->header.response_code);
+		pr_warn("readcpuinfo failed (response=0x%04x)\n",
+			sccb->header.response_code);
 		rc = -EIO;
 		goto out;
 	}
@@ -160,9 +160,8 @@ static int do_cpu_configure(sclp_cmdw_t cmd)
 	case 0x0120:
 		break;
 	default:
-		pr_warning("configure cpu failed (cmd=0x%08x, "
-			   "response=0x%04x)\n", cmd,
-			   sccb->header.response_code);
+		pr_warn("configure cpu failed (cmd=0x%08x, response=0x%04x)\n",
+			cmd, sccb->header.response_code);
 		rc = -EIO;
 		break;
 	}
@@ -230,9 +229,8 @@ static int do_assign_storage(sclp_cmdw_t cmd, u16 rn)
 	case 0x0120:
 		break;
 	default:
-		pr_warning("assign storage failed (cmd=0x%08x, "
-			   "response=0x%04x, rn=0x%04x)\n", cmd,
-			   sccb->header.response_code, rn);
+		pr_warn("assign storage failed (cmd=0x%08x, response=0x%04x, rn=0x%04x)\n",
+			cmd, sccb->header.response_code, rn);
 		rc = -EIO;
 		break;
 	}
@@ -628,9 +626,8 @@ static int do_chp_configure(sclp_cmdw_t cmd)
 	case 0x0450:
 		break;
 	default:
-		pr_warning("configure channel-path failed "
-			   "(cmd=0x%08x, response=0x%04x)\n", cmd,
-			   sccb->header.response_code);
+		pr_warn("configure channel-path failed (cmd=0x%08x, response=0x%04x)\n",
+			cmd, sccb->header.response_code);
 		rc = -EIO;
 		break;
 	}
@@ -697,8 +694,8 @@ int sclp_chp_read_info(struct sclp_chp_info *info)
 	if (rc)
 		goto out;
 	if (sccb->header.response_code != 0x0010) {
-		pr_warning("read channel-path info failed "
-			   "(response=0x%04x)\n", sccb->header.response_code);
+		pr_warn("read channel-path info failed (response=0x%04x)\n",
+			sccb->header.response_code);
 		rc = -EIO;
 		goto out;
 	}

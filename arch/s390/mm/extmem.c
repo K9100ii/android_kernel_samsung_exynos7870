@@ -276,7 +276,7 @@ query_segment_type (struct dcss_segment *seg)
 		goto out_free;
 	}
 	if (diag_cc > 1) {
-		pr_warning("Querying a DCSS type failed with rc=%ld\n", vmrc);
+		pr_warn("Querying a DCSS type failed with rc=%ld\n", vmrc);
 		rc = dcss_diag_translate_rc (vmrc);
 		goto out_free;
 	}
@@ -470,8 +470,7 @@ __segment_load (char *name, int do_nonshared, unsigned long *addr, unsigned long
 		goto out_resource;
 	}
 	if (diag_cc > 1) {
-		pr_warning("Loading DCSS %s failed with rc=%ld\n", name,
-			   end_addr);
+		pr_warn("Loading DCSS %s failed with rc=%ld\n", name, end_addr);
 		rc = dcss_diag_translate_rc(end_addr);
 		dcss_diag(&purgeseg_scode, seg->dcss_name,
 				&dummy, &dummy);
@@ -587,8 +586,7 @@ segment_modify_shared (char *name, int do_nonshared)
 		goto out_unlock;
 	}
 	if (atomic_read (&seg->ref_count) != 1) {
-		pr_warning("DCSS %s is in use and cannot be reloaded\n",
-			   name);
+		pr_warn("DCSS %s is in use and cannot be reloaded\n", name);
 		rc = -EAGAIN;
 		goto out_unlock;
 	}
@@ -601,8 +599,8 @@ segment_modify_shared (char *name, int do_nonshared)
 			seg->res->flags |= IORESOURCE_READONLY;
 
 	if (request_resource(&iomem_resource, seg->res)) {
-		pr_warning("DCSS %s overlaps with used memory resources "
-			   "and cannot be reloaded\n", name);
+		pr_warn("DCSS %s overlaps with used memory resources and cannot be reloaded\n",
+			name);
 		rc = -EBUSY;
 		kfree(seg->res);
 		goto out_del_mem;
@@ -620,8 +618,8 @@ segment_modify_shared (char *name, int do_nonshared)
 		goto out_del_res;
 	}
 	if (diag_cc > 1) {
-		pr_warning("Reloading DCSS %s failed with rc=%ld\n", name,
-			   end_addr);
+		pr_warn("Reloading DCSS %s failed with rc=%ld\n",
+			name, end_addr);
 		rc = dcss_diag_translate_rc(end_addr);
 		goto out_del_res;
 	}
