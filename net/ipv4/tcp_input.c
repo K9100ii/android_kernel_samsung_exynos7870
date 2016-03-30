@@ -2319,16 +2319,6 @@ static void tcp_update_scoreboard(struct sock *sk, int fast_rexmit)
 	}
 }
 
-/* CWND moderation, preventing bursts due to too big ACKs
- * in dubious situations.
- */
-static inline void tcp_moderate_cwnd(struct tcp_sock *tp)
-{
-	tp->snd_cwnd = min(tp->snd_cwnd,
-			   tcp_packets_in_flight(tp) + tcp_max_burst(tp));
-	tp->snd_cwnd_stamp = tcp_time_stamp;
-}
-
 /* Nothing was retransmitted or returned timestamp is less
  * than timestamp of the first retransmission.
  */
@@ -2463,7 +2453,6 @@ static bool tcp_try_undo_recovery(struct sock *sk)
 		/* Hold old state until something *above* high_seq
 		 * is ACKed. For Reno it is MUST to prevent false
 		 * fast retransmits (RFC2582). SACK TCP is safe. */
-		tcp_moderate_cwnd(tp);
 		if (!tcp_any_retrans_done(sk))
 			tp->retrans_stamp = 0;
 		return true;
