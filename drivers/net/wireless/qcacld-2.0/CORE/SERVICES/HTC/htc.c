@@ -38,7 +38,7 @@
 
 #define MAX_HTC_RX_BUNDLE  2
 
-#ifdef DEBUG
+#ifdef WLAN_DEBUG
 static ATH_DEBUG_MASK_DESCRIPTION g_HTCDebugDescription[] = {
     { ATH_DEBUG_SEND , "Send"},
     { ATH_DEBUG_RECV , "Recv"},

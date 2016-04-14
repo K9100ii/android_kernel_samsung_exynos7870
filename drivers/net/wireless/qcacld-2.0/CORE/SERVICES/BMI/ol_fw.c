@@ -1188,7 +1188,9 @@ out:
 void sdio_ramdump_handler(void * ctx)
 {
 #if !defined(HIF_SDIO)
+#ifdef WLAN_DEBUG
 	int ret;
+#endif
 #endif
 	u_int32_t host_interest_address;
 	u_int32_t dram_dump_values[4];
@@ -1309,7 +1311,7 @@ static void ramdump_work_handler(struct work_struct *ramdump)
 		goto out_fail;
 	}
 #if !defined(HIF_SDIO)
-#ifdef DEBUG
+#ifdef WLAN_DEBUG
 	ret = hif_pci_check_soc_status(ramdump_scn->hif_sc);
 	if (ret)
 		goto out_fail;
@@ -1642,7 +1644,7 @@ void ol_target_failure(void *instance, A_STATUS status)
 		return;
 	}
 
-#if defined(HIF_PCI) && defined(DEBUG)
+#if defined(HIF_PCI) && defined(WLAN_DEBUG)
 	if (vos_is_load_in_progress(VOS_MODULE_ID_VOSS, NULL)) {
 		pr_err("XXX TARGET ASSERTED during driver loading XXX\n");
 

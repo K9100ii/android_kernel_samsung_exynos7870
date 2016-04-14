@@ -66,7 +66,7 @@ static int cnss_diag_pid = INVALID_PID;
 static int get_version = 0;
 static int gprint_limiter = 0;
 
-#if defined(DEBUG)
+#if defined(WLAN_DEBUG)
 
 static ATH_DEBUG_MASK_DESCRIPTION g_fwlogDebugDescription[] = {
     {FWLOG_DEBUG,"fwlog"},
