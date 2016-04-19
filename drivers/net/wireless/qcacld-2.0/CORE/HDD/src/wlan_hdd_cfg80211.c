@@ -13880,7 +13880,8 @@ static int wlan_hdd_change_iface_to_sta_mode(struct net_device *ndev,
     wext->roamProfile.pAddIEScan = pAdapter->scan_info.scanAddIE.addIEdata;
     wext->roamProfile.nAddIEScanLength = pAdapter->scan_info.scanAddIE.length;
     EXIT();
-    return status;
+
+    return vos_status_to_os_return(status);
 }
 
 static int wlan_hdd_cfg80211_change_bss (struct wiphy *wiphy,
@@ -13971,9 +13972,9 @@ static int __wlan_hdd_cfg80211_change_iface(struct wiphy *wiphy,
         switch (type) {
         case NL80211_IFTYPE_STATION:
         case NL80211_IFTYPE_P2P_CLIENT:
-           vstatus = wlan_hdd_change_iface_to_sta_mode(ndev, type);
-           if (vstatus != VOS_STATUS_SUCCESS)
-               return -EINVAL;
+           status = wlan_hdd_change_iface_to_sta_mode(ndev, type);
+           if (status != 0)
+               return status;
 
 #ifdef QCA_LL_TX_FLOW_CT
            if (pAdapter->tx_flow_timer_initialized == VOS_FALSE) {
@@ -14151,7 +14152,7 @@ static int __wlan_hdd_cfg80211_change_iface(struct wiphy *wiphy,
           }
 
           status = wlan_hdd_change_iface_to_sta_mode(ndev, type);
-          if (status != VOS_STATUS_SUCCESS)
+          if (status != 0)
               return status;
 
 #ifdef QCA_LL_TX_FLOW_CT
