@@ -36,6 +36,7 @@
 #include <adf_os_lock.h>   /* adf_os_mutex_t */
 #include <htt.h>           /* htt_dbg_stats_type */
 #include <ol_txrx_stats.h> /* ol_txrx_stats */
+#include "vos_status.h"
 
 typedef void (*ol_txrx_stats_callback)(
     void *ctxt,
@@ -149,7 +150,7 @@ void ol_txrx_peer_display(ol_txrx_peer_handle peer, int indent);
 #endif
 
 /*--- txrx stats display debug functions ---*/
-void ol_txrx_stats(ol_txrx_vdev_handle vdev, char *buffer,
+VOS_STATUS ol_txrx_stats(ol_txrx_vdev_handle vdev, char *buffer,
                    unsigned length);
 
 #if TXRX_STATS_LEVEL != TXRX_STATS_LEVEL_OFF
