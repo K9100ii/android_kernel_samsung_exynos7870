@@ -204,6 +204,8 @@ static int filldir(void * __buf, const char * name, int namlen, loff_t offset,
 	}
 	dirent = buf->previous;
 	if (dirent) {
+		if (signal_pending(current))
+			return -EINTR;
 		if (__put_user(offset, &dirent->d_off))
 			goto efault;
 	}
@@ -285,6 +287,8 @@ static int filldir64(void * __buf, const char * name, int namlen, loff_t offset,
 		return -EINVAL;
 	dirent = buf->previous;
 	if (dirent) {
+		if (signal_pending(current))
+			return -EINTR;
 		if (__put_user(offset, &dirent->d_off))
 			goto efault;
 	}
