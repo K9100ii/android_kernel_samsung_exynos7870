@@ -71,6 +71,11 @@ static inline struct nilfs_mdt_info *NILFS_MDT(const struct inode *inode)
 	return inode->i_private;
 }
 
+static inline int nilfs_is_metadata_file_inode(const struct inode *inode)
+{
+	return inode->i_private != NULL;
+}
+
 /* Default GFP flags using highmem */
 #define NILFS_MDT_GFP      (__GFP_WAIT | __GFP_IO | __GFP_HIGHMEM)
 
@@ -84,6 +89,9 @@ int nilfs_mdt_mark_block_dirty(struct inode *, unsigned long);
 int nilfs_mdt_fetch_dirty(struct inode *);
 
 int nilfs_mdt_init(struct inode *inode, gfp_t gfp_mask, size_t objsz);
+void nilfs_mdt_clear(struct inode *inode);
+void nilfs_mdt_destroy(struct inode *inode);
+
 void nilfs_mdt_set_entry_size(struct inode *, unsigned, unsigned);
 
 int nilfs_mdt_setup_shadow_map(struct inode *inode,
