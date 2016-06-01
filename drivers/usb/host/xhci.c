@@ -680,18 +680,21 @@ void xhci_stop(struct usb_hcd *hcd)
 
 	mutex_lock(&xhci->mutex);
 
+	if (!(xhci->xhc_state & XHCI_STATE_HALTED)) {
+		spin_lock_irq(&xhci->lock);
+
+		xhci->xhc_state |= XHCI_STATE_HALTED;
+		xhci->cmd_ring_state = CMD_RING_STATE_STOPPED;
+		xhci_halt(xhci);
+		xhci_reset(xhci);
+
+		spin_unlock_irq(&xhci->lock);
+	}
+
 	if (!usb_hcd_is_primary_hcd(hcd)) {
 		mutex_unlock(&xhci->mutex);
 		return;
 	}
-
-	spin_lock_irq(&xhci->lock);
-	/* Make sure the xHC is halted for a USB3 roothub
-	 * (xhci_stop() could be called as part of failed init).
-	 */
-	xhci_halt(xhci);
-	xhci_reset(xhci);
-	spin_unlock_irq(&xhci->lock);
 
 	xhci_cleanup_msix(xhci);
 
