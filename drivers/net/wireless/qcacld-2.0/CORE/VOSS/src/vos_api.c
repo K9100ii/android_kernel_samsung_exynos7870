@@ -1642,7 +1642,7 @@ VOS_STATUS vos_alloc_context( v_VOID_t *pVosContext, VOS_MODULE_ID moduleID,
   ** Dynamically allocate the context for module
   */
 
-  *ppModuleContext = kmalloc(size, GFP_KERNEL);
+  *ppModuleContext = vos_mem_malloc(size);
 
 
   if ( *ppModuleContext == NULL)
@@ -1764,7 +1764,7 @@ VOS_STATUS vos_free_context( v_VOID_t *pVosContext, VOS_MODULE_ID moduleID,
   }
 
   if(pModuleContext != NULL)
-      kfree(pModuleContext);
+      vos_mem_free(pModuleContext);
 
   *pGpModContext = NULL;
 
