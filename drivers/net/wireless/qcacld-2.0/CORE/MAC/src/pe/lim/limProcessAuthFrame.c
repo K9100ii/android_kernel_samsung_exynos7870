@@ -679,7 +679,7 @@ limProcessAuthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession pse
                                                     eLIM_AUTH_RSP_TIMER,
                                                     pAuthNode->authNodeIdx);
                     }
-                    PELOGE(limLog(pMac, LOGE, FL("STA is initiating brand-new Authentication ..."));)
+                    limLog(pMac, LOGW, FL("STA is initiating brand-new Authentication ..."));
                     limDeletePreAuthNode(pMac,
                                          pHdr->sa);
                     /**
