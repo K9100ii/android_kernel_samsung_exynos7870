@@ -1547,7 +1547,7 @@ int __wlan_hdd_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
             home_ch = goAdapter->sessionCtx.ap.operatingChannel;
     }
 
-    if (ieee80211_frequency_to_channel(chan->center_freq) == home_ch) {
+    if (chan && ieee80211_frequency_to_channel(chan->center_freq) == home_ch) {
         /* if adapter is already on requested ch, no need for ROC */
         wait = 0;
         hddLog(LOGE,
@@ -1555,7 +1555,7 @@ int __wlan_hdd_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
         goto send_frame;
     }
 
-    if( offchan && wait)
+    if( offchan && wait && chan)
     {
         int status;
         rem_on_channel_request_type_t req_type = OFF_CHANNEL_ACTION_TX;
