@@ -10707,8 +10707,7 @@ VOS_STATUS hdd_stop_adapter( hdd_context_t *pHddCtx, hdd_adapter_t *pAdapter,
          }
          else
          {
-            hdd_abort_mac_scan(pHddCtx, pAdapter->sessionId,
-                               eCSR_SCAN_ABORT_DEFAULT);
+            wlan_hdd_scan_abort(pAdapter);
          }
          if (pAdapter->device_mode != WLAN_HDD_INFRA_STATION) {
              wlan_hdd_cleanup_remain_on_channel_ctx(pAdapter);
