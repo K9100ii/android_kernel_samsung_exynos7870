@@ -963,7 +963,7 @@ int btrfs_quota_disable(struct btrfs_trans_handle *trans,
 		goto out;
 	fs_info->quota_enabled = 0;
 	fs_info->pending_quota_state = 0;
-	btrfs_qgroup_wait_for_completion(fs_info);
+	btrfs_qgroup_wait_for_completion(fs_info, false);
 	spin_lock(&fs_info->qgroup_lock);
 	quota_root = fs_info->quota_root;
 	fs_info->quota_root = NULL;
