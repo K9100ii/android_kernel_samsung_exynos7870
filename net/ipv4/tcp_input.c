@@ -5877,7 +5877,7 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb,
 		 */
 		if (req) {
 			synack_stamp = tcp_rsk(req)->snt_synack;
-			tp->total_retrans = req->num_retrans;
+			inet_csk(sk)->icsk_retransmits = 0;
 			reqsk_fastopen_remove(sk, req, false);
 		} else {
 			synack_stamp = tp->lsndtime;
