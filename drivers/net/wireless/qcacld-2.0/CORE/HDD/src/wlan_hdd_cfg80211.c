@@ -19942,14 +19942,14 @@ static int __wlan_hdd_cfg80211_del_station(struct wiphy *wiphy,
                         goto fn_end;
 
                     /* Send disassoc and deauth both to avoid some IOT issues */
-                    vos_event_reset(&pHostapdState->vosEvent);
+                    vos_event_reset(&pHostapdState->sta_disassoc_event);
                     hdd_softap_sta_disassoc(pAdapter, pDelStaParams);
 
                     vos_status = hdd_softap_sta_deauth(pAdapter, pDelStaParams);
                     if (VOS_IS_STATUS_SUCCESS(vos_status)) {
                         pAdapter->aStaInfo[i].isDeauthInProgress = TRUE;
                         vos_status = vos_wait_single_event(
-                                            &pHostapdState->vosEvent, 1000);
+                                            &pHostapdState->sta_disassoc_event, 1000);
                         if (!VOS_IS_STATUS_SUCCESS(vos_status))
                             hddLog(VOS_TRACE_LEVEL_ERROR,
                                 "!!%s: ERROR: Deauth wait expired!!", __func__);
@@ -19991,7 +19991,7 @@ static int __wlan_hdd_cfg80211_del_station(struct wiphy *wiphy,
                 goto fn_end;
 
             /* Send disassoc and deauth both to avoid some IOT issues */
-            vos_event_reset(&pHostapdState->vosEvent);
+            vos_event_reset(&pHostapdState->sta_disassoc_event);
             hdd_softap_sta_disassoc(pAdapter, pDelStaParams);
             vos_status = hdd_softap_sta_deauth(pAdapter, pDelStaParams);
             if (!VOS_IS_STATUS_SUCCESS(vos_status)) {
@@ -20001,8 +20001,8 @@ static int __wlan_hdd_cfg80211_del_station(struct wiphy *wiphy,
                        MAC_ADDR_ARRAY(pDelStaParams->peerMacAddr));
                 return -ENOENT;
             } else {
-                vos_status = vos_wait_single_event(&pHostapdState->vosEvent,
-                                                                        1000);
+                vos_status = vos_wait_single_event(
+                    &pHostapdState->sta_disassoc_event, 1000);
                 if (!VOS_IS_STATUS_SUCCESS(vos_status))
                     hddLog(VOS_TRACE_LEVEL_ERROR,
                         "!!%s: ERROR: Deauth wait expired!!", __func__);

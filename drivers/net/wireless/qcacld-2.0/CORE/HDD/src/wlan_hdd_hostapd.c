@@ -1794,7 +1794,7 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
                    sizeof(v_MACADDR_t));
             hddLog(LOG1, " disassociated "MAC_ADDRESS_STR, MAC_ADDR_ARRAY(wrqu.addr.sa_data));
 
-            vos_status = vos_event_set(&pHostapdState->vosEvent);
+            vos_status = vos_event_set(&pHostapdState->sta_disassoc_event);
             if (!VOS_IS_STATUS_SUCCESS(vos_status))
                 hddLog(VOS_TRACE_LEVEL_ERROR,
                         "ERROR: Station deauth event reporting failed!!");
@@ -6626,6 +6626,17 @@ VOS_STATUS hdd_init_ap_mode( hdd_adapter_t *pAdapter )
          WLANSAP_Close(sapContext);
 #endif
          return status;
+    }
+
+    status = vos_event_init(&phostapdBuf->sta_disassoc_event);
+    if (!VOS_IS_STATUS_SUCCESS(status)) {
+        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+            "ERROR: Hostapd HDD sta disassoc event init failed!!");
+#ifdef WLAN_FEATURE_MBSSID
+        WLANSAP_Close(sapContext);
+        pAdapter->sessionCtx.ap.sapContext = NULL;
+#endif
+        return status;
     }
 
     init_completion(&pAdapter->session_close_comp_var);

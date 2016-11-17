@@ -819,6 +819,7 @@ static void wlan_hdd_restart_sap(hdd_adapter_t *ap_adapter)
             goto end;
         }
 
+        vos_event_reset(&pHostapdState->vosEvent);
         if (WLANSAP_StartBss(
 #ifdef WLAN_FEATURE_MBSSID
             pHddApCtx->sapContext,
@@ -16324,6 +16325,7 @@ void wlan_hdd_start_sap(hdd_adapter_t *ap_adapter)
         goto end;
     }
 
+    vos_event_reset(&hostapd_state->vosEvent);
     if (WLANSAP_StartBss(hdd_ap_ctx->sapContext, hdd_hostapd_SAPEventCB,
                          &hdd_ap_ctx->sapConfig, (v_PVOID_t)ap_adapter->dev)
                          != VOS_STATUS_SUCCESS) {
