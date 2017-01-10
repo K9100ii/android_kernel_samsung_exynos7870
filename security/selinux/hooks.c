@@ -3825,11 +3825,6 @@ static int selinux_task_kill(struct task_struct *p, struct siginfo *info,
 	return rc;
 }
 
-static int selinux_task_wait(struct task_struct *p)
-{
-	return task_has_perm(p, current, PROCESS__SIGCHLD);
-}
-
 static void selinux_task_to_inode(struct task_struct *p,
 				  struct inode *inode)
 {
@@ -6093,7 +6088,6 @@ static struct security_operations selinux_ops = {
 	.task_getscheduler =		selinux_task_getscheduler,
 	.task_movememory =		selinux_task_movememory,
 	.task_kill =			selinux_task_kill,
-	.task_wait =			selinux_task_wait,
 	.task_to_inode =		selinux_task_to_inode,
 
 	.ipc_permission =		selinux_ipc_permission,

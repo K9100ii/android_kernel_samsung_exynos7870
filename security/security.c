@@ -977,11 +977,6 @@ int security_task_kill(struct task_struct *p, struct siginfo *info,
 	return security_ops->task_kill(p, info, sig, secid);
 }
 
-int security_task_wait(struct task_struct *p)
-{
-	return security_ops->task_wait(p);
-}
-
 int security_task_prctl(int option, unsigned long arg2, unsigned long arg3,
 			 unsigned long arg4, unsigned long arg5)
 {

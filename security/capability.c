@@ -480,11 +480,6 @@ static int cap_task_movememory(struct task_struct *p)
 	return 0;
 }
 
-static int cap_task_wait(struct task_struct *p)
-{
-	return 0;
-}
-
 static int cap_task_kill(struct task_struct *p, struct siginfo *info,
 			 int sig, u32 secid)
 {
@@ -1057,7 +1052,6 @@ void __init security_fixup_ops(struct security_operations *ops)
 	set_to_cap_if_null(ops, task_setscheduler);
 	set_to_cap_if_null(ops, task_getscheduler);
 	set_to_cap_if_null(ops, task_movememory);
-	set_to_cap_if_null(ops, task_wait);
 	set_to_cap_if_null(ops, task_kill);
 	set_to_cap_if_null(ops, task_prctl);
 	set_to_cap_if_null(ops, task_to_inode);
