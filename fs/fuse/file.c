@@ -101,6 +101,7 @@ static void fuse_file_put(struct fuse_file *ff, bool sync)
 			iput(req->misc.release.inode);
 			fuse_put_request(ff->fc, req);
 		} else if (sync) {
+			req->force = 1;
 			req->background = 0;
 			fuse_request_send(ff->fc, req);
 			iput(req->misc.release.inode);
