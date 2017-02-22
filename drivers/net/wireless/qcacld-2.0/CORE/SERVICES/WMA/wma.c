@@ -5807,6 +5807,8 @@ static int wma_unified_dfs_radar_rx_event_handler(void *handle,
 	WMI_DFS_RADAR_EVENTID_param_tlvs *param_tlvs;
 	wmi_dfs_radar_event_fixed_param *radar_event;
 
+	adf_os_atomic_dec(&wma->dfs_wmi_event_pending);
+
 	ic = wma->dfs_ic;
 	if (NULL == ic) {
 		WMA_LOGE("%s: dfs_ic is  NULL ", __func__);
@@ -6974,6 +6976,8 @@ VOS_STATUS WDA_open(v_VOID_t *vos_context, v_VOID_t *os_ctx,
 	adf_os_spinlock_init(&wma_handle->roam_synch_lock);
 #endif
 	adf_os_atomic_init(&wma_handle->is_wow_bus_suspended);
+	adf_os_atomic_init(&wma_handle->dfs_wmi_event_pending);
+	adf_os_atomic_init(&wma_handle->dfs_wmi_event_dropped);
 
 	/* Register vdev start response event handler */
 	wmi_unified_register_event_handler(wma_handle->wmi_handle,
