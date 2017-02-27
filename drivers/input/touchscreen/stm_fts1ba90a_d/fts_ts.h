@@ -749,6 +749,10 @@ struct fts_ts_info {
 	int (*fts_read_from_sponge)(struct fts_ts_info *info, u16 offset, u8 *data, int length);
 	int (*fts_write_to_sponge)(struct fts_ts_info *info, u16 offset, u8 *data, int length);
 #endif
+
+#ifdef CONFIG_FB
+	struct notifier_block fb_notif;
+#endif
 };
 
 int d_fts_fw_update_on_probe(struct fts_ts_info *info);

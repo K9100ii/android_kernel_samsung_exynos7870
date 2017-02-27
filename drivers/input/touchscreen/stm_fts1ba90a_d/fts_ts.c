@@ -79,6 +79,11 @@ enum subsystem {
 #endif
 #endif
 
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif
+
 #ifdef FTS_SUPPORT_TOUCH_KEY
 struct fts_touchkey d_fts_touchkeys[] = {
 	{
@@ -2546,6 +2551,11 @@ static void d_fts_set_input_prop(struct fts_ts_info *info, struct input_dev *dev
 	input_set_drvdata(dev, info);
 }
 
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data);
+#endif
+
 static int d_fts_probe(struct i2c_client *client, const struct i2c_device_id *idp)
 {
 	int retval;
@@ -2758,6 +2768,12 @@ static int d_fts_probe(struct i2c_client *client, const struct i2c_device_id *id
 	d_fts_secure_touch_init(info);
 #endif
 
+#ifdef CONFIG_FB
+	info->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&info->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
+
 	device_init_wakeup(&client->dev, true);
 	info->probe_done = true;
 
@@ -2915,6 +2931,10 @@ static int d_fts_remove(struct i2c_client *client)
 		kfree(info->cmoffset_sdc_proc);
 	}
 	g_info_d = NULL;
+
+#ifdef CONFIG_FB
+	fb_unregister_client(&info->fb_notif);
+#endif
 
 	kfree(info);
 
@@ -3505,6 +3525,35 @@ static void d_fts_shutdown(struct i2c_client *client)
 
 	d_fts_remove(client);
 }
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct fts_ts_info *tc_data = container_of(self, struct fts_ts_info, fb_notif);
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+		        d_fts_input_open(tc_data->input_dev);
+			break;
+		case FB_BLANK_POWERDOWN:
+		        d_fts_input_close(tc_data->input_dev);
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
+
+	return 0;
+}
+#endif
 
 #ifdef CONFIG_PM
 static int d_fts_pm_suspend(struct device *dev)
