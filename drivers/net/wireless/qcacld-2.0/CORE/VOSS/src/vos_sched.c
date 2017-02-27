@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2017 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -1061,7 +1061,7 @@ VosWDThread
   v_BOOL_t shutdown              = VOS_FALSE;
   int count                      = 0;
   VOS_STATUS vosStatus = VOS_STATUS_SUCCESS;
-  set_user_nice(current, -3);
+  set_user_nice(current, -4);
 
   if (Arg == NULL)
   {
