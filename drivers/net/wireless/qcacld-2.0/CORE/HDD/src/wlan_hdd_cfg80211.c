@@ -14141,6 +14141,15 @@ static int __wlan_hdd_cfg80211_change_iface(struct wiphy *wiphy,
        case NL80211_IFTYPE_STATION:
        case NL80211_IFTYPE_P2P_CLIENT:
        case NL80211_IFTYPE_ADHOC:
+
+          if (WLAN_HDD_VDEV_STA_MAX ==
+              hdd_get_current_vdev_sta_count(pHddCtx)) {
+              hddLog(VOS_TRACE_LEVEL_DEBUG,
+                  FL("Unable to change as sta interface: max sta cnt is %d"),
+                  WLAN_HDD_VDEV_STA_MAX);
+              return -EINVAL;
+          }
+
           status = wlan_hdd_change_iface_to_sta_mode(ndev, type);
           if (status != VOS_STATUS_SUCCESS)
               return status;
