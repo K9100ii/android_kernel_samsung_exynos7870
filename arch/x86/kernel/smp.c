@@ -31,6 +31,8 @@
 #include <asm/apic.h>
 #include <asm/nmi.h>
 #include <asm/trace/irq_vectors.h>
+#include <asm/virtext.h>
+
 /*
  *	Some notes on x86 processor bugs affecting SMP operation:
  *
@@ -159,6 +161,7 @@ static int smp_stop_nmi_callback(unsigned int val, struct pt_regs *regs)
 	if (raw_smp_processor_id() == atomic_read(&stopping_cpu))
 		return NMI_HANDLED;
 
+	cpu_emergency_vmxoff();
 	stop_this_cpu(NULL);
 
 	return NMI_HANDLED;
@@ -172,6 +175,7 @@ asmlinkage __visible void smp_reboot_interrupt(void)
 {
 	ack_APIC_irq();
 	irq_enter();
+	cpu_emergency_vmxoff();
 	stop_this_cpu(NULL);
 	irq_exit();
 }
