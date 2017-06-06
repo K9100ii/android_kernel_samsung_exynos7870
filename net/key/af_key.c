@@ -3575,7 +3575,8 @@ static int set_ipsecrequest(struct sk_buff *skb,
 #ifdef CONFIG_NET_KEY_MIGRATE
 static int pfkey_send_migrate(const struct xfrm_selector *sel, u8 dir, u8 type,
 			      const struct xfrm_migrate *m, int num_bundles,
-			      const struct xfrm_kmaddress *k)
+			      const struct xfrm_kmaddress *k,
+			      const struct xfrm_encap_tmpl *encap)
 {
 	int i;
 	int sasize_sel;
@@ -3685,7 +3686,8 @@ err:
 #else
 static int pfkey_send_migrate(const struct xfrm_selector *sel, u8 dir, u8 type,
 			      const struct xfrm_migrate *m, int num_bundles,
-			      const struct xfrm_kmaddress *k)
+			      const struct xfrm_kmaddress *k,
+			      const struct xfrm_encap_tmpl *encap)
 {
 	return -ENOPROTOOPT;
 }
