@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2017 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -5318,14 +5318,14 @@ tSirRetStatus limSendAddBARsp( tpAniSirGlobal pMac,
 
 returnAfterError:
 
-      // Release buffer, if allocated
-      if( NULL != pAddBARspBuffer )
-        palPktFree( pMac->hHdd,
+   // Release buffer, if allocated
+   if( NULL != pAddBARspBuffer )
+       palPktFree( pMac->hHdd,
             HAL_TXRX_FRM_802_11_MGMT,
             (void *) pAddBARspBuffer,
             (void *) pPacket );
 
-      return statusCode;
+    return statusCode;
 }
 
 /**
@@ -5501,14 +5501,14 @@ tSirRetStatus limSendDelBAInd( tpAniSirGlobal pMac,
 
 returnAfterError:
 
-      // Release buffer, if allocated
-      if( NULL != pDelBAIndBuffer )
+    // Release buffer, if allocated
+    if( NULL != pDelBAIndBuffer )
         palPktFree( pMac->hHdd,
             HAL_TXRX_FRM_802_11_MGMT,
             (void *) pDelBAIndBuffer,
             (void *) pPacket );
 
-      return statusCode;
+    return statusCode;
 }
 
 #if defined WLAN_FEATURE_VOWIFI
