@@ -1562,8 +1562,6 @@ static int reiserfs_remount(struct super_block *s, int *mount_flags, char *arg)
 	}
 
 out_ok_unlocked:
-	if (new_opts)
-		replace_mount_options(s, new_opts);
 	return 0;
 
 out_err_unlock:
@@ -1877,8 +1875,6 @@ static int reiserfs_fill_super(struct super_block *s, void *data, int silent)
 	int errval = -EINVAL;
 	char *qf_names[REISERFS_MAXQUOTAS] = {};
 	unsigned int qfmt = 0;
-
-	save_mount_options(s, data);
 
 	sbi = kzalloc(sizeof(struct reiserfs_sb_info), GFP_KERNEL);
 	if (!sbi)
