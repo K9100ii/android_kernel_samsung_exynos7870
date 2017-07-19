@@ -590,6 +590,7 @@ htt_t2h_lp_msg_handler(void *context, adf_nbuf_t htt_t2h_msg )
                 break;
             }
         }
+        break;
     }
     case HTT_T2H_MSG_TYPE_RATE_REPORT:
         {
