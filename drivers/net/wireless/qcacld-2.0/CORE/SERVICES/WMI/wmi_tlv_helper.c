@@ -386,6 +386,12 @@ wmitlv_check_and_pad_tlvs(
     }
     /* NOTE: the returned number of TLVs is in "attr_struct_ptr.cmd_num_tlv" */
 
+    if (param_buf_len < WMI_TLV_HDR_SIZE) {
+        wmi_tlv_print_error("%s: ERROR: Incorrect length param buf length\n",
+                           __func__);
+        return -1;
+    }
+
     /* Create base structure of format wmi_cmd_event_id##_param_tlvs */
     len_wmi_cmd_struct_buf = attr_struct_ptr.cmd_num_tlv * sizeof(wmitlv_cmd_param_info);
 #ifndef NO_DYNAMIC_MEM_ALLOC
