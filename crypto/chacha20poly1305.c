@@ -561,6 +561,11 @@ static struct crypto_instance *chachapoly_alloc(struct rtattr **tb,
 			       CRYPTO_ALG_TYPE_AHASH_MASK);
 	if (IS_ERR(poly))
 		return ERR_CAST(poly);
+	poly_ahash = container_of(poly, struct ahash_alg, halg.base);
+
+	err = -EINVAL;
+	if (poly_ahash->halg.digestsize != POLY1305_DIGEST_SIZE)
+		goto out_put_poly;
 
 	err = -ENOMEM;
 	inst = kzalloc(sizeof(*inst) + sizeof(*ctx), GFP_KERNEL);
@@ -569,7 +574,6 @@ static struct crypto_instance *chachapoly_alloc(struct rtattr **tb,
 
 	ctx = crypto_instance_ctx(inst);
 	ctx->saltlen = CHACHAPOLY_IV_SIZE - ivsize;
-	poly_ahash = container_of(poly, struct ahash_alg, halg.base);
 	err = crypto_init_ahash_spawn(&ctx->poly, &poly_ahash->halg, inst);
 	if (err)
 		goto err_free_inst;
