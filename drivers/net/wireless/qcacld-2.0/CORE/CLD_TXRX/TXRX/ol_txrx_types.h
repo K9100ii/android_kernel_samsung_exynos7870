@@ -1093,8 +1093,7 @@ struct ol_txrx_peer_t {
 #endif
 
 	adf_os_time_t last_assoc_rcvd;
-	adf_os_time_t last_disassoc_rcvd;
-	adf_os_time_t last_deauth_rcvd;
+	adf_os_time_t last_disassoc_deauth_rcvd;
 };
 
 #endif /* _OL_TXRX_TYPES__H_ */
