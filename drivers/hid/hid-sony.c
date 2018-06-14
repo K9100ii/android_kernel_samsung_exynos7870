@@ -2249,16 +2249,20 @@ static int sony_allocate_output_report(struct sony_sc *sc)
 	if ((sc->quirks & SIXAXIS_CONTROLLER) ||
 			(sc->quirks & NAVIGATION_CONTROLLER))
 		sc->output_report_dmabuf =
-			kmalloc(sizeof(union sixaxis_output_report_01),
+			devm_kmalloc(&sc->hdev->dev,
+				sizeof(union sixaxis_output_report_01),
 				GFP_KERNEL);
 	else if (sc->quirks & DUALSHOCK4_CONTROLLER_BT)
-		sc->output_report_dmabuf = kmalloc(DS4_OUTPUT_REPORT_0x11_SIZE,
+		sc->output_report_dmabuf = devm_kmalloc(&sc->hdev->dev,
+						DS4_OUTPUT_REPORT_0x11_SIZE,
 						GFP_KERNEL);
 	else if (sc->quirks & (DUALSHOCK4_CONTROLLER_USB | DUALSHOCK4_DONGLE))
-		sc->output_report_dmabuf = kmalloc(DS4_OUTPUT_REPORT_0x05_SIZE,
+		sc->output_report_dmabuf = devm_kmalloc(&sc->hdev->dev,
+						DS4_OUTPUT_REPORT_0x05_SIZE,
 						GFP_KERNEL);
 	else if (sc->quirks & MOTION_CONTROLLER)
-		sc->output_report_dmabuf = kmalloc(MOTION_REPORT_0x02_SIZE,
+		sc->output_report_dmabuf = devm_kmalloc(&sc->hdev->dev,
+						MOTION_REPORT_0x02_SIZE,
 						GFP_KERNEL);
 	else
 		return 0;
@@ -2865,7 +2869,6 @@ err_stop:
 	if (sc->quirks & SONY_BATTERY_SUPPORT)
 		sony_battery_remove(sc);
 	sony_cancel_work_sync(sc);
-	kfree(sc->output_report_dmabuf);
 	sony_remove_dev_list(sc);
 	sony_release_device_id(sc);
 	return ret;
@@ -2958,8 +2961,6 @@ static void sony_remove(struct hid_device *hdev)
 		device_remove_file(&sc->hdev->dev, &dev_attr_hardware_version);
 
 	sony_cancel_work_sync(sc);
-
-	kfree(sc->output_report_dmabuf);
 
 	sony_remove_dev_list(sc);
 
