@@ -2214,6 +2214,16 @@ static inline int sock_intr_errno(long timeo)
 	return timeo == MAX_SCHEDULE_TIMEOUT ? -ERESTARTSYS : -EINTR;
 }
 
+#define sock_skb_cb_check_size(size) \
+	BUILD_BUG_ON((size) > FIELD_SIZEOF(struct sk_buff, cb))
+
+static inline void sk_drops_add(struct sock *sk, const struct sk_buff *skb)
+{
+	int segs = max_t(u16, 1, skb_shinfo(skb)->gso_segs);
+
+	atomic_add(segs, &sk->sk_drops);
+}
+
 static inline ktime_t sock_read_timestamp(struct sock *sk)
 {
 #if BITS_PER_LONG==32
@@ -2241,9 +2251,6 @@ static inline void sock_write_timestamp(struct sock *sk, ktime_t kt)
 	WRITE_ONCE(sk->sk_stamp, kt);
 #endif
 }
-
-#define sock_skb_cb_check_size(size) \
-	BUILD_BUG_ON((size) > FIELD_SIZEOF(struct sk_buff, cb))
 
 void __sock_recv_timestamp(struct msghdr *msg, struct sock *sk,
 			   struct sk_buff *skb);
