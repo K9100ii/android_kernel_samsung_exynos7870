@@ -146,7 +146,7 @@ static const char *spectre_v2_strings[] = {
 static enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
 
 
-#ifdef RETPOLINE
+#ifdef CONFIG_RETPOLINE
 static bool spectre_v2_bad_module;
 
 bool retpoline_module_ok(bool has_retpoline)
