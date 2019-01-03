@@ -2477,6 +2477,8 @@ static int __do_proc_doulongvec_minmax(void *data, struct ctl_table *table, int 
 			bool neg;
 
 			left -= proc_skip_spaces(&kbuf);
+			if (!left)
+				break;
 
 			err = proc_get_long(&kbuf, &left, &val, &neg,
 					     proc_wspace_sep,
