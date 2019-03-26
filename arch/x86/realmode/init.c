@@ -22,8 +22,6 @@ void __init reserve_real_mode(void)
 	base = __va(mem);
 	memblock_reserve(mem, size);
 	real_mode_header = (struct real_mode_header *) base;
-	printk(KERN_DEBUG "Base memory trampoline at [%p] %llx size %zu\n",
-	       base, (unsigned long long)mem, size);
 }
 
 void __init setup_real_mode(void)
