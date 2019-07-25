@@ -594,6 +594,13 @@ static int tlshim_mgmt_rx_process(void *context, u_int8_t *data,
 		return 0;
 	}
 
+	if (hdr->buf_len > param_tlvs->num_bufp) {
+		adf_os_spin_unlock_bh(&tl_shim->mgmt_lock);
+		TLSHIM_LOGE("Invalid length of frame hdr->buf_len:%u, param_tlvs->num_bufp:%u",
+			hdr->buf_len, param_tlvs->num_bufp);
+		return -EINVAL;
+	}
+
 	if (hdr->buf_len < sizeof(struct ieee80211_frame)) {
 		adf_os_spin_unlock_bh(&tl_shim->mgmt_lock);
 		TLSHIM_LOGE("Invalid rx mgmt packet");
