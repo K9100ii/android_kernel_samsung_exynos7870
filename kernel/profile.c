@@ -363,14 +363,14 @@ out_free:
 		return notifier_from_errno(-ENOMEM);
 	case CPU_ONLINE:
 	case CPU_ONLINE_FROZEN:
-		if (prof_cpu_mask != NULL)
+		if (cpumask_available(prof_cpu_mask))
 			cpumask_set_cpu(cpu, prof_cpu_mask);
 		break;
 	case CPU_UP_CANCELED:
 	case CPU_UP_CANCELED_FROZEN:
 	case CPU_DEAD:
 	case CPU_DEAD_FROZEN:
-		if (prof_cpu_mask != NULL)
+		if (cpumask_available(prof_cpu_mask))
 			cpumask_clear_cpu(cpu, prof_cpu_mask);
 		if (per_cpu(cpu_profile_hits, cpu)[0]) {
 			page = virt_to_page(per_cpu(cpu_profile_hits, cpu)[0]);
@@ -411,7 +411,7 @@ void profile_tick(int type)
 {
 	struct pt_regs *regs = get_irq_regs();
 
-	if (!user_mode(regs) && prof_cpu_mask != NULL &&
+	if (!user_mode(regs) && cpumask_available(prof_cpu_mask) &&
 	    cpumask_test_cpu(smp_processor_id(), prof_cpu_mask))
 		profile_hit(type, (void *)profile_pc(regs));
 }
