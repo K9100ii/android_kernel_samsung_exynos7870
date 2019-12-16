@@ -1797,7 +1797,7 @@ END(nmi)
 ENTRY(ignore_sysret)
 	CFI_STARTPROC
 	mov $-ENOSYS,%eax
-	sysret
+	sysretl
 	CFI_ENDPROC
 END(ignore_sysret)
 
