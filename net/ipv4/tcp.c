@@ -2293,6 +2293,8 @@ int tcp_disconnect(struct sock *sk, int flags)
 	__sk_dst_reset(sk);
 	dst_release(sk->sk_rx_dst);
 	sk->sk_rx_dst = NULL;
+	tp->segs_in = 0;
+	tp->segs_out = 0;
 	tp->bytes_acked = 0;
 	tp->bytes_received = 0;
 
