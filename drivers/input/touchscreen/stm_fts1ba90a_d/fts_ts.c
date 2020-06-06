@@ -1973,11 +1973,16 @@ static irqreturn_t d_fts_interrupt_handler(int irq, void *handle)
 		/* run lpm interrupt handler */
 	}
 
+	/* prevent CPU from entering deep sleep */
+	pm_qos_update_request(&info->pm_qos_req, 100);
+
 	mutex_lock(&info->eventlock);
 
 	ret = d_fts_event_handler_type_b(info);
 
 	mutex_unlock(&info->eventlock);
+
+	pm_qos_update_request(&info->pm_qos_req, PM_QOS_DEFAULT_VALUE);
 
 	return IRQ_HANDLED;
 }
@@ -2660,6 +2665,9 @@ static int d_fts_probe(struct i2c_client *client, const struct i2c_device_id *id
 		info->finger[i].mcount = 0;
 	}
 
+	pm_qos_add_request(&info->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+			PM_QOS_DEFAULT_VALUE);
+
 	retval = d_fts_irq_enable(info, true);
 	if (retval < 0) {
 		input_err(true, &info->client->dev,
@@ -2779,6 +2787,7 @@ err_sec_cmd:
 	if (info->irq_enabled)
 		d_fts_irq_enable(info, false);
 err_enable_irq:
+	pm_qos_remove_request(&info->pm_qos_req);
 	if (info->board->support_dex) {
 		input_unregister_device(info->input_dev_pad);
 		info->input_dev_pad = NULL;
@@ -2908,6 +2917,8 @@ static int d_fts_remove(struct i2c_client *client)
 	g_info_d = NULL;
 
 	kfree(info);
+
+	pm_qos_remove_request(&info->pm_qos_req);
 
 	return 0;
 }

@@ -6,6 +6,7 @@
 #include <linux/wakelock.h>
 #include <linux/vmalloc.h>
 #include <linux/proc_fs.h>
+#include <linux/pm_qos.h>
 
 #define FTS_SUPPORT_TOUCH_KEY
 #undef FTS_SUPPORT_PRESSURE_SENSOR
@@ -683,6 +684,7 @@ struct fts_ts_info {
 	struct mutex i2c_mutex;
 	struct mutex irq_mutex;
 	struct mutex device_mutex;
+	struct pm_qos_request pm_qos_req;
 	struct mutex eventlock;
 	bool reinit_done;
 
