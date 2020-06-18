@@ -869,6 +869,7 @@ void __init setup_arch(char **cmdline_p)
 	init_mm.end_data = (unsigned long) &_edata;
 	init_mm.brk = (unsigned long) &_end;
 
+	jump_label_init();
 	parse_early_param();
 	os_info_init();
 	setup_ipl();
