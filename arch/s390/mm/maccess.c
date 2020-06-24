@@ -50,15 +50,21 @@ static long probe_kernel_write_odd(void *dst, const void *src, size_t size)
 
 long probe_kernel_write(void *dst, const void *src, size_t size)
 {
+	unsigned long flags;
 	long copied = 0;
 
-	while (size) {
-		copied = probe_kernel_write_odd(dst, src, size);
-		if (copied < 0)
-			break;
-		dst += copied;
-		src += copied;
-		size -= copied;
+	flags = arch_local_save_flags();
+	if (!(flags & PSW_MASK_DAT)) {
+		memcpy(dst, src, size);
+	} else {
+		while (size) {
+			copied = probe_kernel_write_odd(dst, src, size);
+			if (copied < 0)
+				break;
+			dst += copied;
+			src += copied;
+			size -= copied;
+		}
 	}
 	return copied < 0 ? -EFAULT : 0;
 }
