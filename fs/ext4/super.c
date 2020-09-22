@@ -4471,6 +4471,7 @@ cantfind_ext4:
 #ifdef CONFIG_QUOTA
 failed_mount8:
 	kobject_del(&sbi->s_kobj);
+	kobject_put(&sbi->s_kobj);
 #endif
 failed_mount7:
 	ext4_unregister_li_request(sb);
