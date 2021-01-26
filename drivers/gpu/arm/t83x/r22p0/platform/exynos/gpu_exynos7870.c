@@ -73,14 +73,14 @@ void __iomem *g3d1_outstanding_regs;
 
 /*  clk,vol,abb,min,max,down stay, pm_qos mem, pm_qos int, pm_qos cpu_kfc_min, pm_qos cpu_egl_max */
 static gpu_dvfs_info gpu_dvfs_table_default[] = {
-	{1300, 900000, 0, 99, 100, 1, 0, 902000, 400000, 1690000, CPU_MAX},
-	{1246, 900000, 0, 99, 100, 1, 0, 902000, 400000, 1690000, CPU_MAX},
-	{1146, 890000, 0, 99, 100, 1, 0, 902000, 400000, 1690000, CPU_MAX},
-	{1001, 880000, 0, 98, 100, 1, 0, 902000, 400000, 1586000, CPU_MAX},
-	{845,  860000, 0, 90,  95, 1, 0, 836000, 400000, 1248000, CPU_MAX},
-	{728,  850000, 0, 85,  90, 1, 0, 728000, 400000, 1144000, CPU_MAX},
-	{676,  840000, 0, 80,  85, 1, 0, 676000, 400000,  902000, CPU_MAX},
-	{545,  830000, 0, 75,  80, 1, 0, 546000, 334000,  902000, CPU_MAX},
+	{1300, 900000, 0, 99, 100, 1, 0, 902000, 400000,       0, CPU_MAX},
+	{1246, 900000, 0, 99, 100, 1, 0, 902000, 400000,       0, CPU_MAX},
+	{1146, 890000, 0, 99, 100, 1, 0, 902000, 400000,       0, CPU_MAX},
+	{1001, 880000, 0, 98, 100, 1, 0, 902000, 400000,       0, CPU_MAX},
+	{845,  860000, 0, 90,  95, 1, 0, 836000, 400000,       0, CPU_MAX},
+	{728,  850000, 0, 85,  90, 1, 0, 728000, 400000,       0, CPU_MAX},
+	{676,  840000, 0, 80,  85, 1, 0, 676000, 400000,       0, CPU_MAX},
+	{545,  830000, 0, 75,  80, 1, 0, 546000, 334000,       0, CPU_MAX},
 	{450,  820000, 0, 70,  75, 1, 0, 451000, 200000,       0, CPU_MAX},
 	{343,  810000, 0, 15,  20, 1, 0, 275000, 134000,       0, CPU_MAX},
 	{160,  800000, 0, 15,  15, 1, 0, 265000, 124000,       0, CPU_MAX},
@@ -96,7 +96,7 @@ static int mif_min_table[] = {
 
 static gpu_attribute gpu_config_attributes[] = {
 	{GPU_MAX_CLOCK, 1001},
-	{GPU_MAX_CLOCK_LIMIT, 1300},
+	{GPU_MAX_CLOCK_LIMIT, 1246},
 	{GPU_MIN_CLOCK, 343},
 	{GPU_MIN_CLOCK_LIMIT, 343},
 	{GPU_DVFS_START_CLOCK, 343},
@@ -121,11 +121,11 @@ static gpu_attribute gpu_config_attributes[] = {
 	{GPU_COLD_MINIMUM_VOL, 0},
 	{GPU_VOLTAGE_OFFSET_MARGIN, 20000},
 	{GPU_TMU_CONTROL, 1},
-	{GPU_TEMP_THROTTLING1, 1146},
+	{GPU_TEMP_THROTTLING1, 1246},
 	{GPU_TEMP_THROTTLING2, 845},
 	{GPU_TEMP_THROTTLING3, 728},
 	{GPU_TEMP_THROTTLING4, 545},
-	{GPU_TEMP_THROTTLING5, 450},
+	{GPU_TEMP_THROTTLING5, 343},
 	{GPU_TEMP_TRIPPING, 343},
 	{GPU_POWER_COEFF, 625}, /* all core on param */
 	{GPU_DVFS_TIME_INTERVAL, 5},
@@ -336,9 +336,13 @@ static int gpu_get_clock(struct kbase_device *kbdev)
 
 static int gpu_enable_clock(struct exynos_context *platform)
 {
+	int err = 0;
 	GPU_LOG(DVFS_DEBUG, DUMMY, 0u, 0u, "%s: [vclk_g3d]\n", __func__);
-	clk_prepare_enable(vclk_g3d);
-	return 0;
+	err = clk_prepare_enable(vclk_g3d);
+	if (err) {
+		GPU_LOG(DVFS_ERROR, LSI_CLOCK_ON_ERR, 0u, 0u, "%s: failed to clk_enable [vclk_g3d]\n", __func__);
+	}
+	return err;
 }
 
 static int gpu_disable_clock(struct exynos_context *platform)
@@ -486,10 +490,14 @@ int gpu_enable_dvs(struct exynos_context *platform)
 	}
 
 #ifdef CONFIG_EXYNOS_CL_DVFS_G3D
-	if (!platform->dvs_is_enabled)
-	{
-		level = gpu_dvfs_get_level(gpu_get_cur_clock(platform));
-		exynos_cl_dvfs_stop(ID_G3D, level);
+	if (!platform->dvs_is_enabled) {
+		if (platform->exynos_pm_domain) {
+		mutex_lock(&platform->exynos_pm_domain->access_lock);
+		if (!platform->dvs_is_enabled && gpu_is_power_on()) {
+			level = gpu_dvfs_get_level(gpu_get_cur_clock(platform));
+			exynos_cl_dvfs_stop(ID_G3D, level);
+		}
+		mutex_unlock(&platform->exynos_pm_domain->access_lock);
 	}
 #endif /* CONFIG_EXYNOS_CL_DVFS_G3D */
 

@@ -313,7 +313,6 @@ int kbase_backend_timer_init(struct kbase_device *kbdev)
 							HRTIMER_MODE_REL);
 	backend->scheduling_timer.function = timer_callback;
 
-	/* MALI_SEC_INTEGRATION */
 	backend->timer_running = false;
 
 	return 0;
