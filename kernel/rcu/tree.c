@@ -56,7 +56,6 @@
 #include <linux/random.h>
 #include <linux/trace_events.h>
 #include <linux/suspend.h>
-#include <linux/exynos-ss.h>
 
 #include "tree.h"
 #include "rcu.h"
