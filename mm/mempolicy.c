@@ -2041,7 +2041,7 @@ retry_cpuset:
 			 * providing THP originated from the local
 			 * node in such case.
 			 */
-			if (!(gfp & __GFP_DIRECT_RECLAIM))
+			if (!(gfp & __GFP_WAIT))
 				gfp |= __GFP_THISNODE;
 			page = __alloc_pages_node(hpage_node, gfp, order);
 			goto out;
