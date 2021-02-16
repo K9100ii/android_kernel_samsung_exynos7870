@@ -27,6 +27,7 @@
  */
 
 /*-------------------------------------------------------------------------*/
+#include <linux/usb/otg.h>
 
 #define	PORT_WAKE_BITS	(PORT_WKOC_E|PORT_WKDISC_E|PORT_WKCONN_E)
 
@@ -576,19 +577,6 @@ static int check_reset_complete (
 				"Failed to enable port %d on root hub TT\n",
 				index+1);
 			return port_status;
-		}
-
-		/* W/A for Synopsys HC HSIC port.
-		 * Return at this point to prevent port owner change
-		 * and retry port reset.
-		 */
-		if (ehci->has_synopsys_hsic_bug) {
-			if ((index + 1) == ehci->hsic_ports) {
-				ehci_err (ehci,
-					"Failed to enable HSIC port %d\n",
-					index + 1);
-				return port_status;
-			}
 		}
 
 		ehci_dbg (ehci, "port %d full speed --> companion\n",
@@ -1221,20 +1209,6 @@ int ehci_hub_control(
 					wIndex + 1);
 				temp |= PORT_OWNER;
 			} else {
-				ehci_vdbg (ehci, "port %d reset\n", wIndex + 1);
-
-				/* W/A for Synopsys HC HSIC port.
-				 * Disable HSIC port to prevent
-				 * the port reset failure.
-				 */
-				if (ehci->has_synopsys_hsic_bug) {
-					if ((wIndex + 1) == ehci->hsic_ports) {
-						ehci_writel(ehci,
-							temp & ~PORT_PE,
-							status_reg);
-					}
-				}
-
 				temp |= PORT_RESET;
 				temp &= ~PORT_PE;
 
