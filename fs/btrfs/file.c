@@ -32,6 +32,7 @@
 #include <linux/compat.h>
 #include <linux/slab.h>
 #include <linux/btrfs.h>
+#include <linux/blkdev.h>
 #include "ctree.h"
 #include "disk-io.h"
 #include "transaction.h"
