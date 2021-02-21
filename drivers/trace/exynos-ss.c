@@ -370,7 +370,6 @@ struct exynos_ss_desc {
 	bool need_header;
 
 	unsigned int callstack;
-	int hardlockup;
 	int no_wdt_dev;
 
 	struct vm_struct vm;
@@ -396,8 +395,6 @@ extern void register_hook_logbuf(void (*)(const char));
 extern void register_hook_logbuf(void (*)(const char *, size_t));
 #endif
 extern void register_hook_logger(void (*)(const char *, const char *, size_t));
-
-extern int exynos_check_hardlockup_reason(void);
 
 typedef int (*ess_initcall_t)(const struct device_node *);
 
@@ -761,12 +758,12 @@ static inline void exynos_ss_hook_logger(const char *name,
 	if (likely(ess_base.enabled == true && item->entry.enabled == true)) {
 		if (unlikely((exynos_ss_check_eob(item, size))))
 			item->curr_ptr = item->head_ptr;
-		
+
 		/* purpose of debugging : should be removed */
 		debug_curr_ptr = item->curr_ptr;
 		debug_buf = buf;
 		debug_size = size;
-		
+
 		memcpy(item->curr_ptr, buf, size);
 		item->curr_ptr += size;
 	}
@@ -969,7 +966,7 @@ void exynos_ss_check_crash_key(unsigned int code, int value)
 		check_crash_keys_in_user(code, value);
 #endif
 		return;
-	}	
+	}
 #endif
 
 	if (code == KEY_POWER)
@@ -2269,9 +2266,9 @@ static const char * find_tag_name_from_id ( int id )
 	int l = 0;
 	int r = ARRAY_SIZE(event_tags)-1;
 	int mid = 0;
-	
+
 	while ( l <= r )
-	{		
+	{
 		mid = (l+r)/2;
 
 		if (event_tags[mid].nTagNum == id )
@@ -2281,15 +2278,15 @@ static const char * find_tag_name_from_id ( int id )
 		else
 			r = mid - 1;
 	}
-	
-	return NULL;	
+
+	return NULL;
 }
 
 static char * parse_buffer(char *buffer, unsigned char type)
 {
 	unsigned int buf_len =0;
 	char buf[64] = {0};
-	
+
 	switch(type)
 	{
 		case EVENT_TYPE_INT:
@@ -2327,9 +2324,9 @@ static char * parse_buffer(char *buffer, unsigned char type)
             buffer+=_len;
 		}
 		break;
-		
+
 	}
-	
+
 	return buffer;
 }
 #endif
@@ -2395,14 +2392,11 @@ static int exynos_ss_combine_pmsg(char *buffer, size_t count, unsigned int level
 				char buf[64] = {0};
 				int tag_id = *(int *)buffer;
 				const char * tag_name  = NULL;
-				
-				if ( count == 4 && (tag_name = find_tag_name_from_id(tag_id)) != NULL )
-				{					
+
+				if (count == 4 && (tag_name = find_tag_name_from_id(tag_id)) != NULL) {
 					buf_len = snprintf(buf, 64, "# %s ", tag_name);
 					logger.func_hook_logger("log_platform", buf, buf_len);
-				}
-				else
-				{
+				} else {
 					// SINGLE ITEM
 					// logger.msg[0] => count == 1 , if event log, it is type.
 					if ( logger.msg[0] == EVENT_TYPE_LONG || logger.msg[0] == EVENT_TYPE_INT || logger.msg[0] == EVENT_TYPE_FLOAT )
@@ -2416,9 +2410,9 @@ static int exynos_ss_combine_pmsg(char *buffer, size_t count, unsigned int level
 							unsigned char items = *(buffer+1);
 							unsigned char i = 0;
 							buffer+=2;
-							
+
 							logger.func_hook_logger("log_platform", "[", 1);
-							
+
 							for (;i<items;++i)
 							{
 								unsigned char type = *buffer;
@@ -2426,15 +2420,15 @@ static int exynos_ss_combine_pmsg(char *buffer, size_t count, unsigned int level
 								buffer = parse_buffer(buffer, type);
 								logger.func_hook_logger("log_platform", ":", 1);
 							}
-							
+
 							logger.func_hook_logger("log_platform", "]", 1);
-		
+
 						}
 						else if ( *buffer == EVENT_TYPE_STRING )
 							parse_buffer(buffer+1, EVENT_TYPE_STRING);
 					}
-						
-					logger.msg[0]=0xff; // dummy value;	
+
+					logger.msg[0]=0xff; // dummy value;
 				}
 #else
 				break;
@@ -2820,8 +2814,8 @@ static int schedinfo_proc_show(struct seq_file *m, void *v)
 		seq_printf(m, "exynos-ss is not enabled\n");
 		return 0;
 	}
-	
-	for(cpu = 0; cpu < CONFIG_NR_CPUS; cpu++) {
+
+	for (cpu = 0; cpu < CONFIG_NR_CPUS; cpu++) {
 		pretime=0;
 		elapsedtime=0;
 
@@ -2831,7 +2825,7 @@ static int schedinfo_proc_show(struct seq_file *m, void *v)
 		do {
 			if (ess_log->task[cpu][curr].time == 0)
 				break;
-			if(pretime) {
+			if (pretime) {
 				elapsedtime=ess_log->task[cpu][curr].time-pretime;
 				ts = elapsedtime;
 				rem_nsec = do_div(ts, 1000000000);
@@ -2842,16 +2836,16 @@ static int schedinfo_proc_show(struct seq_file *m, void *v)
 			ts = ess_log->task[cpu][curr].time;
 			rem_nsec = do_div(ts, 1000000000);
 
-			for(len = 0; (len < TASK_COMM_LEN) && (ess_log->task[cpu][curr].task_comm)[len]; len++);
-			if(len < TASK_COMM_LEN) 
-				seq_printf(m, "[%5llu.%09llu] %-6d  %-15s  ", 
+			for (len = 0; (len < TASK_COMM_LEN) && (ess_log->task[cpu][curr].task_comm)[len]; len++);
+			if (len < TASK_COMM_LEN)
+				seq_printf(m, "[%5llu.%09llu] %-6d  %-15s  ",
 					ts, rem_nsec,
 					ess_log->task[cpu][curr].task->pid,
 					ess_log->task[cpu][curr].task_comm);
-			else 
-				seq_printf(m, "[%5llu.%09llu]         %-15s  ", 
+			else
+				seq_printf(m, "[%5llu.%09llu]         %-15s  ",
 					ts, rem_nsec, "exited");
-			
+
 			curr = (curr+1) & (ARRAY_SIZE(ess_log->task[0])-1);
 		} while (start != curr);
 		seq_printf(m, "\n\n");
@@ -2884,13 +2878,13 @@ static int irqinfo_proc_show(struct seq_file *m, void *v)
 	unsigned start, curr;
 	unsigned long long ts, rem_nsec;
 	struct exynos_ss_item *item = &ess_items[ess_desc.kevents_num];
-	
+
 	if (unlikely(!ess_base.enabled || !item->entry.enabled)) {
 		seq_printf(m, "exynos-ss is not enabled\n");
 		return 0;
 	}
-	
-	for(cpu = 0; cpu < CONFIG_NR_CPUS; cpu++) {		
+
+	for(cpu = 0; cpu < CONFIG_NR_CPUS; cpu++) {
 		start = (atomic_read(&ess_idx.irq_log_idx[cpu]) + 1) & (ARRAY_SIZE(ess_log->irq[0]) - 1);
 		curr = start;
 		seq_printf(m, "[   CPU%d irq log] irq    fn          preempt     en \n", cpu);
@@ -2899,10 +2893,10 @@ static int irqinfo_proc_show(struct seq_file *m, void *v)
 				break;
 			ts = ess_log->irq[cpu][curr].time;
 			rem_nsec = do_div(ts, 1000000000);
-			
-			seq_printf(m, "[%5llu.%09llu] %-5d  0x%p  0x%-8x  %d\n", 
+
+			seq_printf(m, "[%5llu.%09llu] %-5d  0x%p  0x%-8x  %d\n",
 				ts, rem_nsec,
-				ess_log->irq[cpu][curr].irq, 
+				ess_log->irq[cpu][curr].irq,
 				ess_log->irq[cpu][curr].fn,
 				ess_log->irq[cpu][curr].preempt,
 				ess_log->irq[cpu][curr].en);
