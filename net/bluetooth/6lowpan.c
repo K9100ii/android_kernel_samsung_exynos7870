@@ -21,6 +21,8 @@
 #include <net/ip6_route.h>
 #include <net/addrconf.h>
 
+#include <net/af_ieee802154.h> /* to get the address type */
+
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 #include <net/bluetooth/l2cap.h>
@@ -33,6 +35,7 @@ static struct dentry *lowpan_enable_debugfs;
 static struct dentry *lowpan_control_debugfs;
 
 #define IFACE_NAME_TEMPLATE "bt%d"
+#define EUI64_ADDR_LEN 8
 
 struct skb_cb {
 	struct in6_addr addr;
@@ -83,7 +86,7 @@ struct lowpan_dev {
 
 static inline struct lowpan_dev *lowpan_dev(const struct net_device *netdev)
 {
-	return (struct lowpan_dev *)lowpan_priv(netdev)->priv;
+	return netdev_priv(netdev);
 }
 
 static inline void peer_add(struct lowpan_dev *dev, struct lowpan_peer *peer)
@@ -265,18 +268,26 @@ static struct lowpan_dev *lookup_dev(struct l2cap_conn *conn)
 static int give_skb_to_upper(struct sk_buff *skb, struct net_device *dev)
 {
 	struct sk_buff *skb_cp;
+	int ret;
 
 	skb_cp = skb_copy(skb, GFP_ATOMIC);
 	if (!skb_cp)
 		return NET_RX_DROP;
 
-	return netif_rx_ni(skb_cp);
+	ret = netif_rx(skb_cp);
+	if (ret < 0) {
+		BT_DBG("receive skb %d", ret);
+		return NET_RX_DROP;
+	}
+
+	return ret;
 }
 
 static int iphc_decompress(struct sk_buff *skb, struct net_device *netdev,
 			   struct l2cap_chan *chan)
 {
 	const u8 *saddr, *daddr;
+	u8 iphc0, iphc1;
 	struct lowpan_dev *dev;
 	struct lowpan_peer *peer;
 
@@ -291,7 +302,22 @@ static int iphc_decompress(struct sk_buff *skb, struct net_device *netdev,
 	saddr = peer->eui64_addr;
 	daddr = dev->netdev->dev_addr;
 
-	return lowpan_header_decompress(skb, netdev, daddr, saddr);
+	/* at least two bytes will be used for the encoding */
+	if (skb->len < 2)
+		return -EINVAL;
+
+	if (lowpan_fetch_skb_u8(skb, &iphc0))
+		return -EINVAL;
+
+	if (lowpan_fetch_skb_u8(skb, &iphc1))
+		return -EINVAL;
+
+	return lowpan_header_decompress(skb, netdev,
+					saddr, IEEE802154_ADDR_LONG,
+					EUI64_ADDR_LEN, daddr,
+					IEEE802154_ADDR_LONG, EUI64_ADDR_LEN,
+					iphc0, iphc1);
+
 }
 
 static int recv_pkt(struct sk_buff *skb, struct net_device *dev,
@@ -303,17 +329,15 @@ static int recv_pkt(struct sk_buff *skb, struct net_device *dev,
 	if (!netif_running(dev))
 		goto drop;
 
-	if (dev->type != ARPHRD_6LOWPAN || !skb->len)
+	if (dev->type != ARPHRD_6LOWPAN)
 		goto drop;
-
-	skb_reset_network_header(skb);
 
 	skb = skb_share_check(skb, GFP_ATOMIC);
 	if (!skb)
 		goto drop;
 
 	/* check that it's our buffer */
-	if (lowpan_is_ipv6(*skb_network_header(skb))) {
+	if (skb->data[0] == LOWPAN_DISPATCH_IPV6) {
 		/* Pull off the 1-byte of 6lowpan header. */
 		skb_pull(skb, 1);
 
@@ -329,6 +353,7 @@ static int recv_pkt(struct sk_buff *skb, struct net_device *dev,
 		local_skb->pkt_type = PACKET_HOST;
 		local_skb->dev = dev;
 
+		skb_reset_network_header(local_skb);
 		skb_set_transport_header(local_skb, sizeof(struct ipv6hdr));
 
 		if (give_skb_to_upper(local_skb, dev) != NET_RX_SUCCESS) {
@@ -341,35 +366,39 @@ static int recv_pkt(struct sk_buff *skb, struct net_device *dev,
 
 		consume_skb(local_skb);
 		consume_skb(skb);
-	} else if (lowpan_is_iphc(*skb_network_header(skb))) {
-		local_skb = skb_clone(skb, GFP_ATOMIC);
-		if (!local_skb)
-			goto drop;
-
-		local_skb->dev = dev;
-
-		ret = iphc_decompress(local_skb, dev, chan);
-		if (ret < 0) {
-			kfree_skb(local_skb);
-			goto drop;
-		}
-
-		local_skb->protocol = htons(ETH_P_IPV6);
-		local_skb->pkt_type = PACKET_HOST;
-
-		if (give_skb_to_upper(local_skb, dev)
-				!= NET_RX_SUCCESS) {
-			kfree_skb(local_skb);
-			goto drop;
-		}
-
-		dev->stats.rx_bytes += skb->len;
-		dev->stats.rx_packets++;
-
-		consume_skb(local_skb);
-		consume_skb(skb);
 	} else {
-		goto drop;
+		switch (skb->data[0] & 0xe0) {
+		case LOWPAN_DISPATCH_IPHC:	/* ipv6 datagram */
+			local_skb = skb_clone(skb, GFP_ATOMIC);
+			if (!local_skb)
+				goto drop;
+
+			local_skb->dev = dev;
+
+			ret = iphc_decompress(local_skb, dev, chan);
+			if (ret < 0) {
+				kfree_skb(local_skb);
+				goto drop;
+			}
+
+			local_skb->protocol = htons(ETH_P_IPV6);
+			local_skb->pkt_type = PACKET_HOST;
+
+			if (give_skb_to_upper(local_skb, dev)
+					!= NET_RX_SUCCESS) {
+				kfree_skb(local_skb);
+				goto drop;
+			}
+
+			dev->stats.rx_bytes += skb->len;
+			dev->stats.rx_packets++;
+
+			consume_skb(local_skb);
+			consume_skb(skb);
+			break;
+		default:
+			break;
+		}
 	}
 
 	return NET_RX_SUCCESS;
@@ -483,7 +512,8 @@ static int setup_header(struct sk_buff *skb, struct net_device *netdev,
 		status = 1;
 	}
 
-	lowpan_header_compress(skb, netdev, daddr, dev->netdev->dev_addr);
+	lowpan_header_compress(skb, netdev, ETH_P_IPV6, daddr,
+			       dev->netdev->dev_addr, skb->len);
 
 	err = dev_hard_header(skb, netdev, ETH_P_IPV6, NULL, NULL, 0);
 	if (err < 0)
@@ -663,8 +693,13 @@ static struct header_ops header_ops = {
 
 static void netdev_setup(struct net_device *dev)
 {
+	dev->addr_len		= EUI64_ADDR_LEN;
+	dev->type		= ARPHRD_6LOWPAN;
+
 	dev->hard_header_len	= 0;
 	dev->needed_tailroom	= 0;
+	dev->mtu		= IPV6_MIN_MTU;
+	dev->tx_queue_len	= 0;
 	dev->flags		= IFF_RUNNING | IFF_POINTOPOINT |
 				  IFF_MULTICAST;
 	dev->watchdog_timeo	= 0;
@@ -815,9 +850,8 @@ static int setup_netdev(struct l2cap_chan *chan, struct lowpan_dev **dev)
 	struct net_device *netdev;
 	int err = 0;
 
-	netdev = alloc_netdev(LOWPAN_PRIV_SIZE(sizeof(struct lowpan_dev)),
-			      IFACE_NAME_TEMPLATE, NET_NAME_UNKNOWN,
-			      netdev_setup);
+	netdev = alloc_netdev(sizeof(struct lowpan_dev), IFACE_NAME_TEMPLATE,
+			      NET_NAME_UNKNOWN, netdev_setup);
 	if (!netdev)
 		return -ENOMEM;
 
@@ -836,8 +870,6 @@ static int setup_netdev(struct l2cap_chan *chan, struct lowpan_dev **dev)
 	INIT_LIST_HEAD(&(*dev)->list);
 	list_add_rcu(&(*dev)->list, &bt_6lowpan_devices);
 	spin_unlock(&devices_lock);
-
-	lowpan_netdev_setup(netdev, LOWPAN_LLTYPE_BTLE);
 
 	err = register_netdev(netdev);
 	if (err < 0) {
