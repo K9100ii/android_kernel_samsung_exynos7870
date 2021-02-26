@@ -778,7 +778,7 @@ void samsung_register_comp_pll(struct samsung_clk_provider *ctx,
 }
 
 /* operation functions for mux clocks */
-static int samsung_mux_get_parent(struct clk_hw *hw)
+static u8 samsung_mux_get_parent(struct clk_hw *hw)
 {
 	struct samsung_composite_mux *mux = to_comp_mux(hw);
 	u32 val;
