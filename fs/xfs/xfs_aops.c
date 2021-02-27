@@ -137,40 +137,15 @@ xfs_setfilesize_trans_alloc(
  */
 STATIC int
 xfs_setfilesize(
-	struct xfs_inode	*ip,
-	struct xfs_trans	*tp,
-	xfs_off_t		offset,
-	size_t			size)
-{
-	xfs_fsize_t		isize;
-
-	xfs_ilock(ip, XFS_ILOCK_EXCL);
-	isize = xfs_new_eof(ip, offset + size);
-	if (!isize) {
-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-		xfs_trans_cancel(tp, 0);
-		return 0;
-	}
-
-	trace_xfs_setfilesize(ip, offset, size);
-
-	ip->i_d.di_size = isize;
-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-
-	return xfs_trans_commit(tp, 0);
-}
-
-STATIC int
-xfs_setfilesize_ioend(
 	struct xfs_ioend	*ioend)
 {
 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
 	struct xfs_trans	*tp = ioend->io_append_trans;
+	xfs_fsize_t		isize;
 
 	/*
 	 * The transaction may have been allocated in the I/O submission thread,
-	 * thus we need to mark ourselves as being in a transaction manually.
+	 * thus we need to mark ourselves as beeing in a transaction manually.
 	 * Similarly for freeze protection.
 	 */
 	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
@@ -178,11 +153,25 @@ xfs_setfilesize_ioend(
 
 	/* we abort the update if there was an IO error */
 	if (ioend->io_error) {
-		xfs_trans_cancel(tp);
+		xfs_trans_cancel(tp, 0);
 		return ioend->io_error;
 	}
 
-	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+	xfs_ilock(ip, XFS_ILOCK_EXCL);
+	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
+	if (!isize) {
+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+		xfs_trans_cancel(tp, 0);
+		return 0;
+	}
+
+	trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
+
+	ip->i_d.di_size = isize;
+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+
+	return xfs_trans_commit(tp, 0);
 }
 
 /*
@@ -200,7 +189,8 @@ xfs_finish_ioend(
 
 		if (ioend->io_type == XFS_IO_UNWRITTEN)
 			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-		else if (ioend->io_append_trans)
+		else if (ioend->io_append_trans ||
+			 (ioend->io_isdirect && xfs_ioend_is_append(ioend)))
 			queue_work(mp->m_data_workqueue, &ioend->io_work);
 		else
 			xfs_destroy_ioend(ioend);
@@ -235,8 +225,22 @@ xfs_end_io(
 			goto done;
 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
 						  ioend->io_size);
+	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
+		/*
+		 * For direct I/O we do not know if we need to allocate blocks
+		 * or not so we can't preallocate an append transaction as that
+		 * results in nested reservations and log space deadlocks. Hence
+		 * allocate the transaction here. While this is sub-optimal and
+		 * can block IO completion for some time, we're stuck with doing
+		 * it this way until we can pass the ioend to the direct IO
+		 * allocation callbacks and avoid nesting that way.
+		 */
+		error = xfs_setfilesize_trans_alloc(ioend);
+		if (error)
+			goto done;
+		error = xfs_setfilesize(ioend);
 	} else if (ioend->io_append_trans) {
-		error = xfs_setfilesize_ioend(ioend);
+		error = xfs_setfilesize(ioend);
 	} else {
 		ASSERT(!xfs_ioend_is_append(ioend));
 	}
@@ -245,6 +249,17 @@ done:
 	if (error)
 		ioend->io_error = error;
 	xfs_destroy_ioend(ioend);
+}
+
+/*
+ * Call IO completion handling in caller context on the final put of an ioend.
+ */
+STATIC void
+xfs_finish_ioend_sync(
+	struct xfs_ioend	*ioend)
+{
+	if (atomic_dec_and_test(&ioend->io_remaining))
+		xfs_end_io(&ioend->io_work);
 }
 
 /*
@@ -268,6 +283,7 @@ xfs_alloc_ioend(
 	 * all the I/O from calling the completion routine too early.
 	 */
 	atomic_set(&ioend->io_remaining, 1);
+	ioend->io_isdirect = 0;
 	ioend->io_error = 0;
 	ioend->io_list = NULL;
 	ioend->io_type = type;
@@ -1472,7 +1488,11 @@ xfs_get_blocks_direct(
  *
  * If the private argument is non-NULL __xfs_get_blocks signals us that we
  * need to issue a transaction to convert the range from unwritten to written
- * extents.
+ * extents.  In case this is regular synchronous I/O we just call xfs_end_io
+ * to do this and we are done.  But in case this was a successful AIO
+ * request this handler is called from interrupt context, from which we
+ * can't start transactions.  In that case offload the I/O completion to
+ * the workqueues we also use for buffered I/O completion.
  */
 STATIC void
 xfs_end_io_direct_write(
@@ -1481,12 +1501,7 @@ xfs_end_io_direct_write(
 	ssize_t			size,
 	void			*private)
 {
-	struct inode		*inode = file_inode(iocb->ki_filp);
-	struct xfs_inode	*ip = XFS_I(inode);
-	struct xfs_mount	*mp = ip->i_mount;
-
-	if (XFS_FORCED_SHUTDOWN(mp))
-		return;
+	struct xfs_ioend	*ioend = iocb->private;
 
 	/*
 	 * While the generic direct I/O code updates the inode size, it does
@@ -1494,33 +1509,22 @@ xfs_end_io_direct_write(
 	 * end_io handler thinks the on-disk size is outside the in-core
 	 * size.  To prevent this just update it a little bit earlier here.
 	 */
-	if (offset + size > i_size_read(inode))
-		i_size_write(inode, offset + size);
+	if (offset + size > i_size_read(ioend->io_inode))
+		i_size_write(ioend->io_inode, offset + size);
 
 	/*
-	 * For direct I/O we do not know if we need to allocate blocks or not,
-	 * so we can't preallocate an append transaction, as that results in
-	 * nested reservations and log space deadlocks. Hence allocate the
-	 * transaction here. While this is sub-optimal and can block IO
-	 * completion for some time, we're stuck with doing it this way until
-	 * we can pass the ioend to the direct IO allocation callbacks and
-	 * avoid nesting that way.
+	 * blockdev_direct_IO can return an error even after the I/O
+	 * completion handler was called.  Thus we need to protect
+	 * against double-freeing.
 	 */
-	if (private && size > 0) {
-		xfs_iomap_write_unwritten(ip, offset, size);
-	} else if (offset + size > ip->i_d.di_size) {
-		struct xfs_trans	*tp;
-		int			error;
+	iocb->private = NULL;
 
-		tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
-		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
-		if (error) {
-			xfs_trans_cancel(tp, 0);
-			return;
-		}
+	ioend->io_offset = offset;
+	ioend->io_size = size;
+	if (private && size > 0)
+		ioend->io_type = XFS_IO_UNWRITTEN;
 
-		xfs_setfilesize(ip, tp, offset, size);
-	}
+	xfs_finish_ioend_sync(ioend);
 }
 
 STATIC ssize_t
@@ -1532,16 +1536,39 @@ xfs_vm_direct_IO(
 {
 	struct inode		*inode = iocb->ki_filp->f_mapping->host;
 	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
+	struct xfs_ioend	*ioend = NULL;
+	ssize_t			ret;
 
 	if (rw & WRITE) {
-		return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+		size_t size = iov_iter_count(iter);
+
+		/*
+		 * We cannot preallocate a size update transaction here as we
+		 * don't know whether allocation is necessary or not. Hence we
+		 * can only tell IO completion that one is necessary if we are
+		 * not doing unwritten extent conversion.
+		 */
+		iocb->private = ioend = xfs_alloc_ioend(inode, XFS_IO_DIRECT);
+		if (offset + size > XFS_I(inode)->i_d.di_size)
+			ioend->io_isdirect = 1;
+
+		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
 					    offset, xfs_get_blocks_direct,
 					    xfs_end_io_direct_write, NULL,
 					    DIO_ASYNC_EXTEND);
+		if (ret != -EIOCBQUEUED && iocb->private)
+			goto out_destroy_ioend;
+	} else {
+		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+					    offset, xfs_get_blocks_direct,
+					    NULL, NULL, 0);
 	}
-	return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
-				    offset, xfs_get_blocks_direct,
-				    NULL, NULL, 0);
+
+	return ret;
+
+out_destroy_ioend:
+	xfs_destroy_ioend(ioend);
+	return ret;
 }
 
 /*
