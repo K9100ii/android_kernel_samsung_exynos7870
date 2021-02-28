@@ -4772,6 +4772,9 @@ int i40e_vsi_open(struct i40e_vsi *vsi)
 		snprintf(int_name, sizeof(int_name) - 1, "%s-fdir",
 			 dev_driver_string(&pf->pdev->dev));
 		err = i40e_vsi_request_irq(vsi, int_name);
+		if (err)
+			goto err_setup_rx;
+
 	} else {
 		err = -EINVAL;
 		goto err_setup_rx;
