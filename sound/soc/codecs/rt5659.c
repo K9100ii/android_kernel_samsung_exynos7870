@@ -4456,8 +4456,8 @@ static int rt5659_set_codec_pll(struct snd_soc_codec *codec, int pll_id,
 	snd_soc_write(codec, RT5659_PLL_CTRL_1,
 		pll_code.n_code << RT5659_PLL_N_SFT | pll_code.k_code);
 	snd_soc_write(codec, RT5659_PLL_CTRL_2,
-		(pll_code.m_bp ? 0 : pll_code.m_code) << RT5659_PLL_M_SFT |
-		pll_code.m_bp << RT5659_PLL_M_BP_SFT);
+		((pll_code.m_bp ? 0 : pll_code.m_code) << RT5659_PLL_M_SFT) |
+		(pll_code.m_bp << RT5659_PLL_M_BP_SFT));
 	snd_soc_update_bits(codec, RT5659_DUMMY_4, 0x1, pll_code.k_bp);
 
 	rt5659->pll_in = freq_in;
