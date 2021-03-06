@@ -784,12 +784,6 @@ static int irda_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 	if (addr_len != sizeof(struct sockaddr_irda))
 		return -EINVAL;
 
-	/* Ensure that the socket is not already bound */
-	if (self->ias_obj) {
-		err = -EINVAL;
-		goto out;
-	}
-
 	lock_sock(sk);
 
 	/* Ensure that the socket is not already bound */
