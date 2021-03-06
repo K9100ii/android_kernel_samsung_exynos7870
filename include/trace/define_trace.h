@@ -87,7 +87,7 @@
 #define DECLARE_TRACE(name, proto, args)
 
 #ifdef CONFIG_EVENT_TRACING
-#include <trace/trace_events.h>
+#include <trace/ftrace.h>
 #endif
 
 #undef TRACE_EVENT
