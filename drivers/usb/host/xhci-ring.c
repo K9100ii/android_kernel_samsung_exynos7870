@@ -310,7 +310,7 @@ static void xhci_handle_stopped_cmd_ring(struct xhci_hcd *xhci,
 
 		i_cmd->status = COMP_CMD_STOP;
 
-		xhci_info(xhci, "Turn aborted command %p to no-op\n",
+		xhci_dbg(xhci, "Turn aborted command %p to no-op\n",
 			 i_cmd->command_trb);
 		/* get cycle state from the original cmd trb */
 		cycle_state = le32_to_cpu(
@@ -1286,7 +1286,6 @@ void xhci_handle_command_timeout(struct work_struct *work)
 		spin_unlock_irqrestore(&xhci->lock, flags);
 		return;
 	}
-
 	/* mark this command to be cancelled */
 	xhci->current_cmd->status = COMP_CMD_ABORT;
 
@@ -1304,19 +1303,25 @@ void xhci_handle_command_timeout(struct work_struct *work)
 			spin_unlock_irqrestore(&xhci->lock, flags);
 			usb_hc_died(xhci_to_hcd(xhci)->primary_hcd);
 			xhci_dbg(xhci, "xHCI host controller is dead.\n");
+
 			return;
 		}
+
 		goto time_out_completed;
 	}
+
 	/* host removed. Bail out */
 	if (xhci->xhc_state & XHCI_STATE_REMOVING) {
 		xhci_dbg(xhci, "host removed, ring start fail?\n");
 		xhci_cleanup_command_queue(xhci);
+
 		goto time_out_completed;
 	}
+
 	/* command timeout on stopped ring, ring can't be aborted */
 	xhci_dbg(xhci, "Command timeout on stopped ring\n");
 	xhci_handle_stopped_cmd_ring(xhci, xhci->current_cmd);
+
 time_out_completed:
 	spin_unlock_irqrestore(&xhci->lock, flags);
 	return;
@@ -2594,15 +2599,6 @@ cleanup:
 						urb->transfer_buffer_length,
 						status);
 			spin_unlock(&xhci->lock);
-#ifdef CONFIG_HOST_COMPLIANT_TEST
-			if (likely(urb->transfer_flags & URB_HCD_DRIVER_TEST)) {
-				xhci_info(xhci, "USB_TEST : URB_HCD_DRIVER_TEST\n");
-				ep->skip = false;
-				spin_lock(&xhci->lock);
-				break;
-			}
-#endif
-
 			/* EHCI, UHCI, and OHCI always unconditionally set the
 			 * urb->status of an isochronous endpoint to 0.
 			 */
@@ -3149,6 +3145,7 @@ static int queue_bulk_sg_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
 		return ret;
 
 	urb_priv = urb->hcpriv;
+
 	/* Deal with URB_ZERO_PACKET - need one more td/trb */
 	zero_length_needed = urb->transfer_flags & URB_ZERO_PACKET &&
 		urb_priv->length == 2;
@@ -3161,6 +3158,7 @@ static int queue_bulk_sg_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
 		if (ret < 0)
 			return ret;
 	}
+
 	td = urb_priv->td[0];
 
 	/*
@@ -3337,6 +3335,7 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
 		return ret;
 
 	urb_priv = urb->hcpriv;
+
 	/* Deal with URB_ZERO_PACKET - need one more td/trb */
 	zero_length_needed = urb->transfer_flags & URB_ZERO_PACKET &&
 		urb_priv->length == 2;
@@ -3390,8 +3389,7 @@ int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
 		 */
 		if (num_trbs > last_trb_num) {
 			field |= TRB_CHAIN;
-		} else if (num_trbs == last_trb_num){
-			/* FIXME - add check for ZERO_PACKET flag before this */
+		} else if (num_trbs == last_trb_num) {
 			td->last_trb = ep_ring->enqueue;
 			field |= TRB_IOC;
 		} else if (zero_length_needed && num_trbs == 1) {
@@ -3559,134 +3557,6 @@ int xhci_queue_ctrl_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
 			start_cycle, start_trb);
 	return 0;
 }
-
-#ifdef CONFIG_HOST_COMPLIANT_TEST
-int xhci_queue_ctrl_tx_single_step(struct xhci_hcd *xhci,
-		gfp_t mem_flags, struct urb *urb, int slot_id,
-		unsigned int ep_index, int get_dev_desc)
-{
-	struct xhci_ring *ep_ring;
-	int num_trbs;
-	int ret;
-	struct usb_ctrlrequest *setup;
-	struct xhci_generic_trb *start_trb;
-	int start_cycle;
-	u32 field, length_field;
-	struct urb_priv *urb_priv;
-	struct xhci_td *td;
-
-	ep_ring = xhci_urb_to_transfer_ring(xhci, urb);
-	if (!ep_ring)
-		return -EINVAL;
-
-	/*
-	 * Need to copy setup packet into setup TRB, so we can't use the setup
-	 * DMA address.
-	 */
-	if (!urb->setup_packet)
-		return -EINVAL;
-	/* 1 TRB for setup, 1 for status */
-	num_trbs = 2;
-	/*
-	 * Don't need to check if we need additional event data and normal TRBs,
-	 * since data in control transfers will never get bigger than 16MB
-	 * XXX: can we get a buffer that crosses 64KB boundaries?
-	 */
-	if (urb->transfer_buffer_length > 0)
-		num_trbs++;
-
-	ret = prepare_transfer(xhci, xhci->devs[slot_id], ep_index,
-				urb->stream_id, num_trbs, urb, 0, GFP_KERNEL);
-	if (ret < 0)
-		return ret;
-
-	urb_priv = urb->hcpriv;
-	td = urb_priv->td[0];
-
-	start_trb = &ep_ring->enqueue->generic;
-	start_cycle = ep_ring->cycle_state;
-
-	/* Queue setup TRB - see section 6.4.1.2.1 */
-	/* FIXME better way to translate setup_packet into two u32 fields? */
-	setup = (struct usb_ctrlrequest *) urb->setup_packet;
-	field = 0;
-	field |= TRB_IDT | TRB_TYPE(TRB_SETUP);
-	if (start_cycle == 0)
-		field |= 0x1;
-
-	/* xHCI 1.0 6.4.1.2.1: Transfer Type field */
-	if (xhci->hci_version == 0x100) {
-		if (urb->transfer_buffer_length > 0) {
-			if (setup->bRequestType & USB_DIR_IN)
-				field |= TRB_TX_TYPE(TRB_DATA_IN);
-			else
-				field |= TRB_TX_TYPE(TRB_DATA_OUT);
-		}
-	}
-
-	if (get_dev_desc) {
-		/* Sending SOF for 15 seconds */
-		schedule_timeout_uninterruptible(msecs_to_jiffies(15000));
-	}
-
-	queue_trb(xhci, ep_ring, true,
-			setup->bRequestType | setup->bRequest << 8 |
-			le16_to_cpu(setup->wValue) << 16,
-			le16_to_cpu(setup->wIndex) |
-			le16_to_cpu(setup->wLength) << 16,
-			TRB_LEN(8) | TRB_INTR_TARGET(0), field);
-
-	if (!get_dev_desc) {
-		giveback_first_trb(xhci, slot_id, ep_index, 0, start_cycle, start_trb);
-
-		/* Sending SOF for 15 seconds */
-		schedule_timeout_uninterruptible(msecs_to_jiffies(15000));
-	}
-
-	/* If there's data, queue data TRBs */
-	/* Only set interrupt on short packet for IN endpoints */
-	if (usb_urb_dir_in(urb))
-		field = TRB_ISP | TRB_TYPE(TRB_DATA);
-	else
-		field = TRB_TYPE(TRB_DATA);
-
-	length_field = TRB_LEN(urb->transfer_buffer_length) |
-		xhci_td_remainder(urb->transfer_buffer_length) |
-		TRB_INTR_TARGET(0);
-
-	if (urb->transfer_buffer_length > 0) {
-		if (setup->bRequestType & USB_DIR_IN)
-			field |= TRB_DIR_IN;
-		queue_trb(xhci, ep_ring, true,
-				lower_32_bits(urb->transfer_dma),
-				upper_32_bits(urb->transfer_dma),
-				length_field,
-				field | ep_ring->cycle_state);
-	}
-
-	/* Save the DMA address of the last TRB in the TD */
-	td->last_trb = ep_ring->enqueue;
-
-	/* Queue status TRB - see Table 7 and sections 4.11.2.2 and 6.4.1.2.3 */
-	/* If the device sent data, the status stage is an OUT transfer */
-	if (urb->transfer_buffer_length > 0 && setup->bRequestType & USB_DIR_IN)
-		field = 0;
-	else
-		field = TRB_DIR_IN;
-
-	queue_trb(xhci, ep_ring, false,
-			0,
-			0,
-			TRB_INTR_TARGET(0),
-			/* Event on completion */
-			field | TRB_IOC | TRB_TYPE(TRB_STATUS) |
-			ep_ring->cycle_state);
-
-	giveback_first_trb(xhci, slot_id, ep_index, 0, start_cycle, start_trb);
-
-	return 0;
-}
-#endif/* CONFIG_HOST_COMPLIANT_TEST */
 
 static int count_isoc_trbs_needed(struct xhci_hcd *xhci,
 		struct urb *urb, int i)
@@ -4033,7 +3903,7 @@ static int queue_command(struct xhci_hcd *xhci, struct xhci_command *cmd,
 
 	if ((xhci->xhc_state & XHCI_STATE_DYING) ||
 		(xhci->xhc_state & XHCI_STATE_HALTED)) {
-		xhci_err(xhci, "xHCI dying or halted, can't queue_command\n");
+		xhci_dbg(xhci, "xHCI dying or halted, can't queue_command\n");
 		return -ESHUTDOWN;
 	}
 
