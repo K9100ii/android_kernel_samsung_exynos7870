@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2008 Steven Rostedt <srostedt@redhat.com>
  */
-#include <linux/trace_events.h>
+#include <linux/ftrace_event.h>
 #include <linux/ring_buffer.h>
 #include <linux/trace_clock.h>
 #include <linux/trace_seq.h>
