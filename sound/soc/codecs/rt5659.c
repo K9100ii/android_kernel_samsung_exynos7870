@@ -4073,7 +4073,7 @@ static int rt5659_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_codec *codec = dai->codec;
 	struct rt5659_priv *rt5659 = snd_soc_codec_get_drvdata(codec);
 	unsigned int val_len = 0, val_clk, mask_clk;
-	int pre_div, bclk_ms, frame_size;
+	int pre_div, frame_size;
 
 	rt5659->lrck[dai->id] = params_rate(params);
 	pre_div = get_clk_info(rt5659->sysclk, rt5659->lrck[dai->id]);
@@ -4087,10 +4087,6 @@ static int rt5659_hw_params(struct snd_pcm_substream *substream,
 		dev_err(codec->dev, "Unsupported frame size: %d\n", frame_size);
 		return -EINVAL;
 	}
-
-	/* TODO: should bclk_ms be set by set_bclk_ratio? */
-	bclk_ms = frame_size > 32 ? 1 : 0;
-	rt5659->bclk[dai->id] = rt5659->lrck[dai->id] * (32 << bclk_ms);
 
 	switch (params_format(params)) {
 	case SNDRV_PCM_FORMAT_S16_LE:
@@ -4116,16 +4112,14 @@ static int rt5659_hw_params(struct snd_pcm_substream *substream,
 			RT5659_I2S_DL_MASK, val_len);
 		break;
 	case RT5659_AIF2:
-		mask_clk = RT5659_I2S_BCLK_MS2_MASK | RT5659_I2S_PD2_MASK;
-		val_clk = bclk_ms << RT5659_I2S_BCLK_MS2_SFT |
-			pre_div << RT5659_I2S_PD2_SFT;
+		mask_clk = RT5659_I2S_PD2_MASK;
+		val_clk = pre_div << RT5659_I2S_PD2_SFT;
 		snd_soc_update_bits(codec, RT5659_I2S2_SDP,
 			RT5659_I2S_DL_MASK, val_len);
 		break;
 	case RT5659_AIF3:
-		mask_clk = RT5659_I2S_BCLK_MS3_MASK | RT5659_I2S_PD3_MASK;
-		val_clk = bclk_ms << RT5659_I2S_BCLK_MS3_SFT |
-			pre_div << RT5659_I2S_PD3_SFT;
+		mask_clk = RT5659_I2S_PD3_MASK;
+		val_clk = pre_div << RT5659_I2S_PD3_SFT;
 		snd_soc_update_bits(codec, RT5659_I2S3_SDP,
 			RT5659_I2S_DL_MASK, val_len);
 		break;
