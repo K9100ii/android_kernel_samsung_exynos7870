@@ -4398,10 +4398,9 @@ void change_smartcover_table(struct fts_ts_info *info)
 
 	tsp_debug_info(true, &info->client->dev, "%s %d\n", __func__, __LINE__);
 
-	for(i=0; i<MAX_TX; i++)
-		for(j=0; j<4; j++)
+	for (i = 0; i < MAX_TX; i++)
+		for (j = 0; j < 4; j++)
 			info->send_table[i][j] = 0;
-		tsp_debug_info(true, &info->client->dev, "%s %d\n", __func__, __LINE__);
 
 	for(i=0; i<MAX_TX; i++){
 		temp = 0;
