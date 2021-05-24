@@ -23,7 +23,7 @@
 #define IS_CONNECTED(iod, ld) ((iod)->link_types & LINKTYPE((ld)->link_type))
 
 #define MAX_MIF_BUFF_SIZE 0x80000 /* 512kb */
-#define MAX_MIF_SEPA_SIZE 32
+#define MAX_MIF_SEPA_SIZE 4
 #define MIF_SEPARATOR "IPC_LOGGER(VER1.1)"
 #define MIF_SEPARATOR_DPRAM "DPRAM_LOGGER(VER1.1)"
 #define MAX_IPC_SKB_SIZE 4096
