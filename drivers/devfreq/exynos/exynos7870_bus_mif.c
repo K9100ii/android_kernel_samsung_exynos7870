@@ -27,7 +27,9 @@
 #include <soc/samsung/bts.h>
 #include <linux/apm-exynos.h>
 #include <soc/samsung/asv-exynos.h>
+#ifdef CONFIG_MCU_IPC
 #include <linux/mcu_ipc.h>
+#endif
 
 #include "../../../drivers/soc/samsung/pwrcal/pwrcal.h"
 #include "../../../drivers/soc/samsung/pwrcal/S5E7870/S5E7870-vclk.h"
@@ -156,7 +158,8 @@ static int exynos7870_devfreq_mif_restore_from_switch_freq(struct device *dev,
 	return 0;
 }
 
-static int exynos8890_devfreq_mif_set_freq_post(struct device *dev,
+#ifdef CONFIG_MCU_IPC
+static int exynos7870_devfreq_mif_set_freq_post(struct device *dev,
 					struct exynos_devfreq_data *data)
 {
 	/* Send information about MIF frequency to mailbox */
@@ -164,6 +167,7 @@ static int exynos8890_devfreq_mif_set_freq_post(struct device *dev,
 
 	return 0;
 }
+#endif
 
 static int exynos7870_devfreq_mif_init_freq_table(struct device *dev,
 						struct exynos_devfreq_data *data)
@@ -354,7 +358,9 @@ static int __init exynos7870_devfreq_mif_init_prepare(struct exynos_devfreq_data
 	data->ops.get_freq = exynos7870_devfreq_mif_get_freq;
 	data->ops.change_to_switch_freq = exynos7870_devfreq_mif_change_to_switch_freq;
 	data->ops.restore_from_switch_freq = exynos7870_devfreq_mif_restore_from_switch_freq;
-	data->ops.set_freq_post = exynos8890_devfreq_mif_set_freq_post;
+#ifdef CONFIG_MCU_IPC
+	data->ops.set_freq_post = exynos7870_devfreq_mif_set_freq_post;
+#endif
 	data->ops.init_freq_table = exynos7870_devfreq_mif_init_freq_table;
 	data->ops.cl_dvfs_start = exynos7870_devfreq_cl_dvfs_start;
 	data->ops.cl_dvfs_stop = exynos7870_devfreq_cl_dvfs_stop;
