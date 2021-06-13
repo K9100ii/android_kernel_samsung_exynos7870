@@ -556,8 +556,6 @@ void kbase_debug_job_fault_kctx_unblock(struct kbase_context *kctx)
 
 int kbase_debug_job_fault_dev_init(struct kbase_device *kbdev)
 {
-	atomic_set(&kctx->job_fault_count, 0);
-
 	return 0;
 }
 
