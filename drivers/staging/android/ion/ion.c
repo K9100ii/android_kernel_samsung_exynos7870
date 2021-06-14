@@ -1064,7 +1064,9 @@ static int ion_debug_client_show(struct seq_file *s, void *unused)
 	struct ion_client *client = s->private;
 	struct rb_node *n;
 	size_t sizes[ION_NUM_HEAP_IDS] = {0};
+#ifdef CONFIG_ION_EXYNOS_STAT_LOG
 	size_t sizes_pss[ION_NUM_HEAP_IDS] = {0};
+#endif
 	const char *names[ION_NUM_HEAP_IDS] = {NULL};
 	int i;
 
@@ -1083,11 +1085,12 @@ static int ion_debug_client_show(struct seq_file *s, void *unused)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_ION_EXYNOS_STAT_LOG
 	seq_printf(s, "%16.s %4.s %16.s %4.s %10.s %8.s %9.s\n",
 		   "task", "pid", "thread", "tid", "size", "# procs", "flag");
 	seq_printf(s, "----------------------------------------------"
 			"--------------------------------------------\n");
-
+#endif
 	mutex_lock(&client->lock);
 	for (n = rb_first(&client->handles); n; n = rb_next(n)) {
 		struct ion_handle *handle = rb_entry(n, struct ion_handle,
@@ -1098,24 +1101,34 @@ static int ion_debug_client_show(struct seq_file *s, void *unused)
 		if (!names[id])
 			names[id] = buffer->heap->name;
 		sizes[id] += buffer->size;
+#ifdef CONFIG_ION_EXYNOS_STAT_LOG
 		sizes_pss[id] += (buffer->size / buffer->handle_count);
 		seq_printf(s, "%16.s %4u %16.s %4u %10zu %8d %9lx\n",
 			   buffer->task_comm, buffer->pid,
 				buffer->thread_comm, buffer->tid, buffer->size,
 				buffer->handle_count, buffer->flags);
+#endif
 	}
 	mutex_unlock(&client->lock);
 	up_read(&g_idev->lock);
 
+#ifdef CONFIG_ION_EXYNOS_STAT_LOG
 	seq_printf(s, "----------------------------------------------"
 			"--------------------------------------------\n");
 	seq_printf(s, "%16.16s: %16.16s %18.18s\n", "heap_name",
 				"size_in_bytes", "size_in_bytes(pss)");
+#else
+	seq_printf(s, "%16.16s: %16.16s\n", "heap_name", "size_in_bytes");
+#endif
 	for (i = 0; i < ION_NUM_HEAP_IDS; i++) {
 		if (!names[i])
 			continue;
+#ifdef CONFIG_ION_EXYNOS_STAT_LOG
 		seq_printf(s, "%16.16s: %16zu %18zu\n",
 				names[i], sizes[i], sizes_pss[i]);
+#else
+		seq_printf(s, "%16.16s: %16zu\n", names[i], sizes[i]);
+#endif
 	}
 	return 0;
 }
