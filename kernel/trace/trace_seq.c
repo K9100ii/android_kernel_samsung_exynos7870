@@ -332,10 +332,12 @@ int trace_seq_putmem_hex(struct trace_seq *s, const void *mem,
 			break;
 
 		/* j increments twice per loop */
-		len -= j / 2;
 		hex[j++] = ' ';
 
 		cnt += trace_seq_putmem(s, hex, j);
+
+		len -= start_len;
+		data += start_len;
 	}
 	return cnt;
 }
