@@ -3004,9 +3004,10 @@ static int rtl8152_close(struct net_device *netdev)
 		tasklet_enable(&tp->tl);
 
 		mutex_unlock(&tp->control);
-
-		usb_autopm_put_interface(tp->intf);
 	}
+
+	if (!res)
+		usb_autopm_put_interface(tp->intf);
 
 	free_all_mem(tp);
 
