@@ -312,16 +312,8 @@ endif
 
 DHDCFLAGS += -DBCMCRYPTO_COMPONENT
 
-# Android Version Check from Platform source
-ifneq ($(ANDROID_VERSION),)
-MAJOR_VERSION := $(shell echo $(ANDROID_VERSION) | rev | cut -c 5- | rev)
+MAJOR_VERSION := 9
 DHDCFLAGS += -DANDROID_PLATFORM_VERSION=$(MAJOR_VERSION)
-else
-ifneq ($(PLATFORM_VERSION),)
-MAJOR_VERSION := $(shell echo $(PLATFORM_VERSION) | cut -d "." -f 1)
-DHDCFLAGS += -DANDROID_PLATFORM_VERSION=$(MAJOR_VERSION)
-endif
-endif
 
 # TCP SYNC flood attack block
 DHDCFLAGS += -DDHDTCPSYNC_FLOOD_BLK -DTCP_SYNC_FLOOD_LIMIT=50
