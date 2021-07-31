@@ -1652,7 +1652,9 @@ static void __dw_mci_start_request(struct dw_mci *host,
 		dw_mci_set_timeout(host, dw_mci_calc_timeout(host));
 		mci_writel(host, BYTCNT, data->blksz*data->blocks);
 		mci_writel(host, BLKSIZ, data->blksz);
+#ifdef CONFIG_ARGOS
 		host->transferred_cnt += data->blksz * data->blocks;
+#endif
 	}
 
 	cmdflags = dw_mci_prepare_command(slot->mmc, cmd);
@@ -2909,7 +2911,7 @@ static irqreturn_t dw_mci_interrupt(int irq, void *dev_id)
 	pending = mci_readl(host, MINTSTS); /* read-only mask reg */
 
 #if defined(CONFIG_QCOM_WIFI)  
-	if ((!strcmp("mmc1", mmc_hostname(host->cur_slot->mmc)))){
+	if ((!strcmp("mmc1", mmc_hostname(host->cur_slot->mmc)))) {
 		/* If same interrupt was occur continously */
 		u32 temp;
 		if (pending & SDMMC_INT_TXDR) {
@@ -2918,14 +2920,12 @@ static irqreturn_t dw_mci_interrupt(int irq, void *dev_id)
 				/* Disable RX/TX IRQs, let DMA handle it */
 				mci_writel(host, RINTSTS, SDMMC_INT_TXDR | SDMMC_INT_RXDR);
 				temp = mci_readl(host, INTMASK);
-				temp  &= ~(SDMMC_INT_RXDR | SDMMC_INT_TXDR);
+				temp &= ~(SDMMC_INT_RXDR | SDMMC_INT_TXDR);
 				mci_writel(host, INTMASK, temp);
 				dev_err(host->dev, "Interrupt storming by FIFO threshold !!!\n");
 			}
 		} else
-		{
 			host->int_count = 0;
-			}
 	}
 #endif
 	/*
@@ -3212,7 +3212,10 @@ static void dw_mci_work_routine_card(struct work_struct *work)
 	}
 }
 
-#if defined(CONFIG_QCOM_WIFI)
+#if defined(CONFIG_QCOM_WIFI) || defined(CONFIG_BCM4343)  || defined(CONFIG_BCM4343_MODULE)|| \
+	defined(CONFIG_BCM43454)  || defined(CONFIG_BCM43454_MODULE) || \
+	defined(CONFIG_BCM43455)  || defined(CONFIG_BCM43455_MODULE) || \
+	defined(CONFIG_BCM43456)  || defined(CONFIG_BCM43456_MODULE)
 static void dw_mci_notify_change(void *dev, int state)
 {
 	struct dw_mci *host = (struct dw_mci *)dev;
@@ -3231,7 +3234,10 @@ static void dw_mci_notify_change(void *dev, int state)
 		spin_unlock_irqrestore(&host->lock, flags);
 	}
 }
-#endif /* CONFIG_QCOM_WIFI */
+#endif /* CONFIG_QCOM_WIFI || CONFIG_BCM4343 || CONFIG_BCM4343_MODULE || \
+	CONFIG_BCM43454 || CONFIG_BCM43454_MODULE || \
+	CONFIG_BCM43455 || CONFIG_BCM43455_MODULE || \
+	CONFIG_BCM43456 || CONFIG_BCM43456_MODULE */
 
 #ifdef CONFIG_OF
 /* given a slot id, find out the device node representing that slot */
@@ -3415,6 +3421,17 @@ static int dw_mci_init_slot(struct dw_mci *host, unsigned int id)
 		host->pdata->ext_cd_init(&dw_mci_notify_change, (void*)host);
 	}
 #endif /* CONFIG_QCOM_WIFI */
+
+#if defined(CONFIG_BCM4343) || defined(CONFIG_BCM4343_MODULE) || \
+	defined(CONFIG_BCM43454)  || defined(CONFIG_BCM43454_MODULE) || \
+	defined(CONFIG_BCM43455)  || defined(CONFIG_BCM43455_MODULE) || \
+	defined(CONFIG_BCM43456)  || defined(CONFIG_BCM43456_MODULE)
+	if (host->pdata->cd_type == DW_MCI_CD_EXTERNAL)
+		host->pdata->ext_cd_init(&dw_mci_notify_change, (void *)host, mmc);
+#endif /* CONFIG_BCM4343 || CONFIG_BCM4343_MODULE || \
+	CONFIG_BCM43454 || CONFIG_BCM43454_MODULE || \
+	CONFIG_BCM43455 || CONFIG_BCM43455_MODULE || \
+	CONFIG_BCM43456 || CONFIG_BCM43456_MODULE */
 
 #ifdef CONFIG_ARGOS
 	dw_mci_transferred_cnt_init(host, mmc);
@@ -3629,17 +3646,36 @@ static struct dw_mci_of_quirks {
 	},
 };
 
-
-#if defined(CONFIG_QCOM_WIFI)
+#if defined(CONFIG_QCOM_WIFI) || defined(CONFIG_BCM4343)  || defined(CONFIG_BCM4343_MODULE) || \
+	defined(CONFIG_BCM43454)  || defined(CONFIG_BCM43454_MODULE) || \
+	defined(CONFIG_BCM43455)  || defined(CONFIG_BCM43455_MODULE) || \
+	defined(CONFIG_BCM43456)  || defined(CONFIG_BCM43456_MODULE) 
 void (*notify_func_callback)(void *dev_id, int state);
 void *mmc_host_dev = NULL;
 static DEFINE_MUTEX(notify_mutex_lock);
 EXPORT_SYMBOL(notify_func_callback);
 EXPORT_SYMBOL(mmc_host_dev);
-static int ext_cd_init_callback(
+#if defined(CONFIG_BCM4343)  || defined(CONFIG_BCM4343_MODULE) || \
+	defined(CONFIG_BCM43454)  || defined(CONFIG_BCM43454_MODULE) || \
+	defined(CONFIG_BCM43455)  || defined(CONFIG_BCM43455_MODULE) || \
+	defined(CONFIG_BCM43456)  || defined(CONFIG_BCM43456_MODULE)
+struct mmc_host *wlan_mmc = NULL;
+static int ext_cd_init_callback (
+	void (*notify_func)(void *dev_id, int state), void *dev_id, struct mmc_host *mmc)
+{
+	mutex_lock(&notify_mutex_lock);
+	WARN_ON(notify_func_callback);
+	notify_func_callback = notify_func;
+	mmc_host_dev = dev_id;
+	wlan_mmc = mmc;
+	mutex_unlock(&notify_mutex_lock);
+
+	return 0;
+}
+#else
+static int ext_cd_init_callback (
 	void (*notify_func)(void *dev_id, int state), void *dev_id)
 {
-	printk("Enter %s\n",__FUNCTION__);
 	mutex_lock(&notify_mutex_lock);
 	WARN_ON(notify_func_callback);
 	notify_func_callback = notify_func;
@@ -3648,10 +3684,13 @@ static int ext_cd_init_callback(
 
 	return 0;
 }
-static int ext_cd_cleanup_callback(
+#endif /* CONFIG_BCM4343 || CONFIG_BCM4343_MODULE || \
+	CONFIG_BCM43454 || CONFIG_BCM43454_MODULE || \
+	CONFIG_BCM43455 || CONFIG_BCM43455_MODULE || \
+	CONFIG_BCM43456 || CONFIG_BCM43456_MODULE */
+static int ext_cd_cleanup_callback (
 	void (*notify_func)(void *dev_id, int state), void *dev_id)
 {
-	printk("Enter %s\n",__FUNCTION__);
 	mutex_lock(&notify_mutex_lock);
 	WARN_ON(notify_func_callback);
 	notify_func_callback = NULL;
@@ -3660,7 +3699,10 @@ static int ext_cd_cleanup_callback(
 
 	return 0;
 }
-#endif /* CONFIG_QCOM_WIFI */
+#endif /* CONFIG_QCOM_WIFI || CONFIG_BCM4343 || CONFIG_BCM4343_MODULE || \
+	CONFIG_BCM43454 || CONFIG_BCM43454_MODULE || \
+	CONFIG_BCM43455 || CONFIG_BCM43455_MODULE || \
+	CONFIG_BCM43456 || CONFIG_BCM43456_MODULE */
 
 static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 {
@@ -3734,8 +3776,11 @@ static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 
 	if (of_find_property(np, "pm-skip-mmc-resume-init", NULL))
 		pdata->pm_caps |= MMC_PM_SKIP_MMC_RESUME_INIT;
-
-#if defined(CONFIG_QCOM_WIFI)
+	
+#if defined(CONFIG_QCOM_WIFI) || defined(CONFIG_BCM4343)  || defined(CONFIG_BCM4343_MODULE) || \
+	defined(CONFIG_BCM43454)  || defined(CONFIG_BCM43454_MODULE) || \
+	defined(CONFIG_BCM43455)  || defined(CONFIG_BCM43455_MODULE) || \
+	defined(CONFIG_BCM43456)  || defined(CONFIG_BCM43456_MODULE) 
 	if (of_find_property(np, "pm-ignore-notify", NULL))
 		pdata->pm_caps |= MMC_PM_IGNORE_PM_NOTIFY;
 
@@ -3744,8 +3789,11 @@ static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 		pdata->ext_cd_init = ext_cd_init_callback;
 		pdata->ext_cd_cleanup = ext_cd_cleanup_callback;
 	}
-#endif /* CONFIG_QCOM_WIFI */
-
+#endif /* CONFIG_QCOM_WIFI || CONFIG_BCM4343 || CONFIG_BCM4343_MODULE || \
+	CONFIG_BCM43454 || CONFIG_BCM43454_MODULE || \
+	CONFIG_BCM43455 || CONFIG_BCM43455_MODULE || \
+	CONFIG_BCM43456 || CONFIG_BCM43456_MODULE */
+	
 	if (of_find_property(np, "card-detect-invert-gpio", NULL)) {
 		pdata->caps2 |= MMC_CAP2_CD_ACTIVE_HIGH;
 		pdata->use_gpio_invert = true;
@@ -4099,10 +4147,17 @@ void dw_mci_remove(struct dw_mci *host)
 
 	mci_writel(host, RINTSTS, 0xFFFFFFFF);
 	mci_writel(host, INTMASK, 0); /* disable all mmc interrupt first */
-#if defined(CONFIG_QCOM_WIFI)
+
+#if defined(CONFIG_QCOM_WIFI) || defined(CONFIG_BCM4343)  || defined(CONFIG_BCM4343_MODULE) || \
+	defined(CONFIG_BCM43454) || defined(CONFIG_BCM43454_MODULE) || \
+	defined(CONFIG_BCM43455) || defined(CONFIG_BCM43455_MODULE) || \
+	defined(CONFIG_BCM43456) || defined(CONFIG_BCM43456_MODULE)
 	if ((!strcmp("mmc1", mmc_hostname(host->cur_slot->mmc))) && host->pdata->cd_type == DW_MCI_CD_EXTERNAL)
 		host->pdata->ext_cd_cleanup(&dw_mci_notify_change, (void *)host);
-#endif /* CONFIG_QCOM_WIFI */
+#endif /* CONFIG_QCOM_WIFI || CONFIG_BCM4343 || CONFIG_BCM4343_MODULE || \
+	CONFIG_BCM43454 || CONFIG_BCM43454_MODULE || \
+	CONFIG_BCM43455 || CONFIG_BCM43455_MODULE || \
+	CONFIG_BCM43456 || CONFIG_BCM43456_MODULE */
 
 	for (i = 0; i < host->num_slots; i++) {
 		dev_dbg(host->dev, "remove slot %d\n", i);

@@ -55,6 +55,22 @@ obj-$(CONFIG_WL_TI)	+= ti/
 
 obj-$(CONFIG_MWIFIEX)	+= mwifiex/
 
+obj-$(CONFIG_BCM4343) += bcmdhd_100_15/
+obj-$(CONFIG_BCM4343) += bcmdhd_100_15/dhd_custom_memprealloc.o
+obj-$(CONFIG_BCM4343) += bcmdhd_100_15/dhd_custom_exynos.o
+
+obj-$(CONFIG_BCM43454) += bcmdhd_100_10/
+obj-$(CONFIG_BCM43454) += bcmdhd_100_10/dhd_custom_memprealloc.o
+obj-$(CONFIG_BCM43454) += bcmdhd_100_10/dhd_custom_exynos.o
+
+obj-$(CONFIG_BCM43455) += bcmdhd_100_10/
+obj-$(CONFIG_BCM43455) += bcmdhd_100_10/dhd_custom_memprealloc.o
+obj-$(CONFIG_BCM43455) += bcmdhd_100_10/dhd_custom_exynos.o
+
+obj-$(CONFIG_BCM43456) += bcmdhd_100_15/
+obj-$(CONFIG_BCM43456) += bcmdhd_100_15/dhd_custom_memprealloc.o
+obj-$(CONFIG_BCM43456) += bcmdhd_100_15/dhd_custom_exynos.o
+
 obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
 obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
 obj-$(CONFIG_CNSS_SDIO)	+= cnss/cnss_sdio.o
