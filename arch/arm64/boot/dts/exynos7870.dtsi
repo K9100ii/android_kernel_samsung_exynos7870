@@ -269,13 +269,13 @@
 		};
 	};
 
-	gic:interrupt-controller@104E0000 {
+	gic: interrupt-controller@104E0000 {
 		compatible = "arm,cortex-a15-gic", "arm,cortex-a9-gic";
 		#interrupt-cells = <3>;
 		#address-cells = <0>;
 		interrupt-controller;
 		reg =	<0x0 0x104E1000 0x1000>,
-			<0x0 0x104E2000 0x1000>,
+			<0x0 0x104E2000 0x2000>,
 			<0x0 0x104E4000 0x2000>,
 			<0x0 0x104E6000 0x2000>;
 		interrupts = <1 9 0xf04>;
