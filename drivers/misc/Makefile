@@ -70,7 +70,7 @@ ccflags-$(CONFIG_TZDEV) += -I$(srctree)/drivers/misc/tzdev/include
 obj-$(CONFIG_TZDEV)		+= tzdev/
 
 # TZIC
-obj-y				+= tzic64.o
+obj-$(CONFIG_TRUSTONIC_TEE)	+= tzic64.o
 
 # Samsung Jack Support
 obj-$(CONFIG_SAMSUNG_JACK)	+= sec_jack.o
