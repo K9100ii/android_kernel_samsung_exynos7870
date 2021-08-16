@@ -519,7 +519,7 @@
 			stk,vdd-supply = <&ldo33_reg>;
 			stk,vio-supply = <&ldo3_reg>;
 			stk,vled_ldo = <&gpd4 2 0x1>;
-			stk,state-reg = <0x2d>;
+			stk,state-reg = <0x2c>;
 			stk,psctrl-reg = <0x71>;
 			stk,alsctrl-reg = <0x2A>;
 			stk,ledctrl-reg = <0xBF>;

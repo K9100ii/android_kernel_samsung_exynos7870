@@ -1382,6 +1382,22 @@
 		flash-gpio = <&gpd3 2 0>;
 		torch-gpio = <&gpd3 3 0>;
 	};
+	
+	firmware {
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/13540000.dwmmc0/by-name/SYSTEM";
+					type = "ext4";
+					mnt_flags = "ro";
+					fsmgr_flags = "wait,verify";
+				};
+			};
+		};
+	};	
 
 	hsi2c_2: hsi2c@13960000 {
 		gpios = <&gpf3 2 0 &gpf3 3 0>;
@@ -1516,29 +1532,29 @@
 	};
 
 	decon_board: decon_board {
-		gpio_lcd_rst = <&gpd3 4 0x1>;
+		gpio_lcd_rst = <&gpd3 4 0>;
 
 		dsim_set_panel_power_enable {
 			type =
 			"regulator,enable",	"LCD_3P0",
 			"regulator,enable",	"LCD_1P8",
-			"delay,usleep",	"5000 6000";
+			"delay,usleep",	"5000";
 		};
 		dsim_set_panel_power_disable {
 			type =
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"regulator,disable",	"LCD_1P8",
 			"regulator,disable",	"LCD_3P0";
 		};
 		dsim_reset_panel {
 			type =
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000";
+			"delay,usleep",	"10000";
 		};
 	};
 

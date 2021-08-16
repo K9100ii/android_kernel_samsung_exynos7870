@@ -1448,44 +1448,44 @@ firmware {
 	};
 
 	decon_board: decon_board {
-		gpio_blic_on = <&gpd3 5 0x1>;
-		gpio_panel_enp = <&gpd3 7 0x1>;
-		gpio_panel_enn = <&gpd4 0 0x1>;
-		gpio_lcd_rst = <&gpd3 4 0x1>;
+		gpio_blic_on = <&gpd3 5 0>;
+		gpio_panel_enp = <&gpd3 7 0>;
+		gpio_panel_enn = <&gpd4 0 0>;
+		gpio_lcd_rst = <&gpd3 4 0>;
 
 		dsim_set_panel_power_early {
 			type =
 			"regulator,enable",	"LCD_1P8",
-			"delay,usleep",	"5000 6000";
+			"delay,usleep",	"5000";
 		};
 		dsim_set_panel_power_enable {
 			type =
 			"gpio,high",	"gpio_blic_on",
-			"delay,usleep",	"1000 2000",
+			"delay,usleep",	"1000",
 			"gpio,high",	"gpio_panel_enp",
-			"delay,usleep",	"1000 2000",
+			"delay,usleep",	"1000",
 			"gpio,high",	"gpio_panel_enn",
-			"delay,usleep",	"10000 11000";
+			"delay,usleep",	"10000";
 		};
 		dsim_set_panel_power_disable {
 			type =
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_panel_enn",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_panel_enp",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_blic_on",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"regulator,disable",	"LCD_1P8";
 		};
 		dsim_reset_panel {
 			type =
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"1000 2000",
+			"delay,usleep",	"1000",
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"1000 2000",
+			"delay,usleep",	"1000",
 			"gpio,high",	"gpio_lcd_rst",
 			"timer,start",	"reset 130";
 		};

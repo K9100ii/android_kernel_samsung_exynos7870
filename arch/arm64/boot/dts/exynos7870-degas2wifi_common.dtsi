@@ -977,32 +977,32 @@
 	};
 
 	decon_board_old: decon_board_old {
-		gpio_lcd_en = <&gpd3 4 0x1>;
-		gpio_blic_on = <&gpd4 3 0x1>;
-		gpio_lcd_rst = <&gpd1 1 0x1>;
+		gpio_lcd_en = <&gpd3 4 0>;
+		gpio_blic_on = <&gpd4 3 0>;
+		gpio_lcd_rst = <&gpd1 1 0>;
 
 		dsim_set_panel_power_enable {
 			type =
 			"gpio,high",	"gpio_lcd_en",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"regulator,enable",	"LCD_1P8",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"gpio,high",	"gpio_blic_on";
 		};
 		dsim_set_panel_power_disable {
 			type =
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"gpio,low",	"gpio_blic_on",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"regulator,disable",	"LCD_1P8",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"gpio,low",	"gpio_lcd_en";
 		};
 		dsim_reset_panel {
 			type =
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"gpio,low",	"gpio_lcd_rst",
 			"delay,msleep",	"20",
 			"gpio,high",	"gpio_lcd_rst",
@@ -1011,28 +1011,28 @@
 	};
 
 	decon_board: decon_board {
-		gpio_lcd_en = <&gpd3 4 0x1>;
-		gpio_lcd_rst = <&gpd1 1 0x1>;
+		gpio_lcd_en = <&gpd3 4 0>;
+		gpio_lcd_rst = <&gpd1 1 0>;
 
 		dsim_set_panel_power_enable {
 			type =
 			"gpio,high",	"gpio_lcd_en",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"regulator,enable",	"LCD_1P8",
-			"delay,usleep",	"10000 11000";
+			"delay,usleep",	"10000";
 		};
 		dsim_set_panel_power_disable {
 			type =
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"regulator,disable",	"LCD_1P8",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"gpio,low",	"gpio_lcd_en";
 		};
 		dsim_reset_panel {
 			type =
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000",
+			"delay,usleep",	"10000",
 			"gpio,low",	"gpio_lcd_rst",
 			"delay,msleep",	"20",
 			"gpio,high",	"gpio_lcd_rst",

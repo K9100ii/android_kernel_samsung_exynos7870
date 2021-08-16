@@ -47,6 +47,7 @@
 			fuelgauge,capacity_max = <990>;
 			fuelgauge,capacity_max_margin = <70>;
 			fuelgauge,capacity_min = <0>;
+			fuelgauge,capacity_full = <4450>;
 			fuelgauge,capacity_calculation_type = <28>;
 			fuelgauge,type_str = "battery";
 		};
@@ -183,6 +184,8 @@
 		battery,expired_time = <13800>;
 		battery,recharginig_expired_time = <5400>;
 		battery,standard_curr = <2100>;
+		battery,battery_full_capacity = <4450>;
+
 
 		battery,charging_total_time = <21600>;
 		battery,recharging_total_time = <5400>;
@@ -217,6 +220,7 @@
 		battery,swelling_drop_float_voltage = <4050>;
 		battery,swelling_high_rechg_voltage = <3850>;
 		battery,swelling_low_rechg_voltage = <3850>;
+		battery,swelling_low_rechg_voltage_offset = <200>;
 
 		battery,ttf_hv_12v_charge_current = <2350>;
 		battery,ttf_hv_charge_current = <2200>;

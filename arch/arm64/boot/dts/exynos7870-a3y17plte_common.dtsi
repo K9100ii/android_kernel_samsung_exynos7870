@@ -1612,13 +1612,13 @@
 		pinctrl-0 = <&disp_pcd_off>;
 		pinctrl-1 = <&disp_pcd>;
 
-		gpio_lcd_rst = <&gpd3 4 0x1>;
+		gpio_lcd_rst = <&gpd3 4 0>;
 
 		dsim_set_panel_power_enable {
 			type =
 			"regulator,enable",	"LCD_3P0",
 			"regulator,enable",	"LCD_1P8",
-			"delay,usleep",	"10000 11000";
+			"delay,usleep",	"10000";
 		};
 		dsim_set_panel_power_disable {
 			type =
@@ -1628,13 +1628,13 @@
 		};
 		dsim_reset_panel {
 			type =
-			"delay,usleep",	"1000 1100",
+			"delay,usleep",	"1000",
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000";
+			"delay,usleep",	"10000";
 		};
 	};
 

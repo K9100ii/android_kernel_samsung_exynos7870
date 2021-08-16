@@ -37,9 +37,10 @@
 			pinctrl-0 = <&fuel_irq>;
 			fuelgauge,fuel_int = <&gpa0 3 0>;
 			fuelgauge,fuel_alert_soc = <1>;
-			fuelgauge,capacity_max = <1000>;
-			fuelgauge,capacity_max_margin = <70>;
+			fuelgauge,capacity_max = <970>;
+			fuelgauge,capacity_max_margin = <200>;
 			fuelgauge,capacity_min = <0>;
+			fuelgauge,capacity_full = <3000>;
 			fuelgauge,capacity_calculation_type = <28>;
 			fuelgauge,type_str = "SDI";
 			fuelgauge,model_type = <1>;
@@ -52,35 +53,38 @@
 			/***** battery data for 4.35 *****/
 			/* battery,battery_table3 */
 			185 11 47 11 166 10 29 10 161 9
-			42 9 188 8 87 8 230 7 155 7
+			42 9 187 8 87 8 230 7 155 7
 			64 7 222 6 161 6 119 6 86 6
 			62 6 42 6 5 6 190 5 143 5
-			55 5 242 1 215 8 106 8 252 7
-			142 7 32 7 178 6 68 6 215 5
-			105 5 251 4 141 4 31 4 177 3
-			67 3 214 2 104 2 250 1 140 1
-			30 1 176 0 66 0 213 15
+			55 5 242 1 255 8 143 8 32 8
+			176 7 64 7 208 6 96 6 241 5
+			129 5 17 5 161 4 50 4 194 3
+			82 3 226 2 114 2 3 2 147 1
+			35 1 179 0 68 0 212 15
 			
 			/* battery,battery_table4 */
-			47 47 48 49 50 51 50 51 51 51
+			10 10 10 10 10 51 50 51 51 51
 			52 52 52 53 53 54 54 55 56 57
 			60 150
 			
 			/* battery,batcap */
-			0x2d 0x60 0x0b 0x58 /* [0x0F] [0x0E] [0x11] [0x10] */
+			0x2C 0x3C 0x0B 0x0F /* [0x0F] [0x0E] [0x11] [0x10] */
 			
 			/* battery,accum */ 
 			0xC6 0x07 /* [0x44] [0x45] */
 			
 			/* battery,soc_arr_val */
-			11052 10516 9980 9443 8907 8370 7834 7298 6761 6225
-			5688 5152 4616 4079 3543 3006 2470 1933 1397 861
-			324 (-212)
+			11246 10700 10154 9608 9063 8517 7971 7425 6879 6334
+			5788 5242 4696 4150 3605 3059 2513 1967 1422 876
+			330 (-216)
 			
 			/* battery,ocv_arr_val */
-			44654 43982 43309 42642 42035 41455 40916 40427 39871 39506
-			39065 38583 38285 38080 37922 37804 37704 37525 37177 36947
+			44654 43982 43310 42642 42035 41454 40915 40426 39871 39506
+			39065 38583 38285 38079 37922 37804 37704 37525 37177 36947
 			36521 32432
+			
+			/* battery,tunning */
+			0x00 /* [0x13] */
 
 			/***** battery data for 4.33 *****/
 			/* battery,battery_table3 */
@@ -113,6 +117,9 @@
 			39065 38583 38285 38079 37922 37804 37704 37524 37177 36947
 			36521 32432
 
+			/* battery,tunning */
+			0x00 /* [0x13] */
+
 			/***** battery data for 4.31 *****/
 			/* battery,battery_table3 */
 			185 11 47 11 166 10 29 10 161 9
@@ -143,6 +150,9 @@
 			44654 43982 43309 42641 42035 41454 40916 40427 39871 39506
 			39065 38584 38286 38080 37922 37804 37704 37525 37177 36948
 			36521 32432
+
+			/* battery,tunning */
+			0x00 /* [0x13] */
 			>;
 
 			battery,battery_table1 = <0x7b 0x0a 0xf7 0x09 0x85 0x09 0x1b 0x09 0xb4 0x08
@@ -185,7 +195,7 @@
 						36521	32432>;
 
 			battery,FG_Accumulative_rate_evt2 =<0xC6 0x07>;
-			battery,data_ver = <0x02>;
+			battery,data_ver = <0x03>;
 	};
 
 	battery {
@@ -278,6 +288,7 @@
 		battery,expired_time = <13800>;
 		battery,recharging_expired_time = <5400>;
 		battery,standard_curr = <1550>;
+		battery,battery_full_capacity = <3000>;
 
 		battery,charging_total_time = <13800>;
 		battery,recharging_total_time = <5400>;

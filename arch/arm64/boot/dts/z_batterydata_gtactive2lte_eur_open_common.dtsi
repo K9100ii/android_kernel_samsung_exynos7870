@@ -47,6 +47,7 @@
 			fuelgauge,capacity_max = <990>;
 			fuelgauge,capacity_max_margin = <70>;
 			fuelgauge,capacity_min = <0>;
+			fuelgauge,capacity_full = <4450>;
 			fuelgauge,capacity_calculation_type = <28>;
 			fuelgauge,type_str = "battery";
 		};
@@ -183,6 +184,7 @@
 		battery,expired_time = <13800>;
 		battery,recharginig_expired_time = <5400>;
 		battery,standard_curr = <2100>;
+		battery,battery_full_capacity = <4450>;
 
 		battery,charging_total_time = <21600>;
 		battery,recharging_total_time = <5400>;

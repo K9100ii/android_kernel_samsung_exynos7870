@@ -499,6 +499,22 @@
 					"+Charging POGO VB:OPEN",
 					"-Undefined Charging:XXX";
 	};
+	
+	firmware {
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/13540000.dwmmc0/by-name/SYSTEM";
+					type = "ext4";
+					mnt_flags = "ro";
+					fsmgr_flags = "wait,verify";
+				};
+			};
+		};
+	};
 
 	i2c@13840000 {
 		samsung,i2c-sda-delay = <100>;
@@ -666,6 +682,7 @@
 			wacom,invert = <0 1 1>; /* x y switch */
 			wacom,fw_path = "epen/w9019_gtactive2.bin";
 			wacom,ic_type = <9019>;
+			wacom,support_aop_mode = "1";
 		};
 	};
 
@@ -1583,6 +1600,7 @@
 			id = <1>; /* matching sensor id */
 			fnum = <4>; /* F2_2 : fimc-is-param.h */
 			setfile = "setB";
+			use_initial_ae;	/* for initial AE */
 		};
 	};
 
@@ -1643,33 +1661,33 @@
 	};
 
 	decon_board: decon_board {
-		gpio_buck_en = <&gpd3 4 0x1>;
-		gpio_lcd_rst = <&gpd4 1 0x1>;
+		gpio_buck_en = <&gpd3 4 0>;
+		gpio_lcd_rst = <&gpd4 1 0>;
 
 		dsim_set_panel_power_enable {
 			type =
 			"regulator,enable",	"LCD_1P8",
-			"delay,usleep",	"1000 1100",
+			"delay,usleep",	"1000",
 			"gpio,high",	"gpio_buck_en",
-			"delay,usleep",	"1000 1100";
+			"delay,usleep",	"1000";
 		};
 		dsim_set_panel_power_disable {
 			type =
-			"delay,usleep",	"1000 1100",
+			"delay,usleep",	"1000",
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"1000 1100",
+			"delay,usleep",	"1000",
 			"gpio,low",	"gpio_buck_en",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"regulator,disable",	"LCD_1P8";
 		};
 		dsim_reset_panel {
 			type =
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,low",	"gpio_lcd_rst",
-			"delay,usleep",	"5000 6000",
+			"delay,usleep",	"5000",
 			"gpio,high",	"gpio_lcd_rst",
-			"delay,usleep",	"10000 11000";
+			"delay,usleep",	"10000";
 		};
 	};
 
