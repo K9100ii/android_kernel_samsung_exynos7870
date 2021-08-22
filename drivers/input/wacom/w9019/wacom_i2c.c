@@ -244,7 +244,7 @@ static void wacom_compulsory_flash_mode(bool en)
 		int ret = 0;
 
 		if (is_enabled == en) {
-			printk(KERN_NOTICE"epen:fwe already %s\n", en ? "enabled" : "disabled");
+			printk(KERN_NOTICE"epen: fwe already %s\n", en ? "enabled" : "disabled");
 			return ;
 		}
 
@@ -258,13 +258,14 @@ static void wacom_compulsory_flash_mode(bool en)
 		if (en) {
 			ret = regulator_enable(reg_fwe);
 			if (ret)
-				printk(KERN_NOTICE"epen:failed to enable fwe reg(%d)\n", ret);
+				printk(KERN_NOTICE"epen: failed to enable fwe reg(%d)\n", ret);
 
-			printk(KERN_NOTICE"epen:fwe1.8v enabled\n");
+			printk(KERN_NOTICE"epen: fwe1.8v enabled\n");
 		} else {
-			if (regulator_is_enabled(reg_fwe))
+			if (regulator_is_enabled(reg_fwe)) {
 				regulator_disable(reg_fwe);
-				printk(KERN_NOTICE"epen:fwe1.8v disabled\n");
+				printk(KERN_NOTICE"epen: fwe1.8v disabled\n");
+			}
 		}
 		regulator_put(reg_fwe);
 
