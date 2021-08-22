@@ -49,6 +49,7 @@
 			fuelgauge,capacity_max = <990>;
 			fuelgauge,capacity_max_margin = <300>;
 			fuelgauge,capacity_min = <0>;
+			fuelgauge,capacity_full = <7300>;
 			fuelgauge,capacity_calculation_type = <28>;
 			fuelgauge,type_str = "SDI";
 			fuelgauge,model_type = <4>;
@@ -166,6 +167,7 @@
 		battery,expired_time = <22800>;
 		battery,recharging_expired_time = <5400>;
 		battery,standard_curr = <1726>;
+		battery,battery_full_capacity = <7300>;
 
 		battery,charging_total_time = <36000>;
 		battery,recharging_total_time = <5400>;

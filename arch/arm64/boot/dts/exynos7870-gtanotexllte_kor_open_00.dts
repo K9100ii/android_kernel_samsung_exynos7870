@@ -129,13 +129,6 @@
 			samsung,pin-drv = <0>;
 		};
 
-		grip_int: grip_int {
-			samsung,pins = "gpa2-4";
-			samsung,pin-function = <0xF>;
-			samsung,pin-pud = <0>;
-			samsung,pin-drv = <0>;
-		};
-
 		muic_irq: muic_irq {
 			samsung,pins = "gpa2-6";
 			samsung,pin-function = <0x0>;
@@ -143,29 +136,6 @@
 		};
 	};
 
-	i2c@13860000 {
-		samsung,i2c-sda-delay = <100>;
-		samsung,i2c-max-bus-freq = <400000>;
-		status = "okay";
-		
-		sx9306-i2c@28 {
-			compatible = "sx9306-i2c";
-			reg = <0x28>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&grip_int>;
-			interrupt-parent = <&gpa2>;
-			interrupts = <4 0 0>;
-			sx9306-i2c,nirq-gpio = <&gpa2 4 0>;
-			sx9306-i2c,ctrl0 = <0x24>;
-			sx9306-i2c,ctrl2 = <0x57>; /* freq : 167kHz */
-			sx9306-i2c,ctrl3 = <0x02>;
-			sx9306-i2c,ctrl5 = <0x17>;
-			sx9306-i2c,normal-thd = <5>; /* normal touch threshold */
-			sx9306-i2c,ch-main = <2>; /* channel number */
-			sx9306-i2c,ch-sub1 = <0xff>;  /*oxff: Not be used sub channel */
-		};
-	};
-	
 	i2c@13890000 {
 		samsung,i2c-sda-delay = <100>;
 		samsung,i2c-max-bus-freq = <400000>;
@@ -485,20 +455,6 @@
 					regulator-initial-mode = <3>;
 				};
 			};
-		};
-
-		audio_codec_cod3026x: cod3026x@04 {
-			compatible = "codec,cod3026x";
-			reg = <0x04>;
-			ten-bit-address;
-			vdd-supply = <&ldo25_reg>;
-//			pinctrl-names = "default";
-//			pinctrl-0 = <&cod3026_irq>;
-//			interrupt-parent = <&gpa0>;
-//			gpios = <&gpa0 4 0xf>;
-			mic-bias1-voltage = <3>;
-			mic-bias2-voltage = <3>;
-			mic-bias-ldo-voltage = <3>;
 		};
 	};
 

@@ -49,14 +49,14 @@
 		#size-cells = <1>;
 		ranges;
 
-		mfc_fw {
+		mfc_fw@AE800000 {
 			compatible = "exynos5433-ion,mfc_fw";
 			secure;
 			reg = <0x0 0xAE800000 0x200000>;
 			id = <8>;
 		};
 
-		mfc_nfw {
+		mfc_nfw@AE600000 {
 			compatible = "exynos5433-ion,mfc_nfw";
 			reg = <0x0 0xAE600000 0x200000>;
 			id = <12>;
@@ -84,23 +84,6 @@
 			is_not_vbus_pad;
 		};
 	};
-	
-	firmware {
-		android {
-			compatible = "android,firmware";
-			fstab {
-				compatible = "android,fstab";
-				system {
-					compatible = "android,system";
-					dev = "/dev/block/platform/13540000.dwmmc0/by-name/SYSTEM";
-					type = "ext4";
-					mnt_flags = "ro";
-					fsmgr_flags = "wait,verify";
-				  };
-				
-			};
-		};
-	};	
 
 	pinctrl_1: pinctrl@148C0000 {
 		compatible = "samsung,exynos7870-pinctrl";
@@ -154,30 +137,33 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		button@1 {
-			label = "gpio-keys: KEY_POWER";
+		power {
+			label = "Power";
 			interrupts = <0 0 0>;
 			interrupt-parent = <&gpa0>;
 			linux,code = <116>;
 			gpios = <&gpa0 0 0xf>;
 			gpio-key,wakeup = <1>;
 		};
-		button@2 {
-			label = "gpio-keys: KEY_VOLUMEDOWN";
+
+		vol-down {
+			label = "Volume Down";
 			interrupts = <1 0 0>;
 			interrupt-parent = <&gpa2>;
 			linux,code = <114>;
 			gpios = <&gpa2 1 0xf>;
 		};
-		button@3 {
-			label = "gpio-keys: KEY_VOLUMEUP";
+
+		vol-up {
+			label = "Volume Up";
 			interrupts = <0 0 0>;
 			interrupt-parent = <&gpa2>;
 			linux,code = <115>;
 			gpios = <&gpa2 0 0xf>;
 		};
-		button@4 {
-			label = "gpio-keys: KEY_HOMEPAGE";
+
+		home {
+			label = "Home";
 			interrupts = <7 0 0>;
 			interrupt-parent = <&gpa1>;
 			linux,code = <172>;
@@ -363,7 +349,7 @@
 		};
 	};
 
-	sd_fixed_vcc: fixedregulator@0 {
+	sd_fixed_vcc: fixedregulator {
 		compatible = "regulator-fixed";
 		regulator-name = "vmmc";
 		/* gpc0-0 and gpc0-2 register is switched */
@@ -520,20 +506,20 @@
 		};
 	};
 
-	i2c@09 {
-        compatible = "i2c-gpio";
-        gpios = <&gpf2 0 0 &gpf2 1 0>;
-        i2c-gpio,delay-us = <2>;
-        #address-cells = <1>;
-        #size-cells = <0>;
-        status = "disabled";
-        wacom@09 {
-            compatible = "wacom,flash";
-            reg = <0x09>;
-            interrupts = <3 0 0>;
-            interrupt-parent = <&gpd4>;
-        };
-    };
+	i2c {
+		compatible = "i2c-gpio";
+		gpios = <&gpf2 0 0 &gpf2 1 0>;
+		i2c-gpio,delay-us = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+		wacom@9 {
+			compatible = "wacom,flash";
+			reg = <0x09>;
+			interrupts = <3 0 0>;
+			interrupt-parent = <&gpd4>;
+		};
+	};
 
 	pinctrl@139F0000 {
 		hall_irq: hall-irq {
@@ -605,12 +591,6 @@
 			samsung,pin-pud = <3>;
 			samsung,pin-drv = <3>;
 		};
-
-//		cod3026_irq: cod3026-irq {
-//			samsung,pins = "gpa0-4";
-//			samsung,pin-pud = <3>;
-//			samsung,pin-drv = <3>;
-//		};
 
 		if_irq: if-irq {
 			samsung,pins = "gpa2-7";
@@ -771,7 +751,7 @@
 
 		freq_tab_count = <5>;
 
-		freq_clip_max_0 = <1586000>;
+		freq_clip_max_0 = <1690000>;
 		freq_clip_max_1 = <1248000>;
 		freq_clip_max_2 = <1248000>;
 		freq_clip_max_3 = <546000>;
@@ -821,7 +801,7 @@
 
 		freq_tab_count = <5>;
 
-		freq_clip_max_0 = <1586000>;
+		freq_clip_max_0 = <1690000>;
 		freq_clip_max_1 = <1248000>;
 		freq_clip_max_2 = <1248000>;
 		freq_clip_max_3 = <546000>;
@@ -901,7 +881,7 @@
 	};
 
 	/* modem_interface */
-	mif_pdata {
+	mif_pdata@10000 {
 		reg = <0 0x10000 0x14>;
 		pinctrl-names = "default";
 
@@ -1354,7 +1334,7 @@
 		};
 	};
 
-	fimc_is_module_4h5yc: fimc-is_sensor_4h5yc@37 {
+	fimc_is_module_4h5yc: fimc-is_sensor_4h5yc {
 		compatible = "samsung,sensor-module-4h5yc";
 
 		pinctrl-names = "pin0", "pin1";
@@ -1385,7 +1365,7 @@
 		};
 	};
 
-	fimc_is_module_sr259: fimc-is_sensor_sr259@30 {
+	fimc_is_module_sr259: fimc-is_sensor_sr259 {
 		compatible = "samsung,sensor-module-sr259";
 
 		pinctrl-names = "pin0", "pin1";
@@ -1405,7 +1385,7 @@
 		status = "okay";
 	};
 
-	fimc_is_flash_gpio: fimc-is-flash_gpio@0 {
+	fimc_is_flash_gpio: fimc-is-flash_gpio {
 		compatible = "samsung,sensor-flash-gpio";
 		id = <0>; /* Rear  */
 		status = "okay";
@@ -1443,9 +1423,9 @@
 			reg = <0x58>;
 		};
 
-		fimc-is-actuator@0C {
+		fimc-is-actuator@C {
 			compatible = "samsung,exynos5-fimc-is-actuator-dw9807";
-			reg = <0x0C>;
+			reg = <0xC>;
 			id = <0>; /* matching sensor id */
 		};
 	};
@@ -1569,7 +1549,7 @@
 		duty_outdoor = <203>;
 	};
 
-	sec_thermistor@0 {
+	sec_thermistor {
 		compatible = "samsung,sec-ap-thermistor";
 		status = "okay";
 
@@ -1583,74 +1563,6 @@
 		io-channel-names = "adc-ap-temp";
 		io-channel-ranges;
 	};
-
-	argos {
-		compatible = "samsung,argos";
-		#address-cells = <1>;
-		boot_device@1 {
-			net_boost,label="WIFI TX";
-			net_boost,node="wlan0";
-			net_boost,table_size = <3>;
-			net_boost,table= <
-				20  900000  0  900000  0 0 0 0 0
-				60  1014000 0  1014000 0 0 0 0 0
-				120 1352000 0  1352000 0 0 0 0 0
-			>;
-		};
-
-		boot_device@2 {
-			net_boost,label="P2P";
-			net_boost,node="p2p-wlan0-0";
-			net_boost,table_size = <3>;
-			net_boost,table= <
-				30 1014000 0 1014000 0 0 0 0 0
-				50 1248000 0 1248000 0 0 0 0 0
-				90 1352000 0 1352000 0 0 0 0 0
-			>;
-		};
-		boot_device@3 {
-			net_boost,label="IPC";
-			net_boost,node="rmnet0 rmnet1 rmnet2 rmnet3 rmnet4 rmnet5 rmnet6 rmnet7 umts_dm0";
-			net_boost,table_size = <4>;
-			net_boost,table= <
-				1 0 0 0 0 0 0 0 1
-				20 0 0 839000 0 546000 100000 0 1
-				50 0 0 1014000 0 836000 100000 0 1
-				100 0 0 1482000 0 902000 100000 0 1
-				>;
-		};
-                boot_device@4 {
-                        net_boost,label="CLAT";
-                        net_boost,node="clat clat4 v4-rmnet0 v4-rmnet1 v4-rmnet2 v4-rmnet3 v4-rmnet4 v4-rmnet5 v4-rmnet6 v4-rmnet7";
-                        net_boost,table_size = <3>;
-                        net_boost,table= <
-                                120 1352000 0 0 0 902000 0 0 0
-                                130 1482000 0 0 0 902000 0 0 0
-                                150 1586000 0 0 0 902000 0 0 0
-                                >;
-                };
-                boot_device@5 {
-                        net_boost,label="USB";
-                        net_boost,node="rndis0";
-                        net_boost,table_size = <1>;
-                        net_boost,table= <  1 0 0 0 0 0 0 0 1 >;
-                };
-                boot_device@6 {
-                        net_boost,label="EMMC";
-                        net_boost,node="";
-                        net_boost,sysnode="/sys/class/mmc_host/mmc0/trans_count";
-                        net_boost,table_size = <1>;
-                        net_boost,table= <128 0 0 546000 0 0 400000 0 0>;
-                };
-		boot_device@7 {
-                        net_boost,label="WIFI RX";
-                        net_boost,node="wlan0";
-                        net_boost,table_size = <1>;
-                        net_boost,table= <
-                                100 1352000 0  1352000 0 0 0 0 0
-                                >;
-                };
-        };
 
 	sec_vib {
 		compatible = "sec_vib";

@@ -456,20 +456,6 @@
 				};
 			};
 		};
-
-		audio_codec_cod3026x: cod3026x@04 {
-			compatible = "codec,cod3026x";
-			reg = <0x04>;
-			ten-bit-address;
-			vdd-supply = <&ldo25_reg>;
-//			pinctrl-names = "default";
-//			pinctrl-0 = <&cod3026_irq>;
-//			interrupt-parent = <&gpa0>;
-//			gpios = <&gpa0 4 0xf>;
-			mic-bias1-voltage = <3>;
-			mic-bias2-voltage = <3>;
-			mic-bias-ldo-voltage = <3>;
-		};
 	};
 
 	i2c@13880000 {
@@ -597,7 +583,7 @@
 	};
 
 	pinctrl@139B0000 {
-			uart1_rts: uart1-rts {
+		uart1_rts: uart1-rts {
 			samsung,pins = "gpd2-3";
 			samsung,pin-function = <2>;
 			samsung,pin-pud = <3>;
@@ -605,7 +591,7 @@
 			samsung,pin-pud-pdn = <3>;
 		};
 
-			uart1_cts: uart1-cts {
+		uart1_cts: uart1-cts {
 			samsung,pins = "gpd2-2";
 			samsung,pin-function = <2>;
 			samsung,pin-pud = <3>;
@@ -613,7 +599,7 @@
 			samsung,pin-pud-pdn = <3>;
 		};
 
-			uart1_tx: uart1-tx {
+		uart1_tx: uart1-tx {
 			samsung,pins = "gpd2-1";
 			samsung,pin-function = <2>;
 			samsung,pin-pud = <3>;
@@ -621,7 +607,7 @@
 			samsung,pin-pud-pdn = <3>;
 		};
 
-			uart1_rx: uart1-rx {
+		uart1_rx: uart1-rx {
 			samsung,pins = "gpd2-0";
 			samsung,pin-function = <2>;
 			samsung,pin-pud = <3>;
@@ -635,8 +621,8 @@
 		status = "okay";
 	};
 
-	serial@13800000 {
-	       pinctrl-names = "default";
+	serial {
+		pinctrl-names = "default";
 		pinctrl-0 = <&uart1_rts &uart1_cts &uart1_tx &uart1_rx>;
 	};
 
@@ -646,7 +632,7 @@
 		status = "okay";
 	};
 
-    hall {
-        hall,gpio_check_bookcover = <&gpf4 0 0>;
-    };
+	hall {
+		hall,gpio_check_bookcover = <&gpf4 0 0>;
+	};
 };
