@@ -356,9 +356,6 @@ int amba_device_add(struct amba_device *dev, struct resource *parent)
 	void __iomem *tmp;
 	int i, ret;
 
-	WARN_ON(dev->irq[0] == (unsigned int)-1);
-	WARN_ON(dev->irq[1] == (unsigned int)-1);
-
 	if (strstr(dev_name(&dev->dev), "adma"))
 		adma_hw_reset(&dev->dev);
 
