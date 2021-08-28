@@ -33,7 +33,6 @@
 #include <sound/tlv.h>
 #include <sound/rt5659.h>
 
-#include <linux/gcd.h>
 #include "rt5659.h"
 
 static struct regmap *global_regmap;
@@ -1845,7 +1844,82 @@ static const struct snd_kcontrol_new rt5659_snd_controls[] = {
 };
 
 /**
- * rt5659_calc_dmic_clk - Calculate the parameter of dmic.
+ * rt5659_get_pre_div - Return the value of pre divider.
+ *
+ * @map: map for setting.
+ * @reg: register.
+ * @sft: shift.
+ *
+ * Return the value of pre divider from given register value.
+ * Return negative error code for unexpected register value.
+ */
+int rt5659_get_pre_div(struct regmap *map, unsigned int reg, int sft)
+{
+	int pd, val;
+
+	regmap_read(map, reg, &val);
+
+	val = (val >> sft) & 0x7;
+
+	switch (val) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+		pd = val + 1;
+		break;
+	case 4:
+		pd = 6;
+		break;
+	case 5:
+		pd = 8;
+		break;
+	case 6:
+		pd = 12;
+		break;
+	case 7:
+		pd = 16;
+		break;
+	default:
+		pd = -EINVAL;
+		break;
+	}
+
+	return pd;
+}
+
+/**
+ * rt5659_calc_dmic_clk - Calculate the frequency divider parameter of dmic.
+ *
+ * @rate: base clock rate.
+ *
+ * Choose divider parameter that gives the highest possible DMIC frequency in
+ * 1MHz - 3MHz range.
+ */
+int rt5659_calc_dmic_clk(int rate)
+{
+	static const int div[] = {2, 3, 4, 6, 8, 12};
+	int i;
+
+	if (rate < 1000000 * div[0]) {
+		pr_warn("Base clock rate %d is too low\n", rate);
+		return -EINVAL;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(div); i++) {
+		if ((div[i] % 3) == 0)
+			continue;
+		/* find divider that gives DMIC frequency below 3.072MHz */
+		if (3072000 * div[i] >= rate)
+			return i;
+	}
+
+	pr_warn("Base clock rate %d is too high\n", rate);
+	return -EINVAL;
+}
+
+/**
+ * set_dmic_clk - Set parameter of dmic.
  *
  * @w: DAPM widget.
  * @kcontrol: The kcontrol of this widget.
@@ -1854,26 +1928,17 @@ static const struct snd_kcontrol_new rt5659_snd_controls[] = {
  * Choose dmic clock between 1MHz and 3MHz.
  * It is better for clock to approximate 3MHz.
  */
-static int rt5659_calc_dmic_clk(struct snd_soc_dapm_widget *w,
+static int set_dmic_clk(struct snd_soc_dapm_widget *w,
 	struct snd_kcontrol *kcontrol, int event)
 {
 	struct snd_soc_codec *codec = w->codec;
 	struct rt5659_priv *rt5659 = snd_soc_codec_get_drvdata(codec);
-	static const int div[] = {2, 3, 4, 6, 8, 12};
-	int idx = -EINVAL, i, rate, red, bound, temp;
+	int pd, idx;
 
-	rate = rt5659->lrck[RT5659_AIF1] << 8;
-	red = 3072000 * 12;
-	for (i = 0; i < ARRAY_SIZE(div); i++) {
-		bound = div[i] * 3072000;
-		if (rate > bound)
-			continue;
-		temp = bound - rate;
-		if (temp < red) {
-			red = temp;
-			idx = i;
-		}
-	}
+	pd = rt5659_get_pre_div(rt5659->regmap,
+		RT5659_ADDA_CLK_1, RT5659_I2S_PD1_SFT);
+	idx = rt5659_calc_dmic_clk(rt5659->sysclk / pd);
+
 	if (idx < 0)
 		dev_err(codec->dev, "Failed to set DMIC clock\n");
 	else {
@@ -1911,7 +1976,7 @@ static int set_adc1_clk(struct snd_soc_dapm_widget *w,
 static int set_adc2_clk(struct snd_soc_dapm_widget *w,
 	struct snd_kcontrol *kcontrol, int event)
 {
-	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
+	struct snd_soc_codec *codec = w->codec;
 
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
@@ -3301,7 +3366,7 @@ static const struct snd_soc_dapm_widget rt5659_dapm_widgets[] = {
 	SND_SOC_DAPM_PGA("DMIC2", SND_SOC_NOPM, 0, 0, NULL, 0),
 
 	SND_SOC_DAPM_SUPPLY("DMIC CLK", SND_SOC_NOPM, 0, 0,
-		rt5659_calc_dmic_clk, SND_SOC_DAPM_PRE_PMU),
+		set_dmic_clk, SND_SOC_DAPM_PRE_PMU),
 	SND_SOC_DAPM_SUPPLY("DMIC1 Power", RT5659_DMIC_CTRL_1,
 		RT5659_DMIC_1_EN_SFT, 0, set_dmic_power, SND_SOC_DAPM_POST_PMU),
 	SND_SOC_DAPM_SUPPLY("DMIC2 Power", RT5659_DMIC_CTRL_1,
@@ -3599,7 +3664,7 @@ static const struct snd_soc_dapm_widget rt5659_dapm_widgets[] = {
 		SND_SOC_DAPM_PRE_PMU),
 	SND_SOC_DAPM_PGA_S("HP Amp", 1, SND_SOC_NOPM, 0, 0, rt5659_hp_event,
 		SND_SOC_DAPM_PRE_PMD | SND_SOC_DAPM_POST_PMU),
-	SND_SOC_DAPM_PGA("LOUT Amp", RT5659_PWR_ANLG_1, RT5659_PWR_LM_BIT,
+	SND_SOC_DAPM_PGA_S("LOUT Amp", 1, RT5659_PWR_ANLG_1, RT5659_PWR_LM_BIT,
 		0, NULL, 0),
 
 	SND_SOC_DAPM_SUPPLY("Charge Pump", SND_SOC_NOPM, 0, 0,
@@ -4262,48 +4327,11 @@ static int rt5659_set_codec_sysclk(struct snd_soc_codec *codec, int clk_id,
 	return 0;
 }
 
-struct pll_calc_map {
-	unsigned int pll_in;
-	unsigned int pll_out;
-	int k;
-	int n;
-	int m;
-	bool m_bp;
-	bool k_bp;
-};
-
-static const struct pll_calc_map pll_preset_table[] = {
-	{19200000,  4096000,  23, 14, 1, false, false},
-	{19200000,  24576000,  3, 30, 3, false, false},
-	{48000000,  3840000,  23,  2, 0, false, false},
-	{3840000,   24576000,  3, 30, 0, true, false},
-	{3840000,   22579200,  3,  5, 0, true, false},
-};
-
-static unsigned int find_best_div(unsigned int in,
-	unsigned int max, unsigned int div)
-{
-	unsigned int d;
-
-	if (in <= max)
-		return 1;
-
-	d = in / max;
-	if (in % max)
-		d++;
-
-	while (div % d != 0)
-		d++;
-
-
-	return d;
-}
-
 /**
  * rt5659_pll_calc - Calculate PLL M/N/K code.
  * @freq_in: external clock provided to the codec.
  * @freq_out: target clock on which the codec works.
- * @pll_code: Pointer to structure with M, N, K, m_bypass and k_bypass flag.
+ * @pll_code: Pointer to structure with M, N, K and bypass flag.
  *
  * Calculate M/N/K code to configure PLL for codec. K is assigned to 2
  * which makes calculation more efficient.
@@ -4314,87 +4342,59 @@ static int rt5659_pll_calc(const unsigned int freq_in,
 	const unsigned int freq_out, struct rt5659_pll_code *pll_code)
 {
 	int max_n = RT5659_PLL_N_MAX, max_m = RT5659_PLL_M_MAX;
-	int i, k, n_t;
-	int k_t, min_k, max_k, n = 0, m = 0, m_t = 0;
-	unsigned int red, pll_out, in_t, out_t, div, div_t;
-	unsigned int red_t = abs(freq_out - freq_in);
-	unsigned int f_in, f_out, f_max;
+	int k, n = 0, m = 0, red, n_t, m_t, pll_out, in_t;
+	int out_t, red_t = abs(freq_out - freq_in);
 	bool m_bypass = false, k_bypass = false;
 
 	if (RT5659_PLL_INP_MAX < freq_in || RT5659_PLL_INP_MIN > freq_in)
 		return -EINVAL;
 
-	for (i = 0; i < ARRAY_SIZE(pll_preset_table); i++) {
-		if (freq_in == pll_preset_table[i].pll_in &&
-			freq_out == pll_preset_table[i].pll_out) {
-			k = pll_preset_table[i].k;
-			m = pll_preset_table[i].m;
-			n = pll_preset_table[i].n;
-			m_bypass = pll_preset_table[i].m_bp;
-			k_bypass = pll_preset_table[i].k_bp;
-			pr_debug("Use preset PLL parameter table\n");
-			goto code_find;
-		}
+	k = 100000000 / freq_out - 2;
+	if (k > RT5659_PLL_K_MAX)
+		k = RT5659_PLL_K_MAX;
+	if (k < 0) {
+		k = 0;
+		k_bypass = true;
 	}
 
-	min_k = 80000000 / freq_out - 2;
-	max_k = 150000000 / freq_out - 2;
-	if (max_k > RT5659_PLL_K_MAX)
-		max_k = RT5659_PLL_K_MAX;
-	if (min_k > RT5659_PLL_K_MAX)
-		min_k = max_k = RT5659_PLL_K_MAX;
-	div_t = gcd(freq_in, freq_out);
-	f_max = 0xffffffff / RT5659_PLL_N_MAX;
-	div = find_best_div(freq_in, f_max, div_t);
-	f_in = freq_in / div;
-	f_out = freq_out / div;
-	k = min_k;
-	if (min_k < -1)
-		min_k = -1;
-	for (k_t = min_k; k_t <= max_k; k_t++) {
-		for (n_t = 0; n_t <= max_n; n_t++) {
-			in_t = f_in * (n_t + 2);
-			pll_out = f_out * (k_t + 2);
-			if (in_t == pll_out) {
-				m_bypass = true;
-				n = n_t;
-				k = k_t;
+	for (n_t = 0; n_t <= max_n; n_t++) {
+		in_t = freq_in / (k_bypass ? 1 : (k + 2));
+		pll_out = freq_out / (n_t + 2);
+		if (in_t < 0)
+			continue;
+		if (in_t == pll_out) {
+			m_bypass = true;
+			n = n_t;
+			goto code_find;
+		}
+
+		red = abs(in_t - pll_out);
+		if (red < red_t) {
+			m_bypass = true;
+			n = n_t;
+			m = m_t;
+			if (red == 0)
 				goto code_find;
-			}
-			out_t = in_t / (k_t + 2);
-			red = abs(f_out - out_t);
+			red_t = red;
+		}
+
+		for (m_t = 0; m_t <= max_m; m_t++) {
+			out_t = in_t / (m_t + 2);
+			red = abs(out_t - pll_out);
 			if (red < red_t) {
-				m_bypass = true;
+				m_bypass = false;
 				n = n_t;
-				m = 0;
-				k = k_t;
+				m = m_t;
 				if (red == 0)
 					goto code_find;
 				red_t = red;
 			}
-			for (m_t = 0; m_t <= max_m; m_t++) {
-				out_t = in_t / ((m_t + 2) * (k_t + 2));
-				red = abs(f_out - out_t);
-				if (red < red_t) {
-					m_bypass = false;
-					n = n_t;
-					m = m_t;
-					k = k_t;
-					if (red == 0)
-						goto code_find;
-					red_t = red;
-				}
-			}
 		}
 	}
+
 	pr_debug("%s: only got an approximation\n", __func__);
 
 code_find:
-	if (k == -1) {
-		k_bypass = true;
-		k = 0;
-	}
-
 	pll_code->m_bp = m_bypass;
 	pll_code->k_bp = k_bypass;
 	pll_code->m_code = m;
@@ -4698,22 +4698,22 @@ static DEVICE_ATTR(codec_reg_adb, 0664, rt5659_codec_adb_show,
 
 static int rt5659_set_bclk_ratio(struct snd_soc_dai *dai, unsigned int ratio)
 {
-	struct snd_soc_component *component = dai->component;
-	struct rt5659_priv *rt5659 = snd_soc_component_get_drvdata(component);
+	struct snd_soc_codec *codec = dai->codec;
+	struct rt5659_priv *rt5659 = snd_soc_codec_get_drvdata(codec);
 
-	dev_dbg(component->dev, "%s ratio=%d\n", __func__, ratio);
+	dev_dbg(codec->dev, "%s ratio=%d\n", __func__, ratio);
 
 	rt5659->bclk[dai->id] = ratio;
 
 	if (ratio == 64) {
 		switch (dai->id) {
 		case RT5659_AIF2:
-			snd_soc_component_update_bits(component, RT5659_ADDA_CLK_1,
+			snd_soc_update_bits(codec, RT5659_ADDA_CLK_1,
 				RT5659_I2S_BCLK_MS2_MASK,
 				RT5659_I2S_BCLK_MS2_64);
 			break;
 		case RT5659_AIF3:
-			snd_soc_component_update_bits(component, RT5659_ADDA_CLK_1,
+			snd_soc_update_bits(codec, RT5659_ADDA_CLK_1,
 				RT5659_I2S_BCLK_MS3_MASK,
 				RT5659_I2S_BCLK_MS3_64);
 			break;
