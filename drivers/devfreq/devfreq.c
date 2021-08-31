@@ -32,7 +32,7 @@
 #if defined(CONFIG_SOC_EXYNOS7870) && defined(CONFIG_PM_OPP)
 #define DF_MAX_VOLT		800000
 #define DF_MIN_VOLT		500000
-#define DF_VOLT_STEP		1
+#define DF_VOLT_STEP		6250
 #endif
 
 static struct class *devfreq_class;
