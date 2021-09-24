@@ -4449,7 +4449,7 @@ static int rt5659_set_codec_pll(struct snd_soc_codec *codec, int pll_id,
 
 	ret = rt5659_pll_calc(freq_in, freq_out, &pll_code);
 	if (ret < 0) {
-		dev_err(codec->dev, "Unsupport input clock %d\n", freq_in);
+		dev_err(codec->dev, "Unsupported input clock %d\n", freq_in);
 		return ret;
 	}
 
