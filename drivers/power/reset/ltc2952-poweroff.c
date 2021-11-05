@@ -203,8 +203,8 @@ static void ltc2952_poweroff_default(struct ltc2952_poweroff_data *data)
 	for (i = 0; i < ARRAY_SIZE(data->gpio); i++)
 		data->gpio[i] = NULL;
 
-	data->wde_interval = ktime_set(0, 300L*1E6L);
-	data->trigger_delay = ktime_set(2, 500L*1E6L);
+	data->wde_interval = ktime_set(0, 300L * NSEC_PER_MSEC);
+	data->trigger_delay = ktime_set(2, 500L * NSEC_PER_MSEC);
 
 	hrtimer_init(&data->timer_trigger, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	data->timer_trigger.function = &ltc2952_poweroff_timer_trigger;
