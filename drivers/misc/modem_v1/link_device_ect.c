@@ -138,7 +138,7 @@ struct freq_table *get_ordered_table(struct ect_table_data *table_data, int n)
 }
 
 int exynos_devfreq_parse_ect(struct ect_table_data *table_data)
-
+{
 	struct freq_table *ect_table = table_data->ect_table;
 	mif_err("ECT is not defined\n");
 
@@ -151,3 +151,4 @@ int exynos_devfreq_parse_ect(struct ect_table_data *table_data)
 	return 0;
 }
 #endif /* CONFIG_ECT */
+
