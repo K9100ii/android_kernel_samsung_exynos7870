@@ -32,7 +32,7 @@ ifeq ($(KERNEL_BUILD),1)
 	CONFIG_LINUX_QCMBR := y
 endif
 
-ifeq ($(KERNEL_BUILD), 1)
+ifeq ($(KERNEL_BUILD), 0)
 	# These are configurable via Kconfig for kernel-based builds
 	# Need to explicitly configure for Android-based builds
 
