@@ -176,8 +176,9 @@ obj-$(CONFIG_EXTCON)		+= extcon/
 obj-$(CONFIG_MEMORY)		+= memory/
 obj-$(CONFIG_IIO)		+= iio/
 
-#Sensor
+# Sensors
 obj-$(CONFIG_SENSORS)		+= sensors/
+
 obj-$(CONFIG_VME_BUS)		+= vme/
 obj-$(CONFIG_IPACK_BUS)		+= ipack/
 obj-$(CONFIG_NTB)		+= ntb/
@@ -188,18 +189,19 @@ obj-$(CONFIG_RAS)		+= ras/
 obj-$(CONFIG_THUNDERBOLT)	+= thunderbolt/
 obj-$(CONFIG_EXYNOS_BTS)	+= bts/
 obj-$(CONFIG_MARVELL_DRIVERS)	+= marvell/
+
 # Mobicore driver
 obj-$(CONFIG_TRUSTONIC_TEE)	+= gud/
 
-#haptic driver
+# Haptic driver
 obj-$(CONFIG_ANDROID_TIMED_OUTPUT)	+= motor/
 
-#Fingerprint
+# Fingerprint
 obj-$(CONFIG_SENSORS_FINGERPRINT)       += fingerprint/
 
-#Sensorhub
+# Sensorhub
 obj-$(CONFIG_SENSORS_SSP)	+= sensorhub/
 
-#GPS
-obj-$(CONFIG_GPS_BCMxxxxx)	+= gps/
+# GPS
+obj-$(CONFIG_GPS_LSI_S5N6420)	+= gps/
 obj-$(CONFIG_GPS_BCM4752)	+= gps/
