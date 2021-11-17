@@ -3009,7 +3009,6 @@ static void rtl8192_pci_disconnect(struct pci_dev *pdev)
 			free_irq(dev->irq, dev);
 			priv->irq = 0;
 		}
-		free_rtllib(dev);
 
 		kfree(priv->scan_cmd);
 
@@ -3018,6 +3017,8 @@ static void rtl8192_pci_disconnect(struct pci_dev *pdev)
 			release_mem_region(pci_resource_start(pdev, 1),
 					pci_resource_len(pdev, 1));
 		}
+
+		free_rtllib(dev);
 	} else {
 		priv = rtllib_priv(dev);
 	}
