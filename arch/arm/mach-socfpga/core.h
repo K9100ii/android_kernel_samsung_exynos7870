@@ -38,7 +38,7 @@ extern void __iomem *sys_manager_base_addr;
 extern void __iomem *rst_manager_base_addr;
 
 extern struct smp_operations socfpga_smp_ops;
-extern char secondary_trampoline, secondary_trampoline_end;
+extern char secondary_trampoline[], secondary_trampoline_end[];
 
 extern unsigned long socfpga_cpu1start_addr;
 
