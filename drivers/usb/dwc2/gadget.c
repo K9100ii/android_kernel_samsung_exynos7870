@@ -3641,7 +3641,7 @@ static int s3c_hsotg_suspend(struct platform_device *pdev, pm_message_t state)
 
 	if (hsotg->driver) {
 		int ep;
-		for (ep = 0; ep < hsotg->num_of_eps; ep++)
+		for (ep = 1; ep < hsotg->num_of_eps; ep++)
 			s3c_hsotg_ep_disable(&hsotg->eps[ep].ep);
 
 		ret = regulator_bulk_disable(ARRAY_SIZE(hsotg->supplies),
