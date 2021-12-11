@@ -32,10 +32,6 @@
 
 #ifdef CONFIG_DEBUG_FS
 
-#if (KERNEL_VERSION(4, 1, 0) > LINUX_VERSION_CODE)
-#define get_file_rcu(x) atomic_long_inc_not_zero(&(x)->f_count)
-#endif
-
 struct debug_mem_mapping {
 	struct list_head node;
 
