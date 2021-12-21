@@ -420,7 +420,7 @@ out:
 static void eax_adma_hw_free(struct snd_pcm_substream *substream)
 {
 	mutex_lock(&di.mutex);
-	pr_info("Entered %s ++\n", __func__);
+	pr_debug("Entered %s ++\n", __func__);
 
 	if (di.running || eax_mixer_any_buf_running()) {
 		pr_info("EAXADMA: some mixer channel is running, (%d), (%d)\n",
@@ -448,7 +448,7 @@ static void eax_adma_hw_free(struct snd_pcm_substream *substream)
 	di.prepare_done = false;
 out:
 	clear_bit(substream->pcm->device, &di.set_params_bitmap);
-	pr_info("Entered %s --\n", __func__);
+	pr_debug("Entered %s --\n", __func__);
 	mutex_unlock(&di.mutex);
 }
 
@@ -514,7 +514,7 @@ static void eax_adma_trigger(bool on)
 		lpass_dma_enable(false);
 		di.prepare_done = false;
 		di.running = on;
-		pr_info("%s:DMA stop retrun value:%d\n", __func__, ret);
+		pr_debug("%s: DMA stop return value: %d\n", __func__, ret);
 	}
 
 	spin_unlock(&di.lock);
@@ -527,7 +527,7 @@ static inline void eax_dma_xfer(struct runtime_data *prtd,
 
 	if (eax_dma_is_uhqa(prtd->format)) {
 		if (!prtd->uhqa_dma_mono || !upcm_l || !upcm_r) {
-			pr_err("%s : UHQA DMA MONO Pointer is NULL\n", __func__);
+			pr_err("%s: UHQA DMA MONO Pointer is NULL\n", __func__);
 			return;
 		}
 		*upcm_l = *prtd->uhqa_dma_mono++;
@@ -546,7 +546,7 @@ static inline void eax_dma_xfer(struct runtime_data *prtd,
 			snd_pcm_period_elapsed(prtd->substream);
 	} else {
 		if (!prtd->normal_dma_mono || !npcm_l || !npcm_r) {
-			pr_err("%s : NORMAL DMA MONO Pointer is NULL\n", __func__);
+			pr_err("%s: NORMAL DMA MONO Pointer is NULL\n", __func__);
 			return;
 		}
 		*npcm_l = *prtd->normal_dma_mono++;
