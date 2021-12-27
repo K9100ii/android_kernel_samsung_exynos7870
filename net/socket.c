@@ -2240,10 +2240,11 @@ static int ___sys_recvmsg(struct socket *sock, struct msghdr __user *msg,
 
 	if (MSG_CMSG_COMPAT & flags)
 		err = get_compat_msghdr(msg_sys, msg_compat);
-	else 
+	else
 		err = copy_msghdr_from_user(msg_sys, msg);
-	if (err < 0)
-			return err;
+	if (err)
+		return err;
+
 	if (msg_sys->msg_iovlen > UIO_FASTIOV) {
 		err = -EMSGSIZE;
 		if (msg_sys->msg_iovlen > UIO_MAXIOV)
