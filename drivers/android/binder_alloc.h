@@ -24,9 +24,6 @@
 #include <linux/list_lru.h>
 
 extern struct list_lru binder_alloc_lru;
-
-#define BINDER_MIN_ALLOC (1 * PAGE_SIZE)
-
 struct binder_transaction;
 
 /**
