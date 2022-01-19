@@ -1229,8 +1229,6 @@ int ip6_append_data(struct sock *sk, int getfrag(void *from, char *to,
 			if (np->frag_size)
 				mtu = np->frag_size;
 		}
-		if (mtu < IPV6_MIN_MTU)
-			return -EINVAL;
 		cork->fragsize = mtu;
 		if (dst_allfrag(rt->dst.path))
 			cork->flags |= IPCORK_ALLFRAG;
@@ -1254,8 +1252,6 @@ int ip6_append_data(struct sock *sk, int getfrag(void *from, char *to,
 
 	fragheaderlen = sizeof(struct ipv6hdr) + rt->rt6i_nfheader_len +
 			(opt ? opt->opt_nflen : 0);
-	maxfraglen = ((mtu - fragheaderlen) & ~7) + fragheaderlen -
-		     sizeof(struct frag_hdr);
 
 	if (mtu <= sizeof(struct ipv6hdr) + IPV6_MAXPLEN) {
 		unsigned int maxnonfragsize, headersize;
@@ -1265,6 +1261,13 @@ int ip6_append_data(struct sock *sk, int getfrag(void *from, char *to,
 			     (dst_allfrag(&rt->dst) ?
 			      sizeof(struct frag_hdr) : 0) +
 			     rt->rt6i_nfheader_len;
+
+		if (mtu < fragheaderlen ||
+		    ((mtu - fragheaderlen) & ~7) + fragheaderlen < sizeof(struct frag_hdr))
+			goto emsgsize;
+
+		maxfraglen = ((mtu - fragheaderlen) & ~7) + fragheaderlen -
+			     sizeof(struct frag_hdr);
 
 		if (ip6_sk_ignore_df(sk))
 			maxnonfragsize = sizeof(struct ipv6hdr) + IPV6_MAXPLEN;
