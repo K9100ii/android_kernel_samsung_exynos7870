@@ -310,7 +310,7 @@ static bool tipc_update_nametbl(struct distr_item *i, u32 node, u32 dtype)
 			return true;
 		}
 	} else {
-		pr_warn("Unrecognized name table message received\n");
+		pr_warn_ratelimited("Unknown name table message received\n");
 	}
 	return false;
 }
