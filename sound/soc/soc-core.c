@@ -4794,7 +4794,7 @@ int snd_soc_of_get_dai_name(struct device_node *of_node,
 
 	mutex_lock(&client_mutex);
 	list_for_each_entry(pos, &component_list, list) {
-		if (pos->dev->of_node != args.np)
+		if (pos->dev->of_node != args.np || !pos->num_dai)
 			continue;
 
 		if (pos->driver->of_xlate_dai_name) {
