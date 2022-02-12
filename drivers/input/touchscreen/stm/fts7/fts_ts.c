@@ -116,6 +116,9 @@ enum TOUCH_MODE {
 };
 #endif
 
+#ifdef CONFIG_EPEN_WACOM_W9019_GTANOTE
+bool fts7_epen_input_active = false;
+#endif
 
 #ifdef USE_OPEN_CLOSE
 static int fts_input_open(struct input_dev *dev);
@@ -1126,6 +1129,12 @@ static unsigned char fts_event_handler_type_b(struct fts_ts_info *info,
 			if (info->board->support_mskey) {
 				unsigned char input_keys;
 
+#ifdef CONFIG_EPEN_WACOM_W9019_GTANOTE
+				if (fts7_epen_input_active) {
+					fts_release_all_key(info);
+					break;
+				}
+#endif
 				input_keys = data[2 + EventNum * FTS_EVENT_SIZE];
 
 				if (input_keys == 0x00)
@@ -1284,6 +1293,12 @@ static unsigned char fts_event_handler_type_b(struct fts_ts_info *info,
 				break;
 			info->touch_count++;
 		case EVENTID_MOTION_POINTER:
+#ifdef CONFIG_EPEN_WACOM_W9019_GTANOTE
+			if (fts7_epen_input_active) {
+				fts_release_all_finger(info);
+				break;
+			}
+#endif
 			if (info->fts_power_state == FTS_POWER_STATE_LOWPOWER) {
 				tsp_debug_info(true, &info->client->dev, "%s: low power mode\n", __func__);
 				fts_release_all_finger(info);

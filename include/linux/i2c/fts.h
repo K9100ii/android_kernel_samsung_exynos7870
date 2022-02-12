@@ -110,9 +110,12 @@ extern struct class *sec_class;
 
 extern unsigned int lcdtype;
 
-void fts_charger_infom(bool en);
 #ifdef CONFIG_TRUSTONIC_TRUSTED_UI
 extern void trustedui_mode_on(void);
 #endif
+
+#ifdef CONFIG_EPEN_WACOM_W9019_GTANOTE
+extern bool fts7_epen_input_active;
 #endif
 
+#endif

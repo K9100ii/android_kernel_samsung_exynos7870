@@ -21,6 +21,10 @@
 #include "wacom_i2c_func.h"
 #include "wacom_i2c_firm.h"
 
+#ifdef CONFIG_TOUCHSCREEN_FTS7
+#include <linux/i2c/fts.h>
+#endif
+
 #if !defined(CONFIG_SAMSUNG_PRODUCT_SHIP)
 #define CONFIG_SAMSUNG_KERNEL_DEBUG_USER
 #endif
@@ -905,5 +909,8 @@ int wacom_i2c_coord(struct wacom_i2c *wac_i2c)
 		wac_i2c->side_pressed = 0;
 	}
 
+#ifdef CONFIG_TOUCHSCREEN_FTS7
+	fts7_epen_input_active = wac_i2c->pen_prox || wac_i2c->pen_pressed;
+#endif
 	return 0;
 }
