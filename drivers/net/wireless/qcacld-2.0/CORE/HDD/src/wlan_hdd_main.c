@@ -1265,7 +1265,7 @@ static int hdd_parse_setrmcrate_command(tANI_U8 *pValue,
     tANI_U8 *inPtr = pValue;
     int tempInt;
     int v = 0;
-    char buf[32];
+    char buf[33];
     *pRate = 0;
     *pTxFlags = 0;
 
