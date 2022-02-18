@@ -73,6 +73,7 @@ static int __init nvic_of_init(struct device_node *node,
 		irq_domain_add_linear(node, irqs, &irq_generic_chip_ops, NULL);
 	if (!nvic_irq_domain) {
 		pr_warn("Failed to allocate irq domain\n");
+		iounmap(nvic_base);
 		return -ENOMEM;
 	}
 
@@ -82,6 +83,7 @@ static int __init nvic_of_init(struct device_node *node,
 	if (ret) {
 		pr_warn("Failed to allocate irq chips\n");
 		irq_domain_remove(nvic_irq_domain);
+		iounmap(nvic_base);
 		return ret;
 	}
 
