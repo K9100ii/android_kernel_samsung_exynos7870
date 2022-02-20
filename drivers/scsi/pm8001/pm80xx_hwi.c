@@ -854,9 +854,11 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
 
 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
 	payload.tag = cpu_to_le32(tag);
-	payload.cfg_pg[0] = (THERMAL_LOG_ENABLE << 9) |
-			(THERMAL_ENABLE << 8) | THERMAL_OP_CODE;
-	payload.cfg_pg[1] = (LTEMPHIL << 24) | (RTEMPHIL << 8);
+	payload.cfg_pg[0] =
+		cpu_to_le32((THERMAL_LOG_ENABLE << 9) |
+			    (THERMAL_ENABLE << 8) | THERMAL_OP_CODE);
+	payload.cfg_pg[1] =
+		cpu_to_le32((LTEMPHIL << 24) | (RTEMPHIL << 8));
 
 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
 	if (rc)
