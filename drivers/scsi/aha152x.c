@@ -3926,18 +3926,16 @@ static int __init aha152x_setup(char *str)
 	setup[setup_count].ext_trans   = ints[0] >= 8 ? ints[8] : 0;
 #if defined(AHA152X_DEBUG)
 	setup[setup_count].debug       = ints[0] >= 9 ? ints[9] : DEBUG_DEFAULT;
-	if (ints[0] > 9) {
+	if (ints[0] > 9)
 		printk(KERN_NOTICE "aha152x: usage: aha152x=<IOBASE>[,<IRQ>[,<SCSI ID>"
 		       "[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY>[,<EXT_TRANS>[,<DEBUG>]]]]]]]]\n");
 #else
-	if (ints[0] > 8) {                                                /*}*/
+	if (ints[0] > 8)
 		printk(KERN_NOTICE "aha152x: usage: aha152x=<IOBASE>[,<IRQ>[,<SCSI ID>"
 		       "[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY>[,<EXT_TRANS>]]]]]]]\n");
 #endif
-	} else {
+	else
 		setup_count++;
-		return 0;
-	}
 
 	return 1;
 }
