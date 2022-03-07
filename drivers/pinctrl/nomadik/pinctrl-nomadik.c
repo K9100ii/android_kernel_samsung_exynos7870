@@ -1994,8 +1994,10 @@ static int nmk_pinctrl_probe(struct platform_device *pdev)
 		nmk_pinctrl_db8540_init(&npct->soc);
 
 	prcm_np = of_parse_phandle(np, "prcm", 0);
-	if (prcm_np)
+	if (prcm_np) {
 		npct->prcm_base = of_iomap(prcm_np, 0);
+		of_node_put(prcm_np);
+	}
 	if (!npct->prcm_base) {
 		if (version == PINCTRL_NMK_STN8815) {
 			dev_info(&pdev->dev,
