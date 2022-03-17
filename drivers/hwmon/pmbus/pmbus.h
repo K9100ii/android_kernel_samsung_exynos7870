@@ -250,6 +250,7 @@
 /*
  * STATUS_VOUT, STATUS_INPUT
  */
+#define PB_VOLTAGE_VIN_OFF		(1<<3)
 #define PB_VOLTAGE_UV_FAULT		(1<<4)
 #define PB_VOLTAGE_UV_WARNING		(1<<5)
 #define PB_VOLTAGE_OV_WARNING		(1<<6)
