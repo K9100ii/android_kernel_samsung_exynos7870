@@ -169,6 +169,8 @@ static struct list_head netlink_tap_all __read_mostly;
 
 static inline u32 netlink_group_mask(u32 group)
 {
+	if (group > 32)
+		return 0;
 	return group ? 1 << (group - 1) : 0;
 }
 
