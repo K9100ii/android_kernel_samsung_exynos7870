@@ -1070,8 +1070,6 @@ static netdev_tx_t m_can_start_xmit(struct sk_buff *skb,
 		m_can_fifo_write(priv, 0, M_CAN_FIFO_DATA(i / 4),
 				 *(u32 *)(cf->data + i));
 
-	can_put_echo_skb(skb, dev, 0);
-
 	if (priv->can.ctrlmode & CAN_CTRLMODE_FD) {
 		cccr = m_can_read(priv, M_CAN_CCCR);
 		cccr &= ~(CCCR_CMR_MASK << CCCR_CMR_SHIFT);
@@ -1088,6 +1086,9 @@ static netdev_tx_t m_can_start_xmit(struct sk_buff *skb,
 
 	/* enable first TX buffer to start transfer  */
 	m_can_write(priv, M_CAN_TXBTIE, 0x1);
+
+	can_put_echo_skb(skb, dev, 0);
+
 	m_can_write(priv, M_CAN_TXBAR, 0x1);
 
 	return NETDEV_TX_OK;
