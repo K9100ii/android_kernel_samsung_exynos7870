@@ -106,7 +106,7 @@ nft_do_chain(struct nft_pktinfo *pkt, const struct nf_hook_ops *ops)
 	const struct nft_chain *chain = ops->priv, *basechain = chain;
 	const struct nft_rule *rule;
 	const struct nft_expr *expr, *last;
-	struct nft_data data[NFT_REG_MAX + 1];
+	struct nft_data data[NFT_REG_MAX + 1] = {};
 	unsigned int stackptr = 0;
 	struct nft_jumpstack jumpstack[NFT_JUMP_STACK_SIZE];
 	struct nft_stats *stats;
