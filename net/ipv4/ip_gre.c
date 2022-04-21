@@ -230,13 +230,12 @@ static void __gre_xmit(struct sk_buff *skb, struct net_device *dev,
 {
 	struct ip_tunnel *tunnel = netdev_priv(dev);
 	struct tnl_ptk_info tpi;
+	__be16 flags = tunnel->parms.o_flags;
 
-	tpi.flags = tunnel->parms.o_flags;
+	tpi.flags = flags;
 	tpi.proto = proto;
 	tpi.key = tunnel->parms.o_key;
-	if (tunnel->parms.o_flags & TUNNEL_SEQ)
-		tunnel->o_seqno++;
-	tpi.seq = htonl(tunnel->o_seqno);
+	tpi.seq = (flags & TUNNEL_SEQ) ? htonl(tunnel->o_seqno++) : 0;
 
 	/* Push GRE header. */
 	gre_build_header(skb, &tpi, tunnel->tun_hlen);
