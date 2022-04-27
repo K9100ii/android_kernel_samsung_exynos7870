@@ -2226,7 +2226,7 @@ hsw_compute_linetime_wm(struct drm_device *dev, struct drm_crtc *crtc)
 	       PIPE_WM_LINETIME_TIME(linetime);
 }
 
-static void intel_read_wm_latency(struct drm_device *dev, uint16_t wm[5])
+static void intel_read_wm_latency(struct drm_device *dev, uint16_t wm[])
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
