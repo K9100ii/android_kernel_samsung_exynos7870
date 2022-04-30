@@ -626,6 +626,7 @@ struct fts_ts_info {
 	int touchkey_threshold;
 	struct device *fac_dev_tk;
 	bool tsk_led_enabled;
+	bool touchkeys_enabled;
 #endif
 
 	unsigned int noise_count;		/* noise mode count */

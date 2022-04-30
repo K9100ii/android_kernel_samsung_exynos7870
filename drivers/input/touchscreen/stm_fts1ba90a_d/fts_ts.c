@@ -1468,6 +1468,7 @@ static int d_fts_init(struct fts_ts_info *info)
 #endif
 #ifdef FTS_SUPPORT_TOUCH_KEY
 	info->tsp_keystatus = 0x00;
+	info->touchkeys_enabled = true;
 #endif
 
 	info->touch_functions = FTS_TOUCHTYPE_DEFAULT_ENABLE;
@@ -1595,6 +1596,11 @@ static u8 d_fts_event_handler_type_b(struct fts_ts_info *info)
 				(p_event_status->sf == 0x1) &&
 				(p_event_status->status_id == 0x0)){
 				unsigned char input_keys;
+
+				if (!info->touchkeys_enabled) {
+					d_fts_release_all_key(info);
+					break;
+				}
 
 				input_keys = data[2 + EventNum * FTS_EVENT_SIZE];
 
