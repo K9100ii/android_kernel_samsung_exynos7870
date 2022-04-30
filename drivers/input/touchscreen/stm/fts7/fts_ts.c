@@ -1022,6 +1022,7 @@ static int fts_init(struct fts_ts_info *info)
 
 #ifdef FTS_SUPPORT_TOUCH_KEY
 	info->tsp_keystatus = 0x00;
+	info->touchkeys_enabled = true;
 #endif
 
 #ifdef FTS_SUPPORT_2NDSCREEN
@@ -1140,6 +1141,11 @@ static unsigned char fts_event_handler_type_b(struct fts_ts_info *info,
 					break;
 				}
 #endif
+				if (!info->touchkeys_enabled) {
+					fts_release_all_key(info);
+					break;
+				}
+
 				input_keys = data[2 + EventNum * FTS_EVENT_SIZE];
 
 				if (input_keys == 0x00)
