@@ -242,7 +242,11 @@ replay:
 #ifdef CONFIG_MODULES
 			struct nlattr *kind = tca[TCA_KIND];
 			char name[IFNAMSIZ];
-
+#endif
+			if (cl)
+				cops->put(q, cl);
+			cl = 0;
+#ifdef CONFIG_MODULES
 			if (kind != NULL &&
 			    nla_strlcpy(name, kind, IFNAMSIZ) < IFNAMSIZ) {
 				rtnl_unlock();
