@@ -23,6 +23,7 @@
 #include <net/inet_hashtables.h>
 #include <net/secure_seq.h>
 #include <net/ip.h>
+#include <net/tcp.h>
 
 static unsigned int inet_ehashfn(struct net *net, const __be32 laddr,
 				 const __u16 lport, const __be32 faddr,
@@ -485,7 +486,8 @@ EXPORT_SYMBOL_GPL(inet_unhash);
  * privacy, this only consumes 1 KB of kernel memory.
  */
 #define INET_TABLE_PERTURB_SHIFT 8
-static u32 table_perturb[1 << INET_TABLE_PERTURB_SHIFT];
+#define INET_TABLE_PERTURB_SIZE (1 << INET_TABLE_PERTURB_SHIFT)
+static u32 *table_perturb;
 
 int __inet_hash_connect(struct inet_timewait_death_row *death_row,
 		struct sock *sk, u64 port_offset,
@@ -507,7 +509,8 @@ int __inet_hash_connect(struct inet_timewait_death_row *death_row,
 		u32 offset;
 		struct inet_timewait_sock *tw = NULL;
 
-		net_get_random_once(table_perturb, sizeof(table_perturb));
+		net_get_random_once(table_perturb,
+				    INET_TABLE_PERTURB_SIZE * sizeof(*table_perturb));
 		index = hash_32(port_offset, INET_TABLE_PERTURB_SHIFT);
 
 		offset = READ_ONCE(table_perturb[index]) + (port_offset >> 32);
@@ -627,6 +630,15 @@ void inet_hashinfo_init(struct inet_hashinfo *h)
 		spin_lock_init(&h->listening_hash[i].lock);
 		INIT_HLIST_NULLS_HEAD(&h->listening_hash[i].head,
 				      i + LISTENING_NULLS_BASE);
-		}
+	}
+
+	if (h != &tcp_hashinfo)
+		return;
+
+	/* this one is used for source ports of outgoing connections */
+	table_perturb = kmalloc_array(INET_TABLE_PERTURB_SIZE,
+				      sizeof(*table_perturb), GFP_KERNEL);
+	if (!table_perturb)
+		panic("TCP: failed to alloc table_perturb");
 }
 EXPORT_SYMBOL_GPL(inet_hashinfo_init);
