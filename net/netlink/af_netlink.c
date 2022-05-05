@@ -1786,7 +1786,6 @@ static int netlink_recvmsg(struct kiocb *kiocb, struct socket *sock,
 		copied = len;
 	}
 
-	skb_reset_transport_header(data_skb);
 	err = skb_copy_datagram_msg(data_skb, 0, msg, copied);
 
 	if (msg->msg_name) {
