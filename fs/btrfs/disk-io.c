@@ -2664,7 +2664,7 @@ int open_ctree(struct super_block *sb,
 		~BTRFS_FEATURE_INCOMPAT_SUPP;
 	if (features) {
 		printk(KERN_ERR "BTRFS: couldn't mount because of "
-		       "unsupported optional features (%Lx).\n",
+		       "unsupported optional features (0x%Lx).\n",
 		       features);
 		err = -EINVAL;
 		goto fail_alloc;
@@ -2736,7 +2736,7 @@ int open_ctree(struct super_block *sb,
 		~BTRFS_FEATURE_COMPAT_RO_SUPP;
 	if (!(sb->s_flags & MS_RDONLY) && features) {
 		printk(KERN_ERR "BTRFS: couldn't mount RDWR because of "
-		       "unsupported option features (%Lx).\n",
+		       "unsupported option features (0x%Lx).\n",
 		       features);
 		err = -EINVAL;
 		goto fail_alloc;
