@@ -1762,7 +1762,7 @@ static int memsize_kernel_show(struct seq_file *m, void *private)
 	kernel = rmem_reg->size - initmem;
 	text = _etext - _text;
 	rodata = __end_rodata - __start_rodata;
-	if (__start_rodata < _etext)
+	if (&__start_rodata < &_etext)
 		text -= rodata;
 	data = _edata - _sdata;
 	bss = __bss_stop - __bss_start;
