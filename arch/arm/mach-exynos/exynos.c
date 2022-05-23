@@ -266,6 +266,7 @@ static void exynos_map_pmu(void)
 	np = of_find_matching_node(NULL, exynos_dt_pmu_match);
 	if (np)
 		pmu_base_addr = of_iomap(np, 0);
+	of_node_put(np);
 
 	if (!pmu_base_addr)
 		panic("failed to find exynos pmu register\n");
