@@ -202,39 +202,12 @@ static int cx_auto_init(struct hda_codec *codec)
 	return 0;
 }
 
-static void cx_auto_reboot_notify(struct hda_codec *codec)
-{
-	struct conexant_spec *spec = codec->spec;
-
-	switch (codec->core.vendor_id) {
-	case 0x14f12008: /* CX8200 */
-	case 0x14f150f2: /* CX20722 */
-	case 0x14f150f4: /* CX20724 */
-		break;
-	default:
-		return;
-	}
-
-	/* Turn the problematic codec into D3 to avoid spurious noises
-	   from the internal speaker during (and after) reboot */
-	cx_auto_turn_eapd(codec, spec->num_eapds, spec->eapds, false);
-
-	snd_hda_codec_set_power_to_all(codec, codec->core.afg, AC_PWRST_D3);
-	snd_hda_codec_write(codec, codec->core.afg, 0,
-			    AC_VERB_SET_POWER_STATE, AC_PWRST_D3);
-}
-
-static void cx_auto_free(struct hda_codec *codec)
-{
-	cx_auto_reboot_notify(codec);
-	snd_hda_gen_free(codec);
-}
+#define cx_auto_free	snd_hda_gen_free
 
 static const struct hda_codec_ops cx_auto_patch_ops = {
 	.build_controls = cx_auto_build_controls,
 	.build_pcms = snd_hda_gen_build_pcms,
 	.init = cx_auto_init,
-	.reboot_notify = cx_auto_reboot_notify,
 	.free = cx_auto_free,
 	.unsol_event = snd_hda_jack_unsol_event,
 #ifdef CONFIG_PM
