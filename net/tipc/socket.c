@@ -333,6 +333,7 @@ static int tipc_sk_create(struct net *net, struct socket *sock,
 	tsk = tipc_sk(sk);
 	ref = tipc_sk_ref_acquire(tsk);
 	if (!ref) {
+		sk_free(sk);
 		pr_warn("Socket create failed; reference table exhausted\n");
 		return -ENOMEM;
 	}
