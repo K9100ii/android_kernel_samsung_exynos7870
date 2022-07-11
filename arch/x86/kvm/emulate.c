@@ -1610,16 +1610,6 @@ static int __load_segment_descriptor(struct x86_emulate_ctxt *ctxt,
 	case VCPU_SREG_TR:
 		if (seg_desc.s || (seg_desc.type != 1 && seg_desc.type != 9))
 			goto exception;
-		if (!seg_desc.p) {
-			err_vec = NP_VECTOR;
-			goto exception;
-		}
-		old_desc = seg_desc;
-		seg_desc.type |= 2; /* busy */
-		ret = ctxt->ops->cmpxchg_emulated(ctxt, desc_addr, &old_desc, &seg_desc,
-						  sizeof(seg_desc), &ctxt->exception);
-		if (ret != X86EMUL_CONTINUE)
-			return ret;
 		break;
 	case VCPU_SREG_LDTR:
 		if (seg_desc.s || seg_desc.type != 2)
@@ -1652,6 +1642,15 @@ static int __load_segment_descriptor(struct x86_emulate_ctxt *ctxt,
 	} else if (ctxt->mode == X86EMUL_MODE_PROT64) {
 		ret = ctxt->ops->read_std(ctxt, desc_addr+8, &base3,
 				sizeof(base3), &ctxt->exception);
+		if (ret != X86EMUL_CONTINUE)
+			return ret;
+	}
+
+	if (seg == VCPU_SREG_TR) {
+		old_desc = seg_desc;
+		seg_desc.type |= 2; /* busy */
+		ret = ctxt->ops->cmpxchg_emulated(ctxt, desc_addr, &old_desc, &seg_desc,
+						  sizeof(seg_desc), &ctxt->exception);
 		if (ret != X86EMUL_CONTINUE)
 			return ret;
 	}
