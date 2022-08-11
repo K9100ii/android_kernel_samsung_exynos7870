@@ -1588,6 +1588,9 @@ int radeon_suspend_kms(struct drm_device *dev, bool suspend, bool fbcon)
 		if (r) {
 			/* delay GPU reset to resume */
 			radeon_fence_driver_force_completion(rdev, i);
+		} else {
+			/* finish executing delayed work */
+			flush_delayed_work(&rdev->fence_drv[i].lockup_work);
 		}
 	}
 
