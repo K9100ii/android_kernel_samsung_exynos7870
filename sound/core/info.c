@@ -164,9 +164,9 @@ static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
 	mutex_lock(&entry->access);
 	if (entry->content == SNDRV_INFO_CONTENT_DATA &&
 	    entry->c.ops->llseek) {
-		offset = entry->c.ops->llseek(entry,
-					      data->file_private_data,
-					      file, offset, orig);
+		ret = entry->c.ops->llseek(entry,
+					   data->file_private_data,
+					   file, offset, orig);
 		goto out;
 	}
 	if (entry->content == SNDRV_INFO_CONTENT_DATA)
