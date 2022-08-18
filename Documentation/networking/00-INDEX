@@ -56,8 +56,6 @@ dccp.txt
 	- the Datagram Congestion Control Protocol (DCCP) (RFC 4340..42).
 de4x5.txt
 	- the Digital EtherWORKS DE4?? and DE5?? PCI Ethernet driver
-decnet.txt
-	- info on using the DECnet networking layer in Linux.
 dl2k.txt
 	- README for D-Link DL2000-based Gigabit Ethernet Adapters (dl2k.ko).
 dm9000.txt
