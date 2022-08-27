@@ -3338,24 +3338,56 @@ static int synchronize_sched_expedited_cpu_stop(void *data)
  * restructure your code to batch your updates, and then use a single
  * synchronize_sched() instead.
  *
- * This implementation can be thought of as an application of sequence
- * locking to expedited grace periods, but using the sequence counter to
- * determine when someone else has already done the work instead of for
- * retrying readers.  We do a mutex_trylock() polling loop, but if we fail
- * too many times in a row, we fall back to synchronize_sched().
+ * This implementation can be thought of as an application of ticket
+ * locking to RCU, with sync_sched_expedited_started and
+ * sync_sched_expedited_done taking on the roles of the halves
+ * of the ticket-lock word.  Each task atomically increments
+ * sync_sched_expedited_started upon entry, snapshotting the old value,
+ * then attempts to stop all the CPUs.  If this succeeds, then each
+ * CPU will have executed a context switch, resulting in an RCU-sched
+ * grace period.  We are then done, so we use atomic_cmpxchg() to
+ * update sync_sched_expedited_done to match our snapshot -- but
+ * only if someone else has not already advanced past our snapshot.
+ *
+ * On the other hand, if try_stop_cpus() fails, we check the value
+ * of sync_sched_expedited_done.  If it has advanced past our
+ * initial snapshot, then someone else must have forced a grace period
+ * some time after we took our snapshot.  In this case, our work is
+ * done for us, and we can simply return.  Otherwise, we try again,
+ * but keep our initial snapshot for purposes of checking for someone
+ * doing our work for us.
+ *
+ * If we fail too many times in a row, we fall back to synchronize_sched().
  */
 void synchronize_sched_expedited(void)
 {
 	int cpu;
-	long s;
+	long firstsnap, s, snap;
 	int trycount = 0;
 	struct rcu_state *rsp = &rcu_sched_state;
 
-	/* Take a snapshot of the sequence number.  */
-	smp_mb(); /* Caller's modifications seen first by other CPUs. */
-	s = (READ_ONCE(rsp->expedited_sequence) + 3) & ~0x1;
-	smp_mb(); /* Above access must not bleed into critical section. */
+	/*
+	 * If we are in danger of counter wrap, just do synchronize_sched().
+	 * By allowing sync_sched_expedited_started to advance no more than
+	 * ULONG_MAX/8 ahead of sync_sched_expedited_done, we are ensuring
+	 * that more than 3.5 billion CPUs would be required to force a
+	 * counter wrap on a 32-bit system.  Quite a few more CPUs would of
+	 * course be required on a 64-bit system.
+	 */
+	if (ULONG_CMP_GE((ulong)atomic_long_read(&rsp->expedited_start),
+			 (ulong)atomic_long_read(&rsp->expedited_done) +
+			 ULONG_MAX / 8)) {
+		wait_rcu_gp(call_rcu_sched);
+		atomic_long_inc(&rsp->expedited_wrap);
+		return;
+	}
 
+	/*
+	 * Take a ticket.  Note that atomic_inc_return() implies a
+	 * full memory barrier.
+	 */
+	snap = atomic_long_inc_return(&rsp->expedited_start);
+	firstsnap = snap;
 	if (!try_get_online_cpus()) {
 		/* CPU hotplug operation in flight, fall back to normal GP. */
 		wait_rcu_gp(call_rcu_sched);
@@ -3365,15 +3397,16 @@ void synchronize_sched_expedited(void)
 	WARN_ON_ONCE(cpu_is_offline(raw_smp_processor_id()));
 
 	/*
-	 * Each pass through the following loop attempts to acquire
-	 * ->expedited_mutex, checking for others doing our work each time.
+	 * Each pass through the following loop attempts to force a
+	 * context switch on each CPU.
 	 */
 	while (!mutex_trylock(&rsp->expedited_mutex)) {
 		put_online_cpus();
 		atomic_long_inc(&rsp->expedited_tryfail);
 
 		/* Check to see if someone else did our work for us. */
-		if (ULONG_CMP_GE(READ_ONCE(rsp->expedited_sequence), s)) {
+		s = atomic_long_read(&rsp->expedited_done);
+		if (ULONG_CMP_GE((ulong)s, (ulong)firstsnap)) {
 			/* ensure test happens before caller kfree */
 			smp_mb__before_atomic(); /* ^^^ */
 			atomic_long_inc(&rsp->expedited_workdone1);
@@ -3390,7 +3423,8 @@ void synchronize_sched_expedited(void)
 		}
 
 		/* Recheck to see if someone else did our work for us. */
-		if (ULONG_CMP_GE(READ_ONCE(rsp->expedited_sequence), s)) {
+		s = atomic_long_read(&rsp->expedited_done);
+		if (ULONG_CMP_GE((ulong)s, (ulong)firstsnap)) {
 			/* ensure test happens before caller kfree */
 			smp_mb__before_atomic(); /* ^^^ */
 			atomic_long_inc(&rsp->expedited_workdone2);
@@ -3410,19 +3444,9 @@ void synchronize_sched_expedited(void)
 			atomic_long_inc(&rsp->expedited_normal);
 			return;
 		}
+		snap = atomic_long_read(&rsp->expedited_start);
+		smp_mb(); /* ensure read is before try_stop_cpus(). */
 	}
-
-	/* Recheck yet again to see if someone else did our work for us. */
-	if (ULONG_CMP_GE(READ_ONCE(rsp->expedited_sequence), s)) {
-		rsp->expedited_workdone3++;
-		mutex_unlock(&rsp->expedited_mutex);
-		smp_mb(); /* ensure test happens before caller kfree */
-		return;
-	}
-
-	WRITE_ONCE(rsp->expedited_sequence, rsp->expedited_sequence + 1);
-	smp_mb(); /* Ensure expedited GP seen after counter increment. */
-	WARN_ON_ONCE(!(rsp->expedited_sequence & 0x1));
 
 	/* Stop each CPU that is online, non-idle, and not us. */
 	for_each_online_cpu(cpu) {
@@ -3434,12 +3458,26 @@ void synchronize_sched_expedited(void)
 			continue;
 		stop_one_cpu(cpu, synchronize_sched_expedited_cpu_stop, NULL);
 	}
+	atomic_long_inc(&rsp->expedited_stoppedcpus);
 
-	smp_mb(); /* Ensure expedited GP seen before counter increment. */
-	WRITE_ONCE(rsp->expedited_sequence, rsp->expedited_sequence + 1);
-	WARN_ON_ONCE(rsp->expedited_sequence & 0x1);
+	/*
+	 * Everyone up to our most recent fetch is covered by our grace
+	 * period.  Update the counter, but only if our work is still
+	 * relevant -- which it won't be if someone who started later
+	 * than we did already did their update.
+	 */
+	do {
+		atomic_long_inc(&rsp->expedited_done_tries);
+		s = atomic_long_read(&rsp->expedited_done);
+		if (ULONG_CMP_GE((ulong)s, (ulong)snap)) {
+			/* ensure test happens before caller kfree */
+			smp_mb__before_atomic(); /* ^^^ */
+			atomic_long_inc(&rsp->expedited_done_lost);
+			break;
+		}
+	} while (atomic_long_cmpxchg(&rsp->expedited_done, s, snap) != s);
+	atomic_long_inc(&rsp->expedited_done_exit);
 	mutex_unlock(&rsp->expedited_mutex);
-	smp_mb(); /* ensure subsequent action seen after grace period. */
 
 	put_online_cpus();
 }
