@@ -27,7 +27,6 @@
 #include <linux/threads.h>
 #include <linux/cpumask.h>
 #include <linux/seqlock.h>
-#include <linux/stop_machine.h>
 
 /*
  * Define shape of hierarchy based on NR_CPUS, CONFIG_RCU_FANOUT, and
@@ -311,9 +310,6 @@ struct rcu_data {
 					/*  ticks this CPU has handled */
 					/*  during and after the last grace */
 					/* period it is aware of. */
-	struct cpu_stop_work exp_stop_work;
-					/* Expedited grace-period control */
-					/*  for CPU stopping. */
 
 	/* 2) batch handling */
 	/*
@@ -498,8 +494,6 @@ struct rcu_state {
 	atomic_long_t expedited_workdone1;	/* # done by others #1. */
 	atomic_long_t expedited_workdone2;	/* # done by others #2. */
 	atomic_long_t expedited_normal;		/* # fallbacks to normal. */
-	atomic_t expedited_need_qs;		/* # CPUs left to check in. */
-	wait_queue_head_t expedited_wq;		/* Wait for check-ins. */
 
 	unsigned long jiffies_force_qs;		/* Time at which to invoke */
 						/*  force_quiescent_state(). */
