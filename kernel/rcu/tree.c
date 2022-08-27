@@ -3499,7 +3499,18 @@ static void __maybe_unused sync_exp_reset_tree(struct rcu_state *rsp)
 }
 
 /*
- * Return non-zero if there is no RCU expedited grace period in progress
+ * Return non-zero if there are any tasks in RCU read-side critical
+ * sections blocking the current preemptible-RCU expedited grace period.
+ * If there is no preemptible-RCU expedited grace period currently in
+ * progress, returns zero unconditionally.
+ */
+static int rcu_preempted_readers_exp(struct rcu_node *rnp)
+{
+	return rnp->exp_tasks != NULL;
+}
+
+/*
+ * return non-zero if there is no RCU expedited grace period in progress
  * for the specified rcu_node structure, in other words, if all CPUs and
  * tasks covered by the specified rcu_node structure have done their bit
  * for the current expedited grace period.  Works only for preemptible
@@ -3509,7 +3520,7 @@ static void __maybe_unused sync_exp_reset_tree(struct rcu_state *rsp)
  */
 static int sync_rcu_preempt_exp_done(struct rcu_node *rnp)
 {
-	return rnp->exp_tasks == NULL &&
+	return !rcu_preempted_readers_exp(rnp) &&
 	       READ_ONCE(rnp->expmask) == 0;
 }
 
@@ -3521,21 +3532,19 @@ static int sync_rcu_preempt_exp_done(struct rcu_node *rnp)
  * recursively up the tree.  (Calm down, calm down, we do the recursion
  * iteratively!)
  *
- * Caller must hold the root rcu_node's exp_funnel_mutex and the
- * specified rcu_node structure's ->lock.
+ * Caller must hold the root rcu_node's exp_funnel_mutex.
  */
-static void __rcu_report_exp_rnp(struct rcu_state *rsp, struct rcu_node *rnp,
-				 bool wake, unsigned long flags)
-	__releases(rnp->lock)
+static void __maybe_unused rcu_report_exp_rnp(struct rcu_state *rsp,
+					      struct rcu_node *rnp, bool wake)
 {
+	unsigned long flags;
 	unsigned long mask;
 
+	raw_spin_lock_irqsave(&rnp->lock, flags);
+	smp_mb__after_unlock_lock();
 	for (;;) {
 		if (!sync_rcu_preempt_exp_done(rnp)) {
-			if (!rnp->expmask)
-				rcu_initiate_boost(rnp, flags);
-			else
-				raw_spin_unlock_irqrestore(&rnp->lock, flags);
+			raw_spin_unlock_irqrestore(&rnp->lock, flags);
 			break;
 		}
 		if (rnp->parent == NULL) {
@@ -3551,52 +3560,8 @@ static void __rcu_report_exp_rnp(struct rcu_state *rsp, struct rcu_node *rnp,
 		rnp = rnp->parent;
 		raw_spin_lock(&rnp->lock); /* irqs already disabled */
 		smp_mb__after_unlock_lock();
-		WARN_ON_ONCE(!(rnp->expmask & mask));
 		rnp->expmask &= ~mask;
 	}
-}
-
-/*
- * Report expedited quiescent state for specified node.  This is a
- * lock-acquisition wrapper function for __rcu_report_exp_rnp().
- *
- * Caller must hold the root rcu_node's exp_funnel_mutex.
- */
-static void __maybe_unused rcu_report_exp_rnp(struct rcu_state *rsp,
-					      struct rcu_node *rnp, bool wake)
-{
-	unsigned long flags;
-
-	raw_spin_lock_irqsave(&rnp->lock, flags);
-	smp_mb__after_unlock_lock();
-	__rcu_report_exp_rnp(rsp, rnp, wake, flags);
-}
-
-/*
- * Report expedited quiescent state for multiple CPUs, all covered by the
- * specified leaf rcu_node structure.  Caller must hold the root
- * rcu_node's exp_funnel_mutex.
- */
-static void rcu_report_exp_cpu_mult(struct rcu_state *rsp, struct rcu_node *rnp,
-				    unsigned long mask, bool wake)
-{
-	unsigned long flags;
-
-	raw_spin_lock_irqsave(&rnp->lock, flags);
-	smp_mb__after_unlock_lock();
-	WARN_ON_ONCE((rnp->expmask & mask) != mask);
-	rnp->expmask &= ~mask;
-	__rcu_report_exp_rnp(rsp, rnp, wake, flags); /* Releases rnp->lock. */
-}
-
-/*
- * Report expedited quiescent state for specified rcu_data (CPU).
- * Caller must hold the root rcu_node's exp_funnel_mutex.
- */
-static void __maybe_unused rcu_report_exp_rdp(struct rcu_state *rsp,
-					      struct rcu_data *rdp, bool wake)
-{
-	rcu_report_exp_cpu_mult(rsp, rdp->mynode, rdp->grpmask, wake);
 }
 
 /* Common code for synchronize_{rcu,sched}_expedited() work-done checking. */
