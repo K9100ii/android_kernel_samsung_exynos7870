@@ -3224,7 +3224,7 @@ void synchronize_sched(void)
 			   "Illegal synchronize_sched() in RCU-sched read-side critical section");
 	if (rcu_blocking_is_gp())
 		return;
-	if (rcu_gp_is_expedited())
+	if (rcu_expedited)
 		synchronize_sched_expedited();
 	else
 		wait_rcu_gp(call_rcu_sched);
@@ -3251,7 +3251,7 @@ void synchronize_rcu_bh(void)
 			   "Illegal synchronize_rcu_bh() in RCU-bh read-side critical section");
 	if (rcu_blocking_is_gp())
 		return;
-	if (rcu_gp_is_expedited())
+	if (rcu_expedited)
 		synchronize_rcu_bh_expedited();
 	else
 		wait_rcu_gp(call_rcu_bh);
@@ -3891,12 +3891,11 @@ static int rcu_pm_notify(struct notifier_block *self,
 	case PM_HIBERNATION_PREPARE:
 	case PM_SUSPEND_PREPARE:
 		if (nr_cpu_ids <= 256) /* Expediting bad for large systems. */
-			rcu_expedite_gp();
+			rcu_expedited = 1;
 		break;
 	case PM_POST_HIBERNATION:
 	case PM_POST_SUSPEND:
-		if (nr_cpu_ids <= 256) /* Expediting bad for large systems. */
-			rcu_unexpedite_gp();
+		rcu_expedited = 0;
 		break;
 	default:
 		break;
