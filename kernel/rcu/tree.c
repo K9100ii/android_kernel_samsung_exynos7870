@@ -3441,7 +3441,7 @@ static int synchronize_sched_expedited_cpu_stop(void *data)
 void synchronize_sched_expedited(void)
 {
 	int cpu;
-	unsigned long s;
+	long s;
 	struct rcu_node *rnp;
 	struct rcu_state *rsp = &rcu_sched_state;
 
