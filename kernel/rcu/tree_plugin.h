@@ -536,6 +536,7 @@ void synchronize_rcu(void)
 EXPORT_SYMBOL_GPL(synchronize_rcu);
 
 static DECLARE_WAIT_QUEUE_HEAD(sync_rcu_preempt_exp_wq);
+static unsigned long sync_rcu_preempt_exp_count;
 static DEFINE_MUTEX(sync_rcu_preempt_exp_mutex);
 
 /*
@@ -648,10 +649,12 @@ void synchronize_rcu_expedited(void)
 	unsigned long flags;
 	struct rcu_node *rnp;
 	struct rcu_state *rsp = rcu_state_p;
-	unsigned long s;
+	unsigned long snap;
 	int trycount = 0;
 
-	s = rcu_exp_gp_seq_snap(rsp);
+	smp_mb(); /* Caller's modifications seen first by other CPUs. */
+	snap = READ_ONCE(sync_rcu_preempt_exp_count) + 1;
+	smp_mb(); /* Above access cannot bleed into critical section. */
 
 	/*
 	 * Acquire lock, falling back to synchronize_rcu() if too many
@@ -659,7 +662,8 @@ void synchronize_rcu_expedited(void)
 	 * expedited grace period for us, just leave.
 	 */
 	while (!mutex_trylock(&sync_rcu_preempt_exp_mutex)) {
-		if (rcu_exp_gp_seq_done(rsp, s))
+		if (ULONG_CMP_LT(snap,
+		    READ_ONCE(sync_rcu_preempt_exp_count)))
 			goto mb_ret; /* Others did our work for us. */
 		if (trycount++ < 10) {
 			udelay(trycount * num_online_cpus());
@@ -668,9 +672,8 @@ void synchronize_rcu_expedited(void)
 			return;
 		}
 	}
-	if (rcu_exp_gp_seq_done(rsp, s))
+	if (ULONG_CMP_LT(snap, READ_ONCE(sync_rcu_preempt_exp_count)))
 		goto unlock_mb_ret; /* Others did our work for us. */
-	rcu_exp_gp_seq_start(rsp);
 
 	/* force all RCU readers onto ->blkd_tasks lists. */
 	synchronize_sched_expedited();
@@ -695,7 +698,8 @@ void synchronize_rcu_expedited(void)
 		   sync_rcu_preempt_exp_done(rnp));
 
 	/* Clean up and exit. */
-	rcu_exp_gp_seq_end(rsp);
+	smp_mb(); /* ensure expedited GP seen before counter increment. */
+	WRITE_ONCE(sync_rcu_preempt_exp_count, sync_rcu_preempt_exp_count + 1);
 unlock_mb_ret:
 	mutex_unlock(&sync_rcu_preempt_exp_mutex);
 mb_ret:
