@@ -680,17 +680,15 @@ int dasd_alias_remove_device(struct dasd_device *device)
 
 struct dasd_device *dasd_alias_get_start_dev(struct dasd_device *base_device)
 {
-
 	struct dasd_device *alias_device;
-	struct alias_pav_group *group;
 	struct alias_lcu *lcu;
 	struct dasd_eckd_private *private, *alias_priv;
+	struct alias_pav_group *group;
 	unsigned long flags;
 
 	private = (struct dasd_eckd_private *) base_device->private;
-	group = private->pavgroup;
 	lcu = private->lcu;
-	if (!group || !lcu)
+	if (!lcu)
 		return NULL;
 	if (lcu->pav == NO_PAV ||
 	    lcu->flags & (NEED_UAC_UPDATE | UPDATE_PENDING))
@@ -707,6 +705,11 @@ struct dasd_device *dasd_alias_get_start_dev(struct dasd_device *base_device)
 	}
 
 	spin_lock_irqsave(&lcu->lock, flags);
+	group = private->pavgroup;
+	if (!group) {
+		spin_unlock_irqrestore(&lcu->lock, flags);
+		return NULL;
+	}
 	alias_device = group->next;
 	if (!alias_device) {
 		if (list_empty(&group->aliaslist)) {
