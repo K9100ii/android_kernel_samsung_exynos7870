@@ -368,6 +368,7 @@ struct inode *nilfs_new_inode(struct inode *dir, umode_t mode)
 	struct inode *inode;
 	struct nilfs_inode_info *ii;
 	struct nilfs_root *root;
+	struct buffer_head *bh;
 	int err = -ENOMEM;
 	ino_t ino;
 
@@ -383,10 +384,26 @@ struct inode *nilfs_new_inode(struct inode *dir, umode_t mode)
 	ii->i_state = 1 << NILFS_I_NEW;
 	ii->i_root = root;
 
-	err = nilfs_ifile_create_inode(root->ifile, &ino, &ii->i_bh);
+	err = nilfs_ifile_create_inode(root->ifile, &ino, &bh);
 	if (unlikely(err))
 		goto failed_ifile_create_inode;
 	/* reference count of i_bh inherits from nilfs_mdt_read_block() */
+
+	if (unlikely(ino < NILFS_USER_INO)) {
+		printk(KERN_WARNING
+		       "NILFS warning: inode bitmap is inconsistent "
+                       "for reserved inodes\n");
+		do {
+			brelse(bh);
+			err = nilfs_ifile_create_inode(root->ifile, &ino, &bh);
+			if (unlikely(err))
+				goto failed_ifile_create_inode;
+		} while (ino < NILFS_USER_INO);
+
+		printk(KERN_INFO
+		       "NILFS: repaired inode bitmap for reserved inodes\n");
+	}
+	ii->i_bh = bh;
 
 	atomic64_inc(&root->inodes_count);
 	inode_init_owner(inode, dir, mode);
