@@ -142,6 +142,10 @@ static int raw_sendmsg(struct kiocb *iocb, struct sock *sk,
 		err = -EINVAL;
 		goto out_dev;
 	}
+	if (!size) {
+		err = 0;
+		goto out_dev;
+	}
 
 	hlen = LL_RESERVED_SPACE(dev);
 	tlen = dev->needed_tailroom;
