@@ -516,5 +516,6 @@ static inline bool vivid_is_hdmi_out(const struct vivid_dev *dev)
 
 void vivid_lock(struct vb2_queue *vq);
 void vivid_unlock(struct vb2_queue *vq);
+bool vivid_validate_fb(const struct v4l2_framebuffer *a);
 
 #endif
