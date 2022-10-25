@@ -227,6 +227,8 @@ static void atc_dostart(struct at_dma_chan *atchan, struct at_desc *first)
 	channel_writel(atchan, CTRLA, 0);
 	channel_writel(atchan, CTRLB, 0);
 	channel_writel(atchan, DSCR, first->txd.phys);
+	/* Don't allow CPU to reorder channel enable. */
+	wmb();
 	dma_writel(atdma, CHER, atchan->mask);
 
 	vdbg_dump_regs(atchan);
