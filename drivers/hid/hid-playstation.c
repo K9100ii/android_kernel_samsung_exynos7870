@@ -292,6 +292,8 @@ struct dualsense_output_report {
 
 /* Flags for DualShock4 output report. */
 #define DS4_OUTPUT_VALID_FLAG0_MOTOR		0x01
+#define DS4_OUTPUT_VALID_FLAG0_LED		0x02
+#define DS4_OUTPUT_VALID_FLAG0_LED_BLINK	0x04
 
 /* DualShock4 hardware limits */
 #define DS4_ACC_RES_PER_G	8192
@@ -319,6 +321,12 @@ struct dualshock4 {
 	bool update_rumble;
 	uint8_t motor_left;
 	uint8_t motor_right;
+
+	/* Lightbar leds */
+	bool update_lightbar;
+	uint8_t lightbar_red;
+	uint8_t lightbar_green;
+	uint8_t lightbar_blue;
 
 	struct work_struct output_worker;
 	bool output_worker_initialized;
@@ -1648,6 +1656,14 @@ static void dualshock4_output_worker(struct work_struct *work)
 		ds4->update_rumble = false;
 	}
 
+	if (ds4->update_lightbar) {
+		common->valid_flag0 |= DS4_OUTPUT_VALID_FLAG0_LED;
+		common->lightbar_red = ds4->lightbar_red;
+		common->lightbar_green = ds4->lightbar_green;
+		common->lightbar_blue = ds4->lightbar_blue;
+		ds4->update_lightbar = false;
+	}
+
 	spin_unlock_irqrestore(&ds4->base.lock, flags);
 
 	hid_hw_output_report(ds4->base.hdev, report.data, report.len);
@@ -1862,6 +1878,29 @@ static inline void dualshock4_schedule_work(struct dualshock4 *ds4)
 	spin_unlock_irqrestore(&ds4->base.lock, flags);
 }
 
+/* Set default lightbar color based on player. */
+static void dualshock4_set_default_lightbar_colors(struct dualshock4 *ds4)
+{
+	/* Use same player colors as PlayStation 4.
+	 * Array of colors is in RGB.
+	 */
+	static const int player_colors[4][3] = {
+		{ 0x00, 0x00, 0x40 }, /* Blue */
+		{ 0x40, 0x00, 0x00 }, /* Red */
+		{ 0x00, 0x40, 0x00 }, /* Green */
+		{ 0x20, 0x00, 0x20 }  /* Pink */
+	};
+
+	uint8_t player_id = ds4->base.player_id % ARRAY_SIZE(player_colors);
+
+	ds4->lightbar_red = player_colors[player_id][0];
+	ds4->lightbar_green = player_colors[player_id][1];
+	ds4->lightbar_blue = player_colors[player_id][2];
+
+	ds4->update_lightbar = true;
+	dualshock4_schedule_work(ds4);
+}
+
 static struct ps_device *dualshock4_create(struct hid_device *hdev)
 {
 	struct dualshock4 *ds4;
@@ -1946,6 +1985,8 @@ static struct ps_device *dualshock4_create(struct hid_device *hdev)
 		hid_err(hdev, "Failed to assign player id for DualShock4: %d\n", ret);
 		goto err;
 	}
+
+	dualshock4_set_default_lightbar_colors(ds4);
 
 	/*
 	 * Reporting hardware and firmware is important as there are frequent updates, which
