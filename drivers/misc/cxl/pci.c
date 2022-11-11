@@ -688,10 +688,10 @@ static int cxl_init_afu(struct cxl *adapter, int slice, struct pci_dev *dev)
 	 * if it returns an error!
 	 */
 	if ((rc = cxl_register_afu(afu)))
-		goto err_put1;
+		goto err_put_dev;
 
 	if ((rc = cxl_sysfs_afu_add(afu)))
-		goto err_put1;
+		goto err_del_dev;
 
 
 	if ((rc = cxl_afu_select_best_mode(afu)))
@@ -703,8 +703,10 @@ static int cxl_init_afu(struct cxl *adapter, int slice, struct pci_dev *dev)
 
 err_put2:
 	cxl_sysfs_afu_remove(afu);
-err_put1:
-	device_unregister(&afu->dev);
+err_del_dev:
+	device_del(&afu->dev);
+err_put_dev:
+	put_device(&afu->dev);
 	free = false;
 	cxl_debugfs_afu_remove(afu);
 	cxl_release_psl_irq(afu);
@@ -941,15 +943,17 @@ static struct cxl *cxl_init_adapter(struct pci_dev *dev)
 	 * even if it returns an error!
 	 */
 	if ((rc = cxl_register_adapter(adapter)))
-		goto err_put1;
+		goto err_put_dev;
 
 	if ((rc = cxl_sysfs_adapter_add(adapter)))
-		goto err_put1;
+		goto err_del_dev;
 
 	return adapter;
 
-err_put1:
-	device_unregister(&adapter->dev);
+err_del_dev:
+	device_del(&adapter->dev);
+err_put_dev:
+	put_device(&adapter->dev);
 	free = false;
 	cxl_debugfs_adapter_remove(adapter);
 	cxl_release_psl_err_irq(adapter);
