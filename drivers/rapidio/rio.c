@@ -1927,11 +1927,16 @@ int rio_register_mport(struct rio_mport *port)
 	port->dev.class = &rio_mport_class;
 
 	res = device_register(&port->dev);
-	if (res)
+	if (res) {
 		dev_err(&port->dev, "RIO: mport%d registration failed ERR=%d\n",
 			port->id, res);
-	else
+		mutex_lock(&rio_mport_list_lock);
+		list_del(&port->node);
+		mutex_unlock(&rio_mport_list_lock);
+		put_device(&port->dev);
+	} else {
 		dev_dbg(&port->dev, "RIO: mport%d registered\n", port->id);
+	}
 
 	mutex_lock(&rio_mport_list_lock);
 	list_add_tail(&port->node, &rio_mports);
