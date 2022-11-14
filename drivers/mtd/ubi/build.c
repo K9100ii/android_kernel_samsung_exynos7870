@@ -541,6 +541,7 @@ static int uif_init(struct ubi_device *ubi, int *ref)
 			err = ubi_add_volume(ubi, ubi->volumes[i]);
 			if (err) {
 				ubi_err("cannot add volume %d", i);
+				ubi->volumes[i] = NULL;
 				goto out_volumes;
 			}
 		}

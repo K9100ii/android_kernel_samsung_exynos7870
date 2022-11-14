@@ -661,6 +661,7 @@ int ubi_add_volume(struct ubi_device *ubi, struct ubi_volume *vol)
 	if (err) {
 		ubi_err("cannot add character device for volume %d, error %d",
 			vol_id, err);
+		vol_release(&vol->dev);
 		return err;
 	}
 
@@ -670,8 +671,11 @@ int ubi_add_volume(struct ubi_device *ubi, struct ubi_volume *vol)
 	vol->dev.class = ubi_class;
 	dev_set_name(&vol->dev, "%s_%d", ubi->ubi_name, vol->vol_id);
 	err = device_register(&vol->dev);
-	if (err)
-		goto out_cdev;
+	if (err) {
+		cdev_del(&vol->cdev);
+		put_device(&vol->dev);
+		return err;
+	}
 
 	err = volume_sysfs_init(ubi, vol);
 	if (err) {
@@ -681,10 +685,6 @@ int ubi_add_volume(struct ubi_device *ubi, struct ubi_volume *vol)
 	}
 
 	self_check_volumes(ubi);
-	return err;
-
-out_cdev:
-	cdev_del(&vol->cdev);
 	return err;
 }
 
