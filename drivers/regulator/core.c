@@ -1290,8 +1290,11 @@ static struct regulator_dev *regulator_dev_lookup(struct device *dev,
 		if (node) {
 			list_for_each_entry(r, &regulator_list, list)
 				if (r->dev.parent &&
-					node == r->dev.of_node)
+					node == r->dev.of_node) {
+					of_node_put(node);
 					return r;
+				}
+			of_node_put(node);
 			*ret = -EPROBE_DEFER;
 			return NULL;
 		} else {
