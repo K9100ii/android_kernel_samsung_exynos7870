@@ -1145,7 +1145,7 @@ static int __init fsl_pamu_probe(struct platform_device *pdev)
 		if (ret) {
 			dev_err(&pdev->dev, "could not create coherence "
 				"subdomain\n");
-			return ret;
+			goto error;
 		}
 	}
 
