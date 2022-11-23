@@ -70,7 +70,6 @@ static int tcf_mirred_init(struct net *net, struct nlattr *nla,
 	switch (parm->eaction) {
 	case TCA_EGRESS_MIRROR:
 	case TCA_EGRESS_REDIR:
-	case TCA_INGRESS_REDIR:
 		break;
 	default:
 		return -EINVAL;

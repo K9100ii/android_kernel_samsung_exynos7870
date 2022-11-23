@@ -84,6 +84,7 @@ struct netns_ipv4 {
 
 	int sysctl_fwmark_reflect;
 	int sysctl_tcp_fwmark_accept;
+	int sysctl_tcp_min_snd_mss;
 
 	struct ping_group_range ping_group_range;
 
