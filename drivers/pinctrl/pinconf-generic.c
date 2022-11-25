@@ -328,6 +328,7 @@ int pinconf_generic_dt_node_to_map(struct pinctrl_dev *pctldev,
 		ret = pinconf_generic_dt_subnode_to_map(pctldev, np, map,
 					&reserved_maps, num_maps, type);
 		if (ret < 0) {
+			of_node_put(np);
 			pinctrl_utils_dt_free_map(pctldev, *map, *num_maps);
 			return ret;
 		}
