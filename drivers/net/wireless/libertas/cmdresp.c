@@ -43,7 +43,7 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
 	netif_carrier_off(priv->dev);
 
 	/* Free Tx and Rx packets */
-	kfree_skb(priv->currenttxskb);
+	dev_kfree_skb_irq(priv->currenttxskb);
 	priv->currenttxskb = NULL;
 	priv->tx_pending_len = 0;
 
