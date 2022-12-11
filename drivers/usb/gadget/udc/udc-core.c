@@ -227,7 +227,7 @@ static inline int usb_gadget_udc_start(struct usb_udc *udc)
  */
 static inline void usb_gadget_udc_stop(struct usb_udc *udc)
 {
-	udc->gadget->ops->udc_stop(udc->gadget);
+	udc->gadget->ops->udc_stop(udc->gadget, udc->driver);
 }
 
 /**

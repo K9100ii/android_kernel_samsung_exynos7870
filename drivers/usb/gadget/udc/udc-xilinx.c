@@ -1403,7 +1403,8 @@ err:
  *
  * Return: zero always
  */
-static int xudc_stop(struct usb_gadget *gadget)
+static int xudc_stop(struct usb_gadget *gadget,
+		     struct usb_gadget_driver *driver)
 {
 	struct xusb_udc *udc = to_udc(gadget);
 	unsigned long flags;

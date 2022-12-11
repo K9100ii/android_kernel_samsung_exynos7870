@@ -566,7 +566,8 @@ struct usb_gadget_ops {
 	void	(*get_config_params)(struct usb_dcd_config_params *);
 	int	(*udc_start)(struct usb_gadget *,
 			struct usb_gadget_driver *);
-	int	(*udc_stop)(struct usb_gadget *);
+	int	(*udc_stop)(struct usb_gadget *,
+			struct usb_gadget_driver *);
 	struct usb_ep *(*match_ep)(struct usb_gadget *,
 			struct usb_endpoint_descriptor *,
 			struct usb_ss_ep_comp_descriptor *);

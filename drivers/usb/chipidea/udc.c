@@ -1571,7 +1571,8 @@ static int ci_udc_pullup(struct usb_gadget *_gadget, int is_on)
 
 static int ci_udc_start(struct usb_gadget *gadget,
 			 struct usb_gadget_driver *driver);
-static int ci_udc_stop(struct usb_gadget *gadget);
+static int ci_udc_stop(struct usb_gadget *gadget,
+			struct usb_gadget_driver *driver);
 
 /* Match ISOC IN from the highest endpoint */
 static struct usb_ep *ci_udc_match_ep(struct usb_gadget *gadget,
@@ -1728,7 +1729,8 @@ static int ci_udc_start(struct usb_gadget *gadget,
 /**
  * ci_udc_stop: unregister a gadget driver
  */
-static int ci_udc_stop(struct usb_gadget *gadget)
+static int ci_udc_stop(struct usb_gadget *gadget,
+			struct usb_gadget_driver *driver)
 {
 	struct ci_hdrc *ci = container_of(gadget, struct ci_hdrc, gadget);
 	unsigned long flags;

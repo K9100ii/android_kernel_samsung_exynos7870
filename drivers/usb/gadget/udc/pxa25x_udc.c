@@ -998,7 +998,8 @@ static int pxa25x_udc_vbus_draw(struct usb_gadget *_gadget, unsigned mA)
 
 static int pxa25x_udc_start(struct usb_gadget *g,
 		struct usb_gadget_driver *driver);
-static int pxa25x_udc_stop(struct usb_gadget *g);
+static int pxa25x_udc_stop(struct usb_gadget *g,
+		struct usb_gadget_driver *driver);
 
 static const struct usb_gadget_ops pxa25x_udc_ops = {
 	.get_frame	= pxa25x_udc_get_frame,
@@ -1311,7 +1312,8 @@ stop_activity(struct pxa25x_udc *dev, struct usb_gadget_driver *driver)
 	udc_reinit(dev);
 }
 
-static int pxa25x_udc_stop(struct usb_gadget*g)
+static int pxa25x_udc_stop(struct usb_gadget*g,
+		struct usb_gadget_driver *driver)
 {
 	struct pxa25x_udc	*dev = to_pxa25x(g);
 

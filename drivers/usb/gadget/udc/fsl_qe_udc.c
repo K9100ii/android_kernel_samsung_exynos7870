@@ -1884,7 +1884,8 @@ static int qe_get_frame(struct usb_gadget *gadget)
 
 static int fsl_qe_start(struct usb_gadget *gadget,
 		struct usb_gadget_driver *driver);
-static int fsl_qe_stop(struct usb_gadget *gadget);
+static int fsl_qe_stop(struct usb_gadget *gadget,
+		struct usb_gadget_driver *driver);
 
 /* defined in usb_gadget.h */
 static const struct usb_gadget_ops qe_gadget_ops = {
@@ -2306,7 +2307,8 @@ static int fsl_qe_start(struct usb_gadget *gadget,
 	return 0;
 }
 
-static int fsl_qe_stop(struct usb_gadget *gadget)
+static int fsl_qe_stop(struct usb_gadget *gadget,
+		struct usb_gadget_driver *driver)
 {
 	struct qe_udc *udc;
 	struct qe_ep *loop_ep;

@@ -1938,7 +1938,8 @@ static int gr_udc_start(struct usb_gadget *gadget,
 	return 0;
 }
 
-static int gr_udc_stop(struct usb_gadget *gadget)
+static int gr_udc_stop(struct usb_gadget *gadget,
+		       struct usb_gadget_driver *driver)
 {
 	struct gr_udc *dev = to_gr_udc(gadget);
 	unsigned long flags;

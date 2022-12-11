@@ -1959,7 +1959,8 @@ err0:
 	return ret;
 }
 
-static int dwc3_gadget_stop(struct usb_gadget *g)
+static int dwc3_gadget_stop(struct usb_gadget *g,
+		struct usb_gadget_driver *driver)
 {
 	struct dwc3		*dwc = gadget_to_dwc(g);
 	unsigned long		flags;

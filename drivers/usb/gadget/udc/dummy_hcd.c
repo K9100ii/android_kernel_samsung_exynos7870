@@ -872,7 +872,8 @@ static int dummy_pullup(struct usb_gadget *_gadget, int value)
 
 static int dummy_udc_start(struct usb_gadget *g,
 		struct usb_gadget_driver *driver);
-static int dummy_udc_stop(struct usb_gadget *g);
+static int dummy_udc_stop(struct usb_gadget *g,
+		struct usb_gadget_driver *driver);
 
 static const struct usb_gadget_ops dummy_ops = {
 	.get_frame	= dummy_g_get_frame,
@@ -938,7 +939,8 @@ static int dummy_udc_start(struct usb_gadget *g,
 	return 0;
 }
 
-static int dummy_udc_stop(struct usb_gadget *g)
+static int dummy_udc_stop(struct usb_gadget *g,
+		struct usb_gadget_driver *driver)
 {
 	struct dummy_hcd	*dum_hcd = gadget_to_dummy_hcd(g);
 	struct dummy		*dum = dum_hcd->dum;

@@ -1190,7 +1190,8 @@ err_supplies:
 	return ret;
 }
 
-static int s3c_hsudc_stop(struct usb_gadget *gadget)
+static int s3c_hsudc_stop(struct usb_gadget *gadget,
+		struct usb_gadget_driver *driver)
 {
 	struct s3c_hsudc *hsudc = to_hsudc(gadget);
 	unsigned long flags;
