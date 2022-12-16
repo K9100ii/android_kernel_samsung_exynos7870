@@ -172,7 +172,7 @@ int __init bcm7120_l2_intc_of_init(struct device_node *dn,
 	}
 
 	ret = irq_alloc_domain_generic_chips(data->domain, 32, 1,
-				dn->full_name, handle_level_irq, clr, 0,
+				dn->full_name, handle_level_irq, clr, IRQ_LEVEL,
 				IRQ_GC_INIT_MASK_CACHE);
 	if (ret) {
 		pr_err("failed to allocate generic irq chip\n");
