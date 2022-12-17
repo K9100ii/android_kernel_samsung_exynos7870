@@ -759,7 +759,7 @@
 	};
 
 	/* modem_interface */
-	mif_pdata@10000 {
+	mif_pdata {
 		reg = <0 0x10000 0x14>;
 		pinctrl-names = "default";
 
