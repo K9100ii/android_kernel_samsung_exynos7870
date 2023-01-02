@@ -127,32 +127,31 @@ static ssize_t udf_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 
 	mutex_lock(&inode->i_mutex);
 	down_write(&iinfo->i_data_sem);
-	if (iinfo->i_alloc_type == ICBTAG_FLAG_AD_IN_ICB) {
-		if (file->f_flags & O_APPEND)
-			pos = inode->i_size;
-		else
-			pos = iocb->ki_pos;
-
-		if (inode->i_sb->s_blocksize <
-				(udf_file_entry_alloc_offset(inode) +
-						pos + count)) {
-			err = udf_expand_file_adinicb(inode);
-			if (err) {
-				mutex_unlock(&inode->i_mutex);
-				udf_debug("udf_expand_adinicb: err=%d\n", err);
-				return err;
-			}
-		} else {
-			if (pos + count > inode->i_size)
-				iinfo->i_lenAlloc = pos + count;
-			else
-				iinfo->i_lenAlloc = inode->i_size;
-			up_write(&iinfo->i_data_sem);
+	if (file->f_flags & O_APPEND)
+		pos = inode->i_size;
+	else
+		pos = iocb->ki_pos;
+	if (iinfo->i_alloc_type == ICBTAG_FLAG_AD_IN_ICB &&
+	    inode->i_sb->s_blocksize < (udf_file_entry_alloc_offset(inode) +
+					pos + count)) {
+		err = udf_expand_file_adinicb(inode);
+		if (err) {
+			mutex_unlock(&inode->i_mutex);
+			udf_debug("udf_expand_adinicb: err=%d\n", err);
+			return err;
 		}
 	} else
 		up_write(&iinfo->i_data_sem);
 
 	retval = __generic_file_write_iter(iocb, from);
+	down_write(&iinfo->i_data_sem);
+	if (iinfo->i_alloc_type == ICBTAG_FLAG_AD_IN_ICB && retval > 0) {
+		if (pos + count > inode->i_size)
+			iinfo->i_lenAlloc = pos + count;
+		else
+			iinfo->i_lenAlloc = inode->i_size;
+	}
+	up_write(&iinfo->i_data_sem);
 	mutex_unlock(&inode->i_mutex);
 
 	if (retval > 0) {
