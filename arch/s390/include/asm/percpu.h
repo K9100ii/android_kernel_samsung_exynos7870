@@ -32,7 +32,7 @@
 	pcp_op_T__ *ptr__;						\
 	preempt_disable();						\
 	ptr__ = raw_cpu_ptr(&(pcp));					\
-	prev__ = *ptr__;						\
+	prev__ = READ_ONCE(*ptr__);					\
 	do {								\
 		old__ = prev__;						\
 		new__ = old__ op (val);					\
