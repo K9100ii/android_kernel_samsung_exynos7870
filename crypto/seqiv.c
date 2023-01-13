@@ -60,7 +60,7 @@ static void seqiv_aead_complete2(struct aead_givcrypt_request *req, int err)
 	struct aead_request *subreq = aead_givcrypt_reqctx(req);
 	struct crypto_aead *geniv;
 
-	if (err == -EINPROGRESS)
+	if (err == -EINPROGRESS || err == -EBUSY)
 		return;
 
 	if (err)
