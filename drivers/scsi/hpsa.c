@@ -4191,7 +4191,7 @@ static int hpsa_register_scsi(struct ctlr_info *h)
 	struct Scsi_Host *sh;
 	int error;
 
-	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
+	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(struct ctlr_info));
 	if (sh == NULL)
 		goto fail;
 
