@@ -191,7 +191,7 @@ static void __kprobes oops_end(unsigned long flags, struct pt_regs *regs,
 		panic("Fatal exception in interrupt");
 	if (panic_on_oops)
 		panic("Fatal exception");
-	do_exit(signr);
+	make_task_dead(signr);
 }
 
 static int __kprobes __die(const char *str, struct pt_regs *regs, long err)

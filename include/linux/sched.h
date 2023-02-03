@@ -2453,6 +2453,8 @@ extern void wake_up_new_task(struct task_struct *tsk);
 extern int sched_fork(unsigned long clone_flags, struct task_struct *p);
 extern void sched_dead(struct task_struct *p);
 
+void __noreturn make_task_dead(int signr);
+
 extern void proc_caches_init(void);
 extern void flush_signals(struct task_struct *);
 extern void ignore_signals(struct task_struct *);

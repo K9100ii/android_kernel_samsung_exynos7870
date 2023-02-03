@@ -295,7 +295,7 @@ void die_if_kernel(char *str, struct pt_regs *regs, long err)
 	}
 
 	oops_exit();
-	do_exit(SIGSEGV);
+	make_task_dead(SIGSEGV);
 }
 
 /* gdb uses break 4,8 */
