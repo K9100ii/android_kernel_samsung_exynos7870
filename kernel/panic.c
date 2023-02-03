@@ -61,6 +61,12 @@ void __weak panic_smp_self_stop(void)
 		cpu_relax();
 }
 
+void check_panic_on_warn(const char *origin)
+{
+	if (panic_on_warn)
+		panic("%s: panic_on_warn set ...\n", origin);
+}
+
 /**
  *	panic - halt the system
  *	@fmt: The text string to print
@@ -452,8 +458,7 @@ static void warn_slowpath_common(const char *file, int line, void *caller,
 	if (args)
 		vprintk(args->fmt, args->args);
 
-	if (panic_on_warn)
-		panic("panic_on_warn set ...\n");
+	check_panic_on_warn("kernel");
 
 	print_modules();
 	dump_stack();
