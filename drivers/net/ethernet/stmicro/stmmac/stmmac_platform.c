@@ -223,7 +223,7 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 			of_property_read_bool(np, "snps,mixed-burst");
 	}
 	plat->force_thresh_dma_mode = of_property_read_bool(np, "snps,force_thresh_dma_mode");
-	if (plat->force_thresh_dma_mode) {
+	if (plat->force_thresh_dma_mode && plat->force_sf_dma_mode) {
 		plat->force_sf_dma_mode = 0;
 		pr_warn("force_sf_dma_mode is ignored if force_thresh_dma_mode is set.");
 	}
