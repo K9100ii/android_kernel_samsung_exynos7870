@@ -1677,6 +1677,7 @@ static void process_thin_deferred_bios(struct thin_c *tc)
 			pool->process_discard(tc, bio);
 		else
 			pool->process_bio(tc, bio);
+		cond_resched();
 	}
 	blk_finish_plug(&plug);
 }
