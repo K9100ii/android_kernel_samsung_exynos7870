@@ -1523,6 +1523,7 @@ static void process_deferred_bios(struct cache *cache)
 			process_discard_bio(cache, bio);
 		else
 			process_bio(cache, &structs, bio);
+		cond_resched();
 	}
 
 	prealloc_free_structs(cache, &structs);
@@ -1703,8 +1704,10 @@ static void requeue_deferred_io(struct cache *cache)
 	bio_list_merge(&bios, &cache->deferred_bios);
 	bio_list_init(&cache->deferred_bios);
 
-	while ((bio = bio_list_pop(&bios)))
+	while ((bio = bio_list_pop(&bios))) {
 		bio_endio(bio, DM_ENDIO_REQUEUE);
+		cond_resched();
+	}
 }
 
 static int more_work(struct cache *cache)
