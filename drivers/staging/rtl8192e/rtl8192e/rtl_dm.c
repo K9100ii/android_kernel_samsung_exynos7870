@@ -122,7 +122,6 @@ static void dm_init_fsync(struct net_device *dev);
 static void dm_deInit_fsync(struct net_device *dev);
 
 static	void dm_check_txrateandretrycount(struct net_device *dev);
-static  void dm_check_ac_dc_power(struct net_device *dev);
 
 /*---------------------Define local function prototype-----------------------*/
 
@@ -172,8 +171,6 @@ void hal_dm_watchdog(struct net_device *dev)
 	if (priv->being_init_adapter)
 		return;
 
-	dm_check_ac_dc_power(dev);
-
 	dm_check_pbc_gpio(dev);
 	dm_check_txrateandretrycount(dev);
 	dm_check_edca_turbo(dev);
@@ -191,30 +188,6 @@ void hal_dm_watchdog(struct net_device *dev)
 	dm_send_rssi_tofw(dev);
 	dm_ctstoself(dev);
 }
-
-static void dm_check_ac_dc_power(struct net_device *dev)
-{
-	struct r8192_priv *priv = rtllib_priv(dev);
-	static char *ac_dc_check_script_path = "/etc/acpi/wireless-rtl-ac-dc-power.sh";
-	char *argv[] = {ac_dc_check_script_path, DRV_NAME, NULL};
-	static char *envp[] = {"HOME=/",
-			"TERM=linux",
-			"PATH=/usr/bin:/bin",
-			 NULL};
-
-	if (priv->ResetProgress == RESET_TYPE_SILENT) {
-		RT_TRACE((COMP_INIT | COMP_POWER | COMP_RF),
-			 "GPIOChangeRFWorkItemCallBack(): Silent Reset!!!!!!!\n");
-		return;
-	}
-
-	if (priv->rtllib->state != RTLLIB_LINKED)
-		return;
-	call_usermodehelper(ac_dc_check_script_path, argv, envp, UMH_WAIT_PROC);
-
-	return;
-};
-
 
 void init_rate_adaptive(struct net_device *dev)
 {
