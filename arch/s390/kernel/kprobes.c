@@ -232,6 +232,7 @@ static void __kprobes pop_kprobe(struct kprobe_ctlblk *kcb)
 {
 	__this_cpu_write(current_kprobe, kcb->prev_kprobe.kp);
 	kcb->kprobe_status = kcb->prev_kprobe.status;
+	kcb->prev_kprobe.kp = NULL;
 }
 
 void __kprobes arch_prepare_kretprobe(struct kretprobe_instance *ri,
