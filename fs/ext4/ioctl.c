@@ -148,6 +148,7 @@ static long swap_inode_boot_loader(struct super_block *sb,
 		ei_bl->i_flags = 0;
 		inode_bl->i_version = 1;
 		i_size_write(inode_bl, 0);
+		EXT4_I(inode_bl)->i_disksize = inode_bl->i_size;
 		inode_bl->i_mode = S_IFREG;
 		if (EXT4_HAS_INCOMPAT_FEATURE(sb,
 					      EXT4_FEATURE_INCOMPAT_EXTENTS)) {
