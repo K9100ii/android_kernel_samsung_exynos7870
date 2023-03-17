@@ -823,6 +823,9 @@ static void dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 
 void activate_task(struct rq *rq, struct task_struct *p, int flags)
 {
+	if (task_on_rq_migrating(p))
+		flags |= ENQUEUE_WAKING;
+
 	if (task_contributes_to_load(p))
 		rq->nr_uninterruptible--;
 
