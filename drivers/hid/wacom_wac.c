@@ -444,7 +444,7 @@ static int wacom_intuos_inout(struct wacom_wac *wacom)
 			wacom->shared->stylus_in_proximity = true;
 
 		/* serial number of the tool */
-		wacom->serial[idx] = ((data[3] & 0x0f) << 28) +
+		wacom->serial[idx] = ((__u64)(data[3] & 0x0f) << 28) +
 			(data[4] << 20) + (data[5] << 12) +
 			(data[6] << 4) + (data[7] >> 4);
 
