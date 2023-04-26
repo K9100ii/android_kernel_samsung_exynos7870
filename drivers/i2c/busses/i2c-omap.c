@@ -876,7 +876,7 @@ omap_i2c_isr(int irq, void *dev_id)
 	u16 stat;
 
 	spin_lock(&dev->lock);
-	mask = omap_i2c_read_reg(dev, OMAP_I2C_IE_REG);
+	mask = omap_i2c_read_reg(dev, OMAP_I2C_IE_REG) & ~OMAP_I2C_STAT_NACK;
 	stat = omap_i2c_read_reg(dev, OMAP_I2C_STAT_REG);
 
 	if (stat & mask)
