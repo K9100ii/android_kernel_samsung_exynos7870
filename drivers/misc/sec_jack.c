@@ -32,6 +32,7 @@
 #include <linux/sec_jack.h>
 #include <linux/of_gpio.h>
 #include <linux/regulator/consumer.h>
+#include <sound/samsung/sec_audio_sysfs.h>
 
 #define NUM_INPUT_DEVICE_ID	2
 #define MAX_ZONE_LIMIT		10
@@ -755,6 +756,9 @@ static int sec_jack_probe(struct platform_device *pdev)
 	dev_set_drvdata(&pdev->dev, hi);
 
 	/* Create sysfs to support PBA test */
+	/* avoid conflict with another sysfs creation */
+	destroy_all_sysfs();
+
 	audio = class_create(THIS_MODULE, "audio");
 	if (IS_ERR(audio)) {
 		dev_err(&pdev->dev, "Failed to create class audio\n");

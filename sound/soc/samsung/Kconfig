@@ -261,6 +261,11 @@ config SND_SOC_ODROIDX2
 	help
 	  Say Y here to enable audio support for the Odroid-X2/U3.
 
+config SND_SOC_SAMSUNG_AUDIO
+	tristate "Audio support for Samsung Projects"
+	help
+	  Say Y here to enable audio support for the Samsung Audio.
+
 config SND_SOC_SAMSUNG_ESPRESSO8890_WM5110
 	tristate "SoC I2S Audio support for WM5110 on ESPRESSO8890"
 	depends on SND_SOC_SAMSUNG
@@ -318,6 +323,17 @@ config SND_SOC_SAMSUNG_UNIVERSAL7870_RT5659
         select SND_SAMSUNG_AUDSS
         select SND_SOC_DUMMY_CODEC
         select SND_SOC_RT5659
+        select SND_SOC_EXYNOS_AUDMIXER
+        help
+        Say Y if you want to add support for SoC audio on the universal7870 board.
+
+config SND_SOC_SAMSUNG_UNIVERSAL7870_RT5665
+        tristate "SoC I2S Audio support for RT5665 on UNIVERSAL7870"
+        depends on SND_SOC_SAMSUNG
+        select SND_SAMSUNG_I2S
+        select SND_SAMSUNG_AUDSS
+        select SND_SOC_DUMMY_CODEC
+        select SND_SOC_RT5665
         select SND_SOC_EXYNOS_AUDMIXER
         help
         Say Y if you want to add support for SoC audio on the universal7870 board.

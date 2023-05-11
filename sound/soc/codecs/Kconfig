@@ -89,9 +89,11 @@ config SND_SOC_ALL_CODECS
 	select SND_SOC_RT5670 if I2C
 	select SND_SOC_RT5677 if I2C
 	select SND_SOC_RT5659 if I2C
+	select SND_SOC_RT5665 if I2C
 	select SND_SOC_SGTL5000 if I2C
 	select SND_SOC_SI476X if MFD_SI476X_CORE
 	select SND_SOC_SIRF_AUDIO_CODEC
+	select SND_SOC_SMA1303 if I2C
 	select SND_SOC_SN95031 if INTEL_SCU_IPC
 	select SND_SOC_SPDIF
 	select SND_SOC_SSM2518 if I2C
@@ -490,6 +492,7 @@ config SND_SOC_RL6231
 	default m if SND_SOC_RT5640=m
 	default m if SND_SOC_RT5645=m
 	default m if SND_SOC_RT5651=m
+	default y if SND_SOC_RT5665=y
 	default m if SND_SOC_RT5670=m
 	default m if SND_SOC_RT5677=m
 
@@ -516,6 +519,9 @@ config SND_SOC_RT5677
 	tristate
 
 config SND_SOC_RT5659
+	tristate
+
+config SND_SOC_RT5665
 	tristate
 
 #Freescale sgtl5000 codec
@@ -855,5 +861,14 @@ config SND_SOC_TFA9896
 	default n
 	help
 	TFA9896 driver
+
+config SND_SOC_SMA1303
+	tristate "Silicon Mitus SMA1303 speaker amplifier"
+	depends on I2C
+	help
+	  Config of SMA1303. It is a Smart power
+	  amplifier which contain speaker protection,
+	  multi-band DRC, equalizer function. It would
+	  be set to yes if device with SMA1303 on it.
 
 endmenu

@@ -73,6 +73,8 @@ else
 snd-soc-universal7870-cod3026x-objs := universal7870-cod3026.o
 endif
 snd-soc-universal7870-rt5659-objs := universal7870-rt5659.o
+snd-soc-universal7870-rt5665-objs := universal7870-rt5665.o jack_rt5665_sysfs_cb.o
+snd-soc-sec-audio-objs := sec_audio_sysfs.o
 snd-soc-espresso8890-wm5110-objs := cp_dummy.o espresso8890_wm5110.o
 
 obj-$(CONFIG_SND_SOC_SAMSUNG_JIVE_WM8750) += snd-soc-jive-wm8750.o
@@ -109,5 +111,7 @@ else
 obj-$(CONFIG_SND_SOC_SAMSUNG_UNIVERSAL7870_COD3026X) += snd-soc-universal7870-cod3026x.o
 endif
 obj-$(CONFIG_SND_SOC_SAMSUNG_UNIVERSAL7870_RT5659) += snd-soc-universal7870-rt5659.o
+obj-$(CONFIG_SND_SOC_SAMSUNG_UNIVERSAL7870_RT5665) += snd-soc-universal7870-rt5665.o
+obj-$(CONFIG_SND_SOC_SAMSUNG_AUDIO) += snd-soc-sec-audio.o
 
 obj-$(CONFIG_SND_SAMSUNG_SEIREN) += seiren/
