@@ -993,4 +993,5 @@ source "drivers/input/touchscreen/synaptics_dsx2/Kconfig"
 source "drivers/input/touchscreen/sec_incell_ts/Kconfig"
 source "drivers/input/touchscreen/sec_ts/Kconfig"
 source "drivers/input/touchscreen/stm_fts1ba90a/Kconfig"
+source "drivers/input/touchscreen/stm_fts1ba90a_d/Kconfig"
 endif
