@@ -12,17 +12,18 @@
 /dts-v1/;
 #include "exynos7870-gtaxl_common.dtsi"
 #include "modem-ss315ap-pdata.dtsi"
-#include "exynos7870-gtaxllte_eur_open_gpio_05.dtsi"
-#include "exynos7870-gtaxllte_eur_open_battery_05.dtsi"
+#include "exynos7870-gtaxllte_eur_open_gpio_07.dtsi"
+#include "exynos7870-gtaxllte_eur_open_battery_07.dtsi"
+#include "exynos7870-gtaxl_sound_07.dtsi"
 
 / {
-	model = "Samsung Galaxy Tab A LTE rev05 board based on Exynos7870";
+	model = "Samsung Galaxy Tab A LTE rev07 board based on Exynos7870";
         model_info-chip = <7870>;
         model_info-platform = "android";
         model_info-subtype = "samsung";
-        model_info-hw_rev = <5>;
-        model_info-hw_rev_end = <6>;
-	compatible = "samsung, Galaxy Tab A LTE 05", "samsung,exynos7870";
+        model_info-hw_rev = <7>;
+        model_info-hw_rev_end = <255>;
+	compatible = "samsung, Galaxy Tab A LTE 07", "samsung,exynos7870";
 
 	cnss_dcdc_en: cnss_dcdc_en {
 		compatible = "regulator-fixed";
@@ -147,7 +148,7 @@
 		samsung,i2c-sda-delay = <100>;
 		samsung,i2c-max-bus-freq = <400000>;
 		status = "okay";
-		
+
 		sx9306-i2c@28 {
 			compatible = "sx9306-i2c";
 			reg = <0x28>;
@@ -165,12 +166,12 @@
 			sx9306-i2c,ch-sub1 = <0xff>;  /*oxff: Not be used sub channel */
 		};
 	};
-	
+
 	i2c@13890000 {
 		samsung,i2c-sda-delay = <100>;
 		samsung,i2c-max-bus-freq = <400000>;
 		status = "okay";
-		
+
 		sx9306_wifi-i2c@2B {
 			compatible = "sx9306_wifi-i2c";
 			reg = <0x2B>;
@@ -188,37 +189,26 @@
 			sx9306_wifi-i2c,ch-sub1 = <0xff>;  /*oxff: Not be used sub channel */
 		};
 	};
-	
+
 	i2c@138D0000 {
 		samsung,i2c-sda-delay = <100>;
 		samsung,i2c-max-bus-freq = <400000>;
 		status = "okay";
 
-		k2hh-i2c@1D {
-			compatible = "k2hh-i2c";
+		lis2ds@1D {
+			compatible = "st,lis2ds";
 			reg = <0x1D>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&acc_int>;
 			interrupt-parent = <&gpa0>;
 			interrupts = <7 0 0>;
-			k2hh,irq_gpio = <&gpa0 7 0>;
-			k2hh,vio-supply = <&ldo3_reg>;
-			k2hh,axis_map_x = <0>;
-			k2hh,axis_map_y = <1>;
-			k2hh,axis_map_z = <2>;
-			k2hh,negate_x = <0>;
-			k2hh,negate_y = <0>;
-			k2hh,negate_z = <1>;
-			k2hh,poll_interval = <100>;
-			k2hh,min_interval = <2>;
+			st,irq_gpio = <&gpa0 7 0>;
+			st,orientation = <2 1 1 1 2 1 1 1 0>;
 		};
-
-		cm3323-i2c@10 {
-			compatible = "cm3323-i2c";
-			reg = <0x10>;
-			cm3323-i2c,vdd-supply = <&ldo33_reg>;
-			cm3323-i2c,vdd-alwayson = <1>;
-			/*cm3323-i2c,vdd-ldo= ;  //use if vdd is connected with ldo or gpio*/
+	
+		tcs3407-i2c@29 {
+			compatible = "ams,tcs3407";
+			reg = <0x29>;
 		};
 	};
 
@@ -488,56 +478,7 @@
 		};
 	};
 
-	i2c@13880000 {
-		samsung,i2c-sda-delay = <100>;
-		samsung,i2c-max-bus-freq = <400000>;
-		#address-cells = <1>;
-		#size-cells = <0>;
-		status = "okay";
-
-		audio_codec: rt5659@1b {
-			compatible = "realtek,rt5659";
-			reg = <0x1b>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&codec_ldoena &codec_reset>;
-			interrupts = <7 0 0>;
-			interrupt-parent = <&gpd3>;
-			realtek,in3-differential = "true";
-			realtek,in4-differential = "true";
-
-			realtek,gpio_ldo = <&gpd3 2 0>;
-			realtek,gpio_reset = <&gpd3 3 0>;
-			realtek,regulator_1v8 = <&ldo30_reg>;
-			realtek,regulator_3v3 = <&ldo32_reg>;
-		};
-	};
-
-	earjack {
-		det-zones-list = <&det_zones 0 10000 10 0>,
-				<&det_zones 1683 10000 10 2>,
-				<&det_zones 3800 10000 10 1>,
-				<&det_zones 9999 10000 10 1>;
-		but-zones-list = <&but_zones 226 1 564>,
-				<&but_zones 582 565 641>,
-				<&but_zones 115 642 836>,
-				<&but_zones 114 837 1300>;
-	};
-
-	sound {
-		samsung,audio-routing =
-				"HP", "HPOL",
-				"HP", "HPOR",
-				"RCV", "MONOOUT",
-				"SPK", "SPOL",
-				"SPK", "SPOR",
-				"IN1P", "Headset Mic",
-				"IN1N", "Headset Mic",
-				"IN3P", "MICBIAS2",
-				"IN3P", "Main Mic",
-				"IN3N", "Main Mic";
-
-		earmic_bias = <1>;
-	};
+	/delete-node/ earjack;
 
 	wlan {
 		compatible = "qcom,cnss_sdio";
@@ -564,7 +505,7 @@
 			samsung,pin-pud-pdn = <3>;
 			samsung,pin-drv = <1>;
 		};
-	
+
 		sd1_bus1: sd1-bus-width1 {
 			samsung,pin-pud = <3>;
 			samsung,pin-drv = <1>;
@@ -575,7 +516,16 @@
 			samsung,pin-drv = <1>;
 		};
 	};
-	
+
+	pinctrl@139B0000 {
+		hs_i2c6_bus: hs-i2c6-bus {
+			samsung,pins = "gpf2-0", "gpf2-1";
+			samsung,pin-function = <2>;
+			samsung,pin-pud = <3>;
+			samsung,pin-drv = <0>;
+		};
+	};
+
 	bluetooth {
 		compatible = "qca,qca6174";
 		gpios = <&gpd4 0 0x1	/*BT_EN*/
@@ -644,9 +594,14 @@
 
 	i2c@13840000 {
 		touchscreen@49 {
-			stm,project_name = "gtaxl_rev03", "T580";
+			compatible = "stm,d_fts_touch";
+			stm,project_name = "gtaxl", "T585";
 			stm,regulator_dvdd = "tsp_dvdd";
 			stm,regulator_avdd = "tsp_avdd";
+			stm,firmware_name = "tsp_stm/fts1ba90a_gtaxl.fw";
+			stm,tclm_level = <2>;
+			stm,afe_base = <0x0E0B>;
+			stm,chip_on_board;
 		};
 	};
 };
