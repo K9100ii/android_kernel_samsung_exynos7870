@@ -223,6 +223,12 @@ config SENSORS_TMD3725_RF_NOISE_DEFENCE_CODE
 	help
 	   This option enables proximity using defence code in TMD3725 driver.
 
+config SENSORS_TCS3407
+	tristate "AMS TCS3407 Color sensor"
+	depends on I2C
+	help
+	   If you say yes here you get support for the AMS TCS3407 color sensors.
+
 config SENSORS_STK3013
 	depends on I2C
 	tristate "STK3013 driver"

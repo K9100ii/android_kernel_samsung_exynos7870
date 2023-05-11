@@ -34,6 +34,7 @@ obj-$(CONFIG_SENSORS_VEML3328)      += veml3328.o
 obj-$(CONFIG_SENSORS_TMD3782)       += tmd3782.o
 obj-$(CONFIG_SENSORS_TMD3700)       += tmd3700.o
 obj-$(CONFIG_SENSORS_TMD3725)       += tmd3725.o
+obj-$(CONFIG_SENSORS_TCS3407)       += tcs3407.o
 obj-$(CONFIG_SENSORS_STK3013)       += stk3013.o
 obj-$(CONFIG_SENSORS_GP2AP070S)     += gp2ap070s.o
 obj-$(CONFIG_SENSORS_GP2AP110S)	    += gp2ap110s.o
