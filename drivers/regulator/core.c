@@ -3615,7 +3615,7 @@ static int add_regulator_attributes(struct regulator_dev *rdev)
 static void rdev_init_debugfs(struct regulator_dev *rdev)
 {
 	rdev->debugfs = debugfs_create_dir(rdev_get_name(rdev), debugfs_root);
-	if (!rdev->debugfs) {
+	if (IS_ERR(rdev->debugfs)) {
 		rdev_warn(rdev, "Failed to create debugfs directory\n");
 		return;
 	}
@@ -4050,7 +4050,7 @@ static int __init regulator_init(void)
 	ret = class_register(&regulator_class);
 
 	debugfs_root = debugfs_create_dir("regulator", NULL);
-	if (!debugfs_root)
+	if (IS_ERR(debugfs_root))
 		pr_warn("regulator: Failed to create debugfs directory\n");
 
 	debugfs_create_file("supply_map", 0444, debugfs_root, NULL,
