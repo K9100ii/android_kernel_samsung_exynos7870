@@ -751,7 +751,7 @@ static ssize_t get_lp_dump(struct device *dev, struct device_attribute *attr, ch
 			snprintf(buff, sizeof(buff),
 					"%d: %04x%04x%04x%04x\n",
 					addr, data0, data1, data2, data3);
-			strncat(buf, buff, sizeof(buff));
+			strncat(buf, buff, sizeof(buff) - strlen(buff) - 1);
 		}
 	}
 
@@ -938,10 +938,10 @@ static ssize_t d_fts_get_cmoffset_dump(struct fts_ts_info *info, char *buf, u8 p
 		char buff[4] = { 0 };
 		for (j = 0; j < info->SenseChannelLength; j++) {
 			snprintf(buff, sizeof(buff), " %d", rbuff[i * info->SenseChannelLength + j]);
-			strncat(buf, buff, sizeof(buff));
+			strncat(buf, buff, sizeof(buff) - strlen(buff) - 1);
 		}
 		snprintf(buff, sizeof(buff), "\n");
-		strncat(buf, buff, sizeof(buff));
+		strncat(buf, buff, sizeof(buff) - strlen(buff) - 1);
 	}
 
 out:
@@ -1292,11 +1292,11 @@ static void fts_get_sec_ito_test_result(struct fts_ts_info *info)
 
 	snprintf(buff, sizeof(buff), "%s: test count - sub:%d, main:%d\n", __func__, data[0], data[1]);
 	input_info(true, &info->client->dev, "%s", buff);
-	strncat(info->ito_result, buff, sizeof(buff));
+	strncat(info->ito_result, buff, sizeof(buff) - strlen(info->ito_result) - 1);
 
 	snprintf(buff, sizeof(buff), "ITO:              /   TX_GAP_MAX   /   RX_GAP_MAX\n");
 	input_info(true, &info->client->dev, "%s", buff);
-	strncat(info->ito_result, buff, sizeof(buff));
+	strncat(info->ito_result, buff, sizeof(buff) - strlen(info->ito_result) - 1);
 
 	for (i = 0; i < 10; i++) {
 		switch (result[i].flag) {
@@ -1319,7 +1319,7 @@ static void fts_get_sec_ito_test_result(struct fts_ts_info *info)
 				result[i].tx_of_rxmax_gap, result[i].rx_of_rxmax_gap,
 				result[i].max_of_rx_gap);
 		input_info(true, &info->client->dev, "%s", buff);
-		strncat(info->ito_result, buff, sizeof(buff));
+		strncat(info->ito_result, buff, sizeof(buff) - strlen(info->ito_result) - 1);
 
 		/* when count is over 200, it restart from 1 */
 		if (result[i].num_of_test > result[max_count].num_of_test + 100)
@@ -2097,7 +2097,7 @@ static void run_rawcap_read_all(void *device_data)
 	for (j = 0; j < info->ForceChannelLength; j++) {
 		for (i = 0; i < info->SenseChannelLength; i++) {
 			snprintf(buff, sizeof(buff), "%d,", info->pFrame[j * info->SenseChannelLength + i]);
-			strncat(all_strbuff, buff, sizeof(buff));
+			strncat(all_strbuff, buff, sizeof(buff) - strlen(all_strbuff) - 1);
 		}
 	}
 	enter_factory_mode(info, false);
@@ -2196,7 +2196,7 @@ static void get_strength_all_data(void *device_data)
 	for (i = 0; i < info->ForceChannelLength; i++) {
 		for (j = 0; j < info->SenseChannelLength; j++) {
 			snprintf(buff, sizeof(buff), "%d,", info->pFrame[(i * info->SenseChannelLength) + j]);
-			strncat(all_strbuff, buff, sizeof(buff));
+			strncat(all_strbuff, buff, sizeof(buff) - strlen(all_strbuff) - 1);
 		}
 	}
 
@@ -2605,12 +2605,12 @@ static void fts_read_self_raw_frame(struct fts_ts_info *info, bool allnode)
 		memset(mbuff, 0x0, sizeof(mbuff));
 		for (i = 0; i < (info->ForceChannelLength); i++) {
 			snprintf(temp, sizeof(temp), "%d,", (s16)self_force_raw_data[i]);
-			strncat(mbuff, temp, sizeof(temp));
+			strncat(mbuff, temp, sizeof(mbuff) - strlen(mbuff) - 1);
 			input_info(true, &info->client->dev, "Force[%d] %d\n", i, (s16)self_force_raw_data[i]);
 		}
 		for (i = 0; i < (info->SenseChannelLength); i++) {
 			snprintf(temp, sizeof(temp), "%d,", (s16)self_sense_raw_data[i]);
-			strncat(mbuff, temp, sizeof(temp));
+			strncat(mbuff, temp, sizeof(mbuff) - strlen(mbuff) - 1);
 			input_info(true, &info->client->dev, "Sense[%d] %d\n", i, (s16)self_sense_raw_data[i]);
 		}
 
@@ -2911,7 +2911,7 @@ static void get_cx_all_data(void *device_data)
 		for (j = 0; j < info->ForceChannelLength; j++) {
 			for (i = 0; i < info->SenseChannelLength; i++) {
 				snprintf(buff, sizeof(buff), "%d,", info->cx_data[j * info->SenseChannelLength + i]);
-				strncat(all_strbuff, buff, sizeof(buff));
+				strncat(all_strbuff, buff, sizeof(buff) - strlen(all_strbuff) - 1);
 			}
 		}
 	}
@@ -2970,7 +2970,7 @@ static void run_cx_gap_data_x_all(void *device_data)
 	for (ii = 0; ii < (info->SenseChannelLength * info->ForceChannelLength); ii++) {
 		if ((ii + 1) % (info->SenseChannelLength) != 0) {
 			snprintf(temp, sizeof(temp), "%d,", (int)abs(info->cx_data[ii + 1] - info->cx_data[ii]));
-			strncat(buff, temp, sizeof(temp));
+			strncat(buff, temp, sizeof(temp) - strlen(buff) - 1);
 			memset(temp, 0x00, 5);
 		}
 	}
@@ -3002,7 +3002,7 @@ static void run_cx_gap_data_y_all(void *device_data)
 		if (ii < (info->ForceChannelLength - 1) * info->SenseChannelLength) {
 			snprintf(temp, sizeof(temp), "%d,",
 					(int)abs(info->cx_data[ii + info->SenseChannelLength] - info->cx_data[ii]));
-			strncat(buff, temp, sizeof(temp));
+			strncat(buff, temp, sizeof(temp) - strlen(buff) - 1);
 			memset(temp, 0x00, 5);
 		}
 	}
