@@ -114,6 +114,8 @@ int tc_classify_compat(struct sk_buff *skb, const struct tcf_proto *tp,
 int tc_classify(struct sk_buff *skb, const struct tcf_proto *tp,
 		struct tcf_result *res);
 
+extern const struct nla_policy rtm_tca_policy[TCA_MAX + 1];
+
 /* Calculate maximal size of packet seen by hard_start_xmit
    routine of this device.
  */
