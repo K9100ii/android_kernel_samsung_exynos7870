@@ -564,6 +564,9 @@ static int u32_set_parms(struct net *net, struct tcf_proto *tp,
 {
 	int err;
 	struct tcf_exts e;
+#ifdef CONFIG_NET_CLS_IND
+	int ifindex = -1;
+#endif
 
 	tcf_exts_init(&e, TCA_U32_ACT, TCA_U32_POLICE);
 	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
@@ -571,6 +574,15 @@ static int u32_set_parms(struct net *net, struct tcf_proto *tp,
 		return err;
 
 	err = -EINVAL;
+
+#ifdef CONFIG_NET_CLS_IND
+	if (tb[TCA_U32_INDEV]) {
+		ifindex = tcf_change_indev(net, tb[TCA_U32_INDEV]);
+		if (ifindex < 0)
+			goto errout;
+	}
+#endif
+
 	if (tb[TCA_U32_LINK]) {
 		u32 handle = nla_get_u32(tb[TCA_U32_LINK]);
 		struct tc_u_hnode *ht_down = NULL, *ht_old;
@@ -598,13 +610,8 @@ static int u32_set_parms(struct net *net, struct tcf_proto *tp,
 	}
 
 #ifdef CONFIG_NET_CLS_IND
-	if (tb[TCA_U32_INDEV]) {
-		int ret;
-		ret = tcf_change_indev(net, tb[TCA_U32_INDEV]);
-		if (ret < 0)
-			goto errout;
-		n->ifindex = ret;
-	}
+	if (ifindex >= 0)
+		n->ifindex = ifindex;
 #endif
 	tcf_exts_change(tp, &n->exts, &e);
 
