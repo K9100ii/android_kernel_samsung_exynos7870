@@ -943,6 +943,15 @@ static int xfrm_dump_sa(struct sk_buff *skb, struct netlink_callback *cb)
 			if (filter == NULL)
 				return -ENOMEM;
 
+			/* see addr_match(), (prefix length >> 5) << 2
+			 * will be used to compare xfrm_address_t
+			 */
+			if (filter->splen > (sizeof(xfrm_address_t) << 3) ||
+			    filter->dplen > (sizeof(xfrm_address_t) << 3)) {
+				kfree(filter);
+				return -EINVAL;
+			}
+
 			memcpy(filter, nla_data(attrs[XFRMA_ADDRESS_FILTER]),
 			       sizeof(*filter));
 		}
