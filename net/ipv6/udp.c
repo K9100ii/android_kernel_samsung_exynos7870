@@ -1162,7 +1162,6 @@ do_udp_sendmsg:
 	if (len > INT_MAX - sizeof(struct udphdr))
 		return -EMSGSIZE;
 
-	getfrag  =  is_udplite ?  udplite_getfrag : ip_generic_getfrag;
 	if (up->pending) {
 		/*
 		 * There are pending frames.
@@ -1296,20 +1295,6 @@ do_udp_sendmsg:
 		goto do_confirm;
 back_from_confirm:
 
-	/* Lockless fast path for the non-corking case */
-	if (!corkreq) {
-		struct sk_buff *skb;
-
-		skb = ip6_make_skb(sk, getfrag, msg, ulen,
-				   sizeof(struct udphdr), hlimit, tclass, opt,
-				   &fl6, (struct rt6_info *)dst,
-				   msg->msg_flags, dontfrag);
-		err = PTR_ERR(skb);
-		if (!IS_ERR_OR_NULL(skb))
-			err = udp_v6_send_skb(skb, &fl6);
-		goto release_dst;
-	}
-
 	lock_sock(sk);
 	if (unlikely(up->pending)) {
 		/* The socket is already corked while preparing it. */
@@ -1327,6 +1312,7 @@ do_append_data:
 	if (dontfrag < 0)
 		dontfrag = np->dontfrag;
 	up->len += ulen;
+	getfrag  =  is_udplite ?  udplite_getfrag : ip_generic_getfrag;
 	err = ip6_append_data(sk, getfrag, msg->msg_iov, ulen,
 		sizeof(struct udphdr), hlimit, tclass, opt, &fl6,
 		(struct rt6_info *)dst,
@@ -1338,11 +1324,6 @@ do_append_data:
 	else if (unlikely(skb_queue_empty(&sk->sk_write_queue)))
 		up->pending = 0;
 
-	if (err > 0)
-		err = np->recverr ? net_xmit_errno(err) : 0;
-	release_sock(sk);
-
-release_dst:
 	if (dst) {
 		if (connected) {
 			ip6_dst_store(sk, dst,
@@ -1359,6 +1340,9 @@ release_dst:
 		dst = NULL;
 	}
 
+	if (err > 0)
+		err = np->recverr ? net_xmit_errno(err) : 0;
+	release_sock(sk);
 out:
 	dst_release(dst);
 	fl6_sock_release(flowlabel);
