@@ -431,9 +431,10 @@ static unsigned int reserve_eilvt_offset(int offset, unsigned int new)
 		if (vector && !eilvt_entry_is_changeable(vector, new))
 			/* may not change if vectors are different */
 			return rsvd;
-	} while (!atomic_try_cmpxchg(&eilvt_offsets[offset], &rsvd, new));
+		rsvd = atomic_cmpxchg(&eilvt_offsets[offset], rsvd, new);
+	} while (rsvd != new);
 
-	rsvd = new & ~APIC_EILVT_MASKED;
+	rsvd &= ~APIC_EILVT_MASKED;
 	if (rsvd && rsvd != vector)
 		pr_info("LVT offset %d assigned for vector 0x%02x\n",
 			offset, rsvd);
