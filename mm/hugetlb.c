@@ -1445,7 +1445,7 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
 		if (!page)
 			goto out_uncharge_cgroup;
 		spin_lock(&hugetlb_lock);
-		if (!avoid_reserve && vma_has_reserves(vma, gbl_chg)) {
+		if (!avoid_reserve && vma_has_reserves(vma, chg)) {
 			SetPagePrivate(page);
 			h->resv_huge_pages--;
 		}
