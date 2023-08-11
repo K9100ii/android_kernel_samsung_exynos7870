@@ -1472,8 +1472,8 @@ static void cpuset_cancel_attach(struct cgroup_subsys_state *css,
 				 struct cgroup_taskset *tset)
 {
 	mutex_lock(&cpuset_mutex);
-	cs->attach_in_progress--;
-	if (!cs->attach_in_progress)
+	css_cs(css)->attach_in_progress--;
+	if (!css_cs(css)->attach_in_progress)
 		wake_up(&cpuset_attach_wq);
 	mutex_unlock(&cpuset_mutex);
 }
