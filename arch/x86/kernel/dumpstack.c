@@ -225,11 +225,6 @@ unsigned long oops_begin(void)
 EXPORT_SYMBOL_GPL(oops_begin);
 NOKPROBE_SYMBOL(oops_begin);
 
-<<<<<<< HEAD
-=======
-void __noreturn rewind_stack_and_make_dead(int signr);
-
->>>>>>> a5d89ca57e24 (exit: Add and use make_task_dead.)
 void oops_end(unsigned long flags, struct pt_regs *regs, int signr)
 {
 	if (regs && kexec_should_crash(current))
