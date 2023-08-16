@@ -250,7 +250,7 @@ static int dvb_frontend_get_event(struct dvb_frontend *fe,
 	}
 
 	if (events->eventw == events->eventr) {
-		struct wait_queue_entry wait;
+		wait_queue_t wait;
 		int ret = 0;
 
 		if (flags & O_NONBLOCK)
