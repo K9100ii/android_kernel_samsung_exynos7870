@@ -1568,7 +1568,7 @@ static void mmc_card_debug_log_sysfs_init(struct mmc_card *card)
 	sysfs_attr_init(&card->error_count.attr);
 	card->error_count.attr.name = "err_count";
 
-	card->error_count.attr.mode = S_IRUGO | S_IWUSR;
+	card->error_count.attr.mode = 0644;
 
 	if (device_create_file((disk_to_dev(md->disk)), &card->error_count)) {
 		pr_err("%s: Failed to create err_count sysfs entry\n",
@@ -1576,28 +1576,28 @@ static void mmc_card_debug_log_sysfs_init(struct mmc_card *card)
 		return;
 	}
 	/* init. card->err_log */
-	snprintf(card->err_log[0].type, sizeof(char)*4, "sbc ");
-	snprintf(card->err_log[1].type, sizeof(char)*4, "sbc ");
+	snprintf(card->err_log[0].type, sizeof(char)*6, "sbc  ");
+	snprintf(card->err_log[1].type, sizeof(char)*6, "sbc  ");
 	card->err_log[0].err_type = -EILSEQ;
 	card->err_log[1].err_type = -ETIMEDOUT;
 
-	snprintf(card->err_log[2].type, sizeof(char)*4, "cmd ");
-	snprintf(card->err_log[3].type, sizeof(char)*4, "cmd ");
+	snprintf(card->err_log[2].type, sizeof(char)*6, "cmd  ");
+	snprintf(card->err_log[3].type, sizeof(char)*6, "cmd  ");
 	card->err_log[2].err_type = -EILSEQ;
 	card->err_log[3].err_type = -ETIMEDOUT;
 
-	snprintf(card->err_log[4].type, sizeof(char)*4, "data");
-	snprintf(card->err_log[5].type, sizeof(char)*4, "data");
+	snprintf(card->err_log[4].type, sizeof(char)*6, "data ");
+	snprintf(card->err_log[5].type, sizeof(char)*6, "data ");
 	card->err_log[4].err_type = -EILSEQ;
 	card->err_log[5].err_type = -ETIMEDOUT;
 
-	snprintf(card->err_log[6].type, sizeof(char)*4, "stop");
-	snprintf(card->err_log[7].type, sizeof(char)*4, "stop");
+	snprintf(card->err_log[6].type, sizeof(char)*6, "stop ");
+	snprintf(card->err_log[7].type, sizeof(char)*6, "stop ");
 	card->err_log[6].err_type = -EILSEQ;
 	card->err_log[7].err_type = -ETIMEDOUT;
-	
-	snprintf(card->err_log[8].type, sizeof(char)*4, "busy");
-	snprintf(card->err_log[9].type, sizeof(char)*4, "busy");
+
+	snprintf(card->err_log[8].type, sizeof(char)*6, "busy ");
+	snprintf(card->err_log[9].type, sizeof(char)*6, "busy ");
 	card->err_log[8].err_type = -EILSEQ;
 	card->err_log[9].err_type = -ETIMEDOUT;
 }
@@ -1610,7 +1610,7 @@ static int card_busy_detect(struct mmc_card *card, unsigned int timeout_ms,
 	u32 status;
 	struct mmc_queue_req *mq_mrq;
 	struct mmc_blk_request *brq = NULL;
-	
+
 	if (card->host->areq) {
 		mq_mrq = container_of(card->host->areq, struct mmc_queue_req,
 				mmc_active);
