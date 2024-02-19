@@ -777,37 +777,35 @@ void fts_print_frame(struct fts_ts_info *info, short *min, short *max)
 		return;
 	}
 
-	snprintf(pTmp, 4, "    ");
-	strncat(pStr, pTmp, 4);
-
+	memset(pStr, 0x0, 6 * (info->SenseChannelLength + 1));
+	snprintf(pTmp, sizeof(pTmp), "    ");
+	strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 
 	for (i = 0; i < info->SenseChannelLength; i++) {
-		snprintf(pTmp, 6, "Rx%02d  ", i);
-		strncat(pStr, pTmp, 6);
+		snprintf(pTmp, sizeof(pTmp), "Rx%02d  ", i);
+		strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 	}
 
 	input_raw_info(true, &info->client->dev, "%s\n", pStr);
 
 	memset(pStr, 0x0, 6 * (info->SenseChannelLength + 1));
-	snprintf(pTmp, 2, " +");
-	strncat(pStr, pTmp, 2);
+	snprintf(pTmp, sizeof(pTmp), " +");
+	strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 
 	for (i = 0; i < info->SenseChannelLength; i++) {
-		snprintf(pTmp, 6, "------");
-		strncat(pStr, pTmp, 6);
-
+		snprintf(pTmp, sizeof(pTmp), "------");
+		strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 	}
 
 	input_raw_info(true, &info->client->dev, "%s\n", pStr);
 
 	for (i = 0; i < info->ForceChannelLength; i++) {
 		memset(pStr, 0x0, 6 * (info->SenseChannelLength + 1));
-		snprintf(pTmp, 7, "Tx%02d | ", i);
-		strncat(pStr, pTmp, 7);
-
+		snprintf(pTmp, sizeof(pTmp), "Tx%02d | ", i);
+		strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 
 		for (j = 0; j < info->SenseChannelLength; j++) {
-			snprintf(pTmp, 6, "%5d ", info->pFrame[(i * info->SenseChannelLength) + j]);
+			snprintf(pTmp, sizeof(pTmp), "%5d ", info->pFrame[(i * info->SenseChannelLength) + j]);
 
 			if (i > 0) {
 				if (info->pFrame[(i * info->SenseChannelLength) + j] < *min)
@@ -816,7 +814,7 @@ void fts_print_frame(struct fts_ts_info *info, short *min, short *max)
 				if (info->pFrame[(i * info->SenseChannelLength) + j] > *max)
 					*max = info->pFrame[(i * info->SenseChannelLength) + j];
 			}
-			strncat(pStr, pTmp, 6);
+			strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 		}
 		input_raw_info(true, &info->client->dev, "%s\n", pStr);
 	}
@@ -1562,7 +1560,7 @@ static void get_strength_all_data(void *device_data)
 		for (j = 0; j < info->SenseChannelLength; j++) {
 
 			snprintf(buff, sizeof(buff), "%d,", info->pFrame[(i * info->SenseChannelLength) + j]);
-			strncat(all_strbuff, buff, sizeof(buff));
+			strncat(all_strbuff, buff, sizeof(buff) - strlen(all_strbuff) - 1);
 		}
 	}
 
@@ -2563,7 +2561,7 @@ static void get_cx_all_data(void *device_data)
 			for(i = 0; i < rx_num; i++){
 				info->cx_data[(j * rx_num) + i] = ReadData[j][i + 1];
 				snprintf(buff, sizeof(buff), "%d,", ReadData[j][i + 1]);
-				strncat(all_strbuff, buff, sizeof(buff));
+				strncat(all_strbuff, buff, sizeof(buff) - strlen(all_strbuff) - 1);
 			}
 		}
 	}

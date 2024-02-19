@@ -1127,35 +1127,35 @@ void d_fts_print_frame(struct fts_ts_info *info, short *min, short *max)
 	if (pStr == NULL)
 		return;
 
-	snprintf(pTmp, 4, "    ");
-	strncat(pStr, pTmp, 4);
+	memset(pStr, 0x0, 6 * (info->SenseChannelLength + 1));
+	snprintf(pTmp, sizeof(pTmp), "    ");
+	strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 
 	for (i = 0; i < info->SenseChannelLength; i++) {
-		snprintf(pTmp, 6, "Rx%02d  ", i);
-		strncat(pStr, pTmp, 6);
+		snprintf(pTmp, sizeof(pTmp), "Rx%02d  ", i);
+		strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 	}
 
 	input_raw_info(true, &info->client->dev, "%s\n", pStr);
 
 	memset(pStr, 0x0, 6 * (info->SenseChannelLength + 1));
-	snprintf(pTmp, 2, " +");
-	strncat(pStr, pTmp, 2);
+	snprintf(pTmp, sizeof(pTmp), " +");
+	strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 
 	for (i = 0; i < info->SenseChannelLength; i++) {
-		snprintf(pTmp, 6, "------");
-		strncat(pStr, pTmp, 6);
+		snprintf(pTmp, sizeof(pTmp), "------");
+		strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 	}
 
 	input_raw_info(true, &info->client->dev, "%s\n", pStr);
 
 	for (i = 0; i < info->ForceChannelLength; i++) {
 		memset(pStr, 0x0, 6 * (info->SenseChannelLength + 1));
-		snprintf(pTmp, 7, "Tx%02d | ", i);
-		strncat(pStr, pTmp, 7);
-
+		snprintf(pTmp, sizeof(pTmp), "Tx%02d | ", i);
+		strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 
 		for (j = 0; j < info->SenseChannelLength; j++) {
-			snprintf(pTmp, 6, "%5d ", info->pFrame[(i * info->SenseChannelLength) + j]);
+			snprintf(pTmp, sizeof(pTmp), "%5d ", info->pFrame[(i * info->SenseChannelLength) + j]);
 
 			if (i > 0) {
 				if (info->pFrame[(i * info->SenseChannelLength) + j] < *min)
@@ -1164,7 +1164,7 @@ void d_fts_print_frame(struct fts_ts_info *info, short *min, short *max)
 				if (info->pFrame[(i * info->SenseChannelLength) + j] > *max)
 					*max = info->pFrame[(i * info->SenseChannelLength) + j];
 			}
-			strncat(pStr, pTmp, 6);
+			strncat(pStr, pTmp, 6 * info->SenseChannelLength);
 		}
 		input_raw_info(true, &info->client->dev, "%s\n", pStr);
 	}
